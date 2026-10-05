@@ -1,5 +1,17 @@
 # Changelog
 
+## v8 · Foaling season & real logo
+- Uses the original Marebook logo artwork in the header, footer, hero and log-in box.
+- Foaling-season planner, per Charles & Kelly:
+  - Target foaling window is January–April, with April as the ideal month. May–June counts as late.
+  - The goal is earlier in the year, because every foal turns one on January 1.
+  - The planner shows a crop timeline with every mare's due date and works the breeding dates back 340 days.
+  - It shows the days left in the window and each open mare's projected foaling date if bred now.
+  - It can add lights-program reminders for December 1.
+- Mare cards and profiles show which part of the season the foal lands in. Foal pages show "calendar age", meaning how many months old the foal is when it's a two-year-old on paper.
+- Season settings under Account let them change the window, the ideal month and the late cutoff.
+- Removed the decorative orb behind the hero text.
+
 ## v7 · Brand, public site, spec pass (Oct 2026)
 Built against Charles & Kelly's wireframes, page summaries, the App Build Workbook and the Platform & Ownership Checklist.
 
