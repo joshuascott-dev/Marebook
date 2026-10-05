@@ -1,30 +1,41 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Marebook: mare, foal and stallion records with a breeding calendar that runs itself."><meta name="theme-color" content="#2b5a44"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif;background:#f1f4f1}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
-<title>Marebook</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Marebook · Never miss a breeding milestone again</title>
+<meta name="description" content="Marebook: mare, foal and stallion records with a breeding calendar that runs itself. Made in Weatherford, Texas.">
+<meta name="theme-color" content="#0a0e10">
+<meta property="og:title" content="Marebook"><meta property="og:description" content="Never miss a breeding milestone again. Mare, foal and stallion records with a calendar that runs itself."><meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e10'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%232c8c8f' stroke-width='3'/%3E%3Ccircle cx='17' cy='44' r='7' fill='%233aa7d6'/%3E%3Ctext x='35' y='41' text-anchor='middle' font-family='Georgia,serif' font-size='26' fill='%23e8eced'%3EM%3C/text%3E%3C/svg%3E">
+<style>:root{color-scheme:light}body{margin:0;background:#f5f3ee}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700;800&family=Pinyon+Script&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
 /* Layout: one-column phone app — sticky brand bar, scrolling view, fixed bottom tab bar; bottom sheets for forms. Widens to a centered 720px column on desktop. */
+/* Brand: Marebook logo — night black, teal ring, silver lettering, blue orb; antique gold for luxury accents. */
 :root{
-  --bg:#f1f4f1; --surface:#ffffff; --sunk:#e7ece8; --ink:#16201a; --muted:#5a6a60; --line:#d6ded8;
-  --accent:#2b5a44; --accent-ink:#ffffff; --soft:#e0ebe4;
-  --brass:#9a6f1c; --brass-soft:#f3ead6;
-  --warn:#b0531c; --warn-soft:#f6e4d9; --danger:#a32f2f; --ok:#2e7548;
-  --f-display:"Zilla Slab", Rockwell, "Roboto Slab", Georgia, serif;
-  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg:#f5f3ee; --surface:#ffffff; --sunk:#ece9e2; --ink:#111618; --muted:#5d666a; --line:#dfdad0;
+  --accent:#1d6a6e; --accent-ink:#ffffff; --soft:#e2eeee;
+  --brass:#8c6a2c; --brass-soft:#f3ecdc;
+  --warn:#b4532a; --warn-soft:#f7e6dc; --danger:#a83232; --ok:#2f7a55;
+  --night:#0a0e10; --night-2:#121a1d; --night-ink:#e8eced; --night-muted:#93a0a5; --night-line:#1f2c31;
+  --silver:#c6cdd2; --ring:#2c8c8f; --orb:#2e93c4; --gold:#b8924c;
+  --shadow:0 1px 2px rgb(16 22 24 / .04), 0 12px 32px -20px rgb(16 22 24 / .28);
+  --f-display:"Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --f-body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-  --r:12px;
+  --r:14px;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#0f1411; --surface:#171e1a; --sunk:#121915; --ink:#e5ebe7; --muted:#97a69c; --line:#29342d;
-  --accent:#7cb898; --accent-ink:#0c1410; --soft:#1d2b23;
-  --brass:#d6a64c; --brass-soft:#2c2618;
-  --warn:#e38c55; --warn-soft:#2e2019; --danger:#e57070; --ok:#6fc38f; color-scheme:dark }}
+  --bg:#0b0f11; --surface:#141a1d; --sunk:#0f1517; --ink:#e8ecee; --muted:#9aa5aa; --line:#243035;
+  --accent:#5db6b8; --accent-ink:#061012; --soft:#12292b;
+  --brass:#d3ae66; --brass-soft:#2a2416;
+  --warn:#e8915e; --warn-soft:#2f2019; --danger:#e77272; --ok:#6fc596;
+  --shadow:0 1px 2px rgb(0 0 0 / .3), 0 12px 32px -20px rgb(0 0 0 / .6); color-scheme:dark }}
 :root[data-theme="dark"]{
-  --bg:#0f1411; --surface:#171e1a; --sunk:#121915; --ink:#e5ebe7; --muted:#97a69c; --line:#29342d;
-  --accent:#7cb898; --accent-ink:#0c1410; --soft:#1d2b23;
-  --brass:#d6a64c; --brass-soft:#2c2618;
-  --warn:#e38c55; --warn-soft:#2e2019; --danger:#e57070; --ok:#6fc38f; color-scheme:dark }
+  --bg:#0b0f11; --surface:#141a1d; --sunk:#0f1517; --ink:#e8ecee; --muted:#9aa5aa; --line:#243035;
+  --accent:#5db6b8; --accent-ink:#061012; --soft:#12292b;
+  --brass:#d3ae66; --brass-soft:#2a2416;
+  --warn:#e8915e; --warn-soft:#2f2019; --danger:#e77272; --ok:#6fc596;
+  --shadow:0 1px 2px rgb(0 0 0 / .3), 0 12px 32px -20px rgb(0 0 0 / .6); color-scheme:dark }
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
@@ -401,18 +412,231 @@ table.tbl{border-collapse:collapse;width:100%;min-width:560px;font-size:13.5px}
 .mare .spent{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;border-top:1px dashed var(--line);padding-top:8px}
 .mare .spent b{font-family:var(--f-mono);color:var(--ink);font-weight:500}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}@media (min-width:760px){.sheet{animation:none}}}
+/* ===================== v7 · brand system & spec pages ===================== */
+html,body{overflow-x:clip}
+body{font-size:15px;letter-spacing:.003em}
+h1,h2,h3{font-weight:600;letter-spacing:-.01em}
+h2{font-size:24px} .sec-h h2{font-size:24px}
+.eyebrow{letter-spacing:.16em;color:var(--brass)}
+.mare-h h3,.stud-h h3{font-size:23px}
+.list,.mare,.stud,.order,.feature,.plan,.tile,.profile,.howto,.kpis,.hbars,.months,.tbl-wrap,.pl,.big-gest,.welcome{box-shadow:var(--shadow)}
+.btn{border-radius:10px;transition:background .15s,border-color .15s,filter .15s,transform .1s}
+.btn:hover{border-color:var(--muted)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.block{width:100%;padding:12px 16px;font-size:15px}
+.btn.on-dark{background:transparent;border-color:#34454c;color:var(--night-ink)}
+.btn.on-dark:hover{border-color:var(--silver)}
+.btn.teal{background:var(--ring);border-color:var(--ring);color:#fff}
+.btn.gold{background:transparent;border-color:var(--gold);color:var(--gold)}
+.btn.gold:hover{background:var(--gold);color:#17130b}
+a.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
+.pagebar{border-bottom:1px solid var(--line);padding-bottom:16px;margin-top:26px}
+.pagebar h1{font-size:clamp(32px,4.6vw,44px);font-weight:600;line-height:1.05}
+.crumbs{letter-spacing:.14em}
+.fchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]{box-shadow:0 1px 3px rgb(0 0 0 / .12)}
+.seg.sm{margin:0} .seg.sm button{padding:5px 10px;font-size:12.5px}
+.icon-btn.sm{width:30px;height:30px;border-radius:8px}
+.icon-btn.sm svg{width:15px;height:15px}
+.banner{border:1px solid rgb(184 146 76 / .35)}
+/* header */
+.top{background:var(--night);color:var(--night-ink);border-bottom:1px solid var(--night-line)}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--ring) 30%,var(--ring) 70%,transparent);opacity:.55}
+.top-in{padding:6px 16px;min-height:62px}
+.brand{color:var(--night-ink)}
+.brand .logo{height:48px;width:auto;display:block}
+.top-acts{display:flex;gap:8px;align-items:center}
+.me{border-color:#34454c}
+@media (min-width:900px){
+  .topnav{margin-left:18px;gap:0}
+  .topnav button{color:var(--night-muted);border-radius:0;padding:21px 10px;font-size:13px;letter-spacing:.02em}
+  .topnav button:hover{color:#fff}
+  .topnav button[aria-current="page"]{color:#fff;background:none;box-shadow:inset 0 -2px 0 var(--ring)}
+  .menu-btn{display:none!important}
+}
+@media (max-width:899px){.hide-sm{display:none!important}}
+.menu-btn{background:transparent;border-color:#34454c;color:var(--night-ink)}
+.menu-list{display:grid;gap:4px}
+.menu-list button{text-align:left;padding:14px 12px;border:0;border-bottom:1px solid var(--line);background:none;font-family:var(--f-display);font-size:24px;font-weight:600}
+/* footer */
+.site-foot{background:var(--night);color:var(--night-muted);margin-top:56px;border-top:1px solid var(--night-line)}
+.foot-in{max-width:1120px;margin:0 auto;padding:40px 16px 26px;display:grid;gap:28px;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+.foot-brand .logo{height:60px;width:auto;display:block}
+.foot-brand p{margin:10px 0 0;font-size:13.5px;max-width:34ch;line-height:1.6}
+.foot-col{display:grid;gap:9px;align-content:start}
+.foot-col b{color:var(--night-ink);font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-bottom:2px}
+.foot-col button{background:none;border:0;padding:0;color:var(--night-muted);text-align:left;font-size:14px}
+.foot-col button:hover{color:#fff}
+.foot-legal{grid-column:1/-1;border-top:1px solid var(--night-line);padding-top:18px;font-size:12px;line-height:1.75;display:flex;flex-wrap:wrap;gap:4px 24px;justify-content:space-between}
+body:not(.is-public) .site-foot{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+@media (min-width:900px){body:not(.is-public) .site-foot{padding-bottom:0}}
+body.is-public .tabs, body.is-public .fab{display:none}
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.card-h h2{font-size:24px}
+.card-f{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.card .list,.card .tbl-wrap{box-shadow:none}
+/* member home */
+.home{display:grid;gap:18px;margin-top:18px}
+@media (min-width:920px){.home{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:start}}
+.home-col{display:grid;gap:18px;align-content:start;min-width:0}
+.hrow{display:grid;gap:8px;padding:14px 0;border-top:1px solid var(--line)}
+.card-h + .hrow{border-top:0;padding-top:2px}
+.hrow .lbl{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center}
+.hrow .lbl i{font-style:normal;font-family:var(--f-mono);letter-spacing:0;background:var(--sunk);border-radius:6px;padding:0 6px;font-size:11px;color:var(--ink)}
+.hrow .ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hrow .ctl .btn{white-space:nowrap}
+.ss{display:flex;gap:8px;flex-wrap:wrap;width:100%}
+.ss select{flex:1 1 150px;width:auto;min-width:0}
+.todo.stack{grid-template-columns:1fr}
+/* typeahead */
+.combo{position:relative;min-width:0;flex:1 1 200px}
+.combo .search{padding-left:36px;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") no-repeat 11px 50%/16px}
+.combo .lb{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:15;margin:0;padding:6px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 22px 44px -18px rgb(0 0 0 / .4);max-height:320px;overflow:auto}
+.combo li[role=option]{padding:8px 10px;border-radius:8px;cursor:pointer;display:grid;gap:1px}
+.combo li[role=option] span{font-weight:600}
+.combo li[role=option] small{color:var(--muted);font-size:12px}
+.combo li[aria-selected=true],.combo li[role=option]:hover{background:var(--soft)}
+.combo li.grp{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);font-weight:700;padding:10px 10px 4px}
+.combo li.none{padding:10px;color:var(--muted);font-size:14px}
+.combo mark{background:none;color:var(--accent);font-weight:800}
+/* mini calendar */
+.mcal-h{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.mcal-h b{font-family:var(--f-display);font-size:20px;font-weight:600}
+.mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.mcal .dw{font-size:10.5px;font-weight:700;color:var(--muted);text-align:center;padding:2px 0 4px;letter-spacing:.1em}
+.mc{aspect-ratio:1/.92;border:0;background:var(--bg);border-radius:8px;display:grid;grid-template-rows:1fr auto;justify-items:center;align-items:center;padding:3px 0 6px;font-family:var(--f-mono);font-size:12.5px;min-width:0;color:var(--ink)}
+.mc.out{opacity:.35}
+.mc:hover{box-shadow:inset 0 0 0 1px var(--accent)}
+.mc.is-today{background:var(--accent);color:var(--accent-ink)}
+.mc.late:not(.is-today){box-shadow:inset 0 -2px 0 var(--warn)}
+.mdots{display:flex;gap:2px;height:5px}
+.mdots b{width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.mdots b.vet{background:var(--accent)} .mdots b.vaccine{background:var(--brass)} .mdots b.foaling{background:var(--warn)} .mdots b.breeding{background:var(--ok)}
+.mc.is-today .mdots b{background:var(--accent-ink)}
+/* foal page */
+.profile.solo{grid-template-columns:1fr}
+.fgrid{display:grid;gap:16px;margin-top:16px}
+@media (min-width:1000px){.fgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr);align-items:start}}
+.tl{list-style:none;margin:0;padding:0;display:grid;max-height:560px;overflow:auto}
+.tl li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:start}
+.tl li:first-child{border-top:0}
+.tl-b{display:grid;gap:1px;cursor:pointer;min-width:0}
+.tl-d{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.tl-t{font-weight:600;font-size:14px;line-height:1.3}
+.tl-m{font-size:11.5px;color:var(--muted)}
+.tl li.done .tl-t{color:var(--muted);text-decoration:line-through}
+.tl li.late .tl-d{color:var(--warn);font-weight:700}
+.vids{display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.lbl-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.vid{margin:0;display:grid;gap:2px;justify-items:start}
+.vid video{width:100%;border-radius:10px;background:#000;aspect-ratio:16/9;object-fit:contain}
+.vid-empty{font-size:12.5px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;line-height:1.45}
+.pf-main{border-style:solid;background:radial-gradient(circle at 30% 25%,var(--soft),var(--sunk))}
+/* stallion cards & search */
+.studs-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,265px),1fr))}
+.stud2{padding:0;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:16px;text-align:left;display:grid;grid-template-rows:auto 1fr;box-shadow:var(--shadow);transition:transform .18s,border-color .18s;width:100%;color:inherit}
+.stud2:hover{transform:translateY(-2px);border-color:var(--accent)}
+.stud2-img{position:relative;aspect-ratio:16/10;background:radial-gradient(circle at 28% 30%,#1f5355,var(--night) 70%);display:grid;place-items:center;overflow:hidden}
+.stud2-img img{width:100%;height:100%;object-fit:cover}
+.stud2-img::after{content:"";position:absolute;width:62%;aspect-ratio:1;border:1px solid rgb(44 140 143 / .45);border-radius:50%}
+.stud2-img:has(img)::after{display:none}
+.mono-g{font-family:var(--f-display);font-size:46px;color:var(--silver);letter-spacing:.06em;position:relative;z-index:1}
+.feat{position:absolute;top:10px;left:10px;z-index:2;background:var(--gold);color:#17130b;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+.stud2-b{padding:14px 16px 16px;display:grid;gap:5px;align-content:start}
+.stud2-k{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);font-weight:700}
+.stud2 h3{font-size:24px}
+.stud2-m{font-size:13.5px;color:var(--muted)}
+.stud2-lte{font-size:13px}
+.stud2-f{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:4px;align-items:baseline}
+.stud2-f b{font-family:var(--f-mono);color:var(--ink);font-size:15px;font-weight:600}
+.grp-h{display:flex;gap:10px;align-items:baseline;margin:14px 0 2px;font-size:22px}
+.grp-h span{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.sfilters{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+.portal{display:grid;gap:12px}
+.portal p{margin:0}
+/* public site */
+.pub{display:grid;gap:64px}
+.hero-x{position:relative;margin:-8px calc(50% - 50vw) 0;padding:64px max(16px,calc(50vw - 544px)) 76px;background:radial-gradient(900px 440px at 12% -10%,rgb(44 140 143 / .32),transparent 60%),radial-gradient(640px 320px at 95% 110%,rgb(46 147 196 / .18),transparent 60%),var(--night);color:var(--night-ink);overflow:hidden;display:grid;gap:18px;justify-items:start}
+.hero-x .logo{height:clamp(104px,15vw,150px);width:auto}
+.hero-x h1{font-size:clamp(42px,7.2vw,80px);line-height:1;max-width:13ch;color:#fff;font-weight:500}
+.hero-x h1 em{font-style:italic;color:var(--silver)}
+.hero-x p{color:#b4c0c4;max-width:56ch;font-size:17px;line-height:1.65;margin:0}
+.hero-x .eyebrow{color:var(--gold)}
+.hero-x.lite{padding-block:52px 56px}
+.hero-x.lite h1{font-size:clamp(38px,6vw,64px);max-width:16ch}
+.ring-deco{position:absolute;right:-140px;top:-120px;width:560px;aspect-ratio:1;border:1px solid rgb(44 140 143 / .35);border-radius:50%;pointer-events:none}
+.ring-deco::after{content:"";position:absolute;inset:70px;border:1px solid rgb(198 205 210 / .12);border-radius:50%}
+.ring-deco::before{content:"";position:absolute;left:62px;bottom:112px;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#c4f0ff,#3aa7d6 45%,#0b3b57);box-shadow:0 0 40px rgb(46 147 196 / .5)}
+.rule{width:56px;height:1px;background:var(--gold)}
+.pub-sec{display:grid;gap:20px}
+.pub-h{display:grid;gap:8px;max-width:680px}
+.pub-h h2{font-size:clamp(30px,4.4vw,44px);line-height:1.05}
+.pub-h p{margin:0;color:var(--muted);font-size:16px;line-height:1.6}
+.aud{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+.aud button{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px 22px;display:grid;gap:10px;box-shadow:var(--shadow);transition:transform .18s,border-color .18s;align-content:start}
+.aud button:hover{transform:translateY(-2px);border-color:var(--accent)}
+.aud .n{font-family:var(--f-display);font-style:italic;font-size:17px;color:var(--brass)}
+.aud h3{font-size:28px}
+.aud p{margin:0;color:var(--muted);font-size:14.5px;line-height:1.6}
+.aud .go{font-weight:700;color:var(--accent);font-size:14px}
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:18px 0}
+.flow li{position:relative;padding:30px 12px 0 0;display:grid;gap:2px;align-content:start}
+.flow li::before{content:"";position:absolute;top:10px;left:0;right:0;height:1px;background:var(--line)}
+.flow li i{position:absolute;top:0;left:0;width:21px;height:21px;border-radius:50%;background:var(--surface);border:1.5px solid var(--accent);font-style:normal;font-size:10.5px;display:grid;place-items:center;font-weight:800;color:var(--accent)}
+.flow li:first-child i{background:var(--accent);color:var(--accent-ink)}
+.flow b{font-size:14.5px}
+.flow span{font-size:12px;color:var(--muted);font-family:var(--f-mono)}
+.ad{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 20px;align-items:center;padding:20px 22px;border-radius:16px;background:linear-gradient(115deg,#120f09,#211b10 55%,#120f09);color:#efe6d2;border:1px solid rgb(184 146 76 / .5);position:relative}
+.ad-k{position:absolute;top:-9px;left:18px;background:var(--bg);padding:0 8px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);font-weight:700}
+.ad-b{display:grid;gap:4px}
+.ad-b b{font-family:var(--f-display);font-size:24px;font-weight:600;line-height:1.15}
+.ad-b span{font-size:13.5px;color:#cbbfa4}
+@media (max-width:620px){.ad{grid-template-columns:1fr}}
+.cta{background:radial-gradient(700px 300px at 0% 0%,rgb(44 140 143 / .3),transparent 60%),var(--night);color:var(--night-ink);border-radius:20px;padding:40px 28px;display:grid;gap:14px;justify-items:start}
+.cta h2{color:#fff;font-size:clamp(30px,4.5vw,46px);max-width:18ch;line-height:1.05}
+.cta p{margin:0;color:#b4c0c4;max-width:56ch}
+.two-col{display:grid;gap:20px}
+@media (min-width:900px){.two-col{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:start}}
+.pitch{display:grid;gap:14px;align-content:start}
+.pitch ul{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.pitch li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:15px;line-height:1.5}
+.pitch li::before{content:"";width:9px;height:9px;margin-top:7px;border-radius:50%;border:1.5px solid var(--accent)}
+.notmember{background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:14px;text-align:center;margin-top:12px}
+.chkl{display:flex;gap:8px;align-items:center;font-size:14px}
+.auth{display:grid;gap:14px}
+.auth .logo-band{background:var(--night);border-radius:12px;padding:14px;display:grid;place-items:center;margin-top:4px}
+.auth .logo-band .logo{height:64px;width:auto}
+.auth-row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+@media (min-width:760px){.sheet.modal{top:50%;bottom:auto;transform:translate(-50%,-50%);border-radius:18px;width:440px;max-height:92vh;animation:none}.sheet.modal .grab{display:none}}
+.quote{font-family:var(--f-display);font-style:italic;font-size:clamp(24px,3.4vw,34px);line-height:1.25;max-width:30ch;margin:0;border-left:2px solid var(--gold);padding-left:18px}
+.roadmap{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.roadmap div{border-top:2px solid var(--line);padding-top:10px;display:grid;gap:4px}
+.roadmap b{font-size:15px} .roadmap span{font-size:13.5px;color:var(--muted)}
+.roadmap .now{border-top-color:var(--accent)}
+.thanks{text-align:center;justify-items:center;padding:40px 20px}
+.pf>label.btn{font-size:13px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600;justify-self:start}
+@media print{.top,.tabs,.site-foot,.fab,#banner{display:none!important}}
 </style>
 
 <header class="top"><div class="top-in">
-  <button class="brand" aria-label="Marebook home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20v-5a6 6 0 0 1 12 0v5"/><path d="M4 20h16"/><path d="M12 9V4"/><path d="M9 6l3-2 3 2"/></svg>Marebook</button>
+  <button class="brand" aria-label="Marebook home"></button>
   <nav class="topnav" id="topnav" aria-label="Main"></nav>
-  <span class="tagline">Never miss a breeding milestone again.</span>
   <div class="sp"></div>
+  <div class="top-acts" id="topActs"></div>
   <img id="meAv" class="me" alt="" hidden>
 </div></header>
 <div id="banner" class="banner" hidden></div>
 <main class="wrap" id="app"></main>
-<footer class="foot"><b>Marebook</b><span><button data-nav="landing">Features</button> · <button data-nav="plans">Pricing</button> · <button data-nav="landing">Support</button></span><span>Mare, foal and stallion records with a breeding calendar that runs itself.</span><span>Ultrasound and vaccine schedules are standard defaults; confirm with your veterinarian.</span></footer>
+<footer class="site-foot"><div class="foot-in">
+  <div class="foot-brand"><span id="footLogo"></span><p>Mare, foal and stallion records with a breeding calendar that runs itself.</p></div>
+  <nav class="foot-col" aria-label="Marebook"><b>Marebook</b><button data-nav="mare-owners">Mare owners</button><button data-nav="stallion-owners">Stallion owners</button><button data-nav="today">Herd management</button><button data-nav="pricing">Pricing</button></nav>
+  <nav class="foot-col" aria-label="Company"><b>Company</b><button data-nav="about">About us</button><button data-nav="contact">Contact us</button><button data-nav="contact" data-topic="Sponsorship / advertising">Advertise with us</button><button data-auth="login">Member log in</button></nav>
+  <div class="foot-legal"><span>© <span id="yr">2026</span> Hixson Group Enterprises LLC, d/b/a Marebook · Weatherford, Texas</span><span>Reminder schedules are standard defaults. Confirm every protocol with your veterinarian.</span></div>
+</div></footer>
 <nav class="tabs" aria-label="Sections"><div class="tabs-in" id="tabs"></div></nav>
 <div id="layer"></div>
 
@@ -498,12 +722,12 @@ const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const yn = v => v === "yes" ? "Yes" : v === "no" ? "No" : "—";
 
 // ---------- state ----------
-const S = { mares:{}, tasks:{}, studs:{}, orders:{}, expenses:{}, recurring:{}, settings:{}, foals:{} };
-const COLLS = ["mares","tasks","studs","orders","expenses","recurring","settings","foals"];
+const S = { mares:{}, tasks:{}, studs:{}, orders:{}, expenses:{}, recurring:{}, settings:{}, foals:{}, members:{} };
+const COLLS = ["mares","tasks","studs","orders","expenses","recurring","settings","foals","members"];
 let db = null, user = null, assets = null, downloads = null, me = {id:null}, local = false, ready = false, canWrite = true;
 let profiles = {};
-const ui = { view: (location.hash||"").slice(1) || "today", mare:null, barnFilter:"all", barnQ:"", calMonth:TODAY.slice(0,7), calDay:TODAY, studSeg:"browse", studQ:"", studBreed:"", costPeriod:"ytd", costMare:"", costQ:"", costMore:false, barnSeg:"mares", foal:null, foalFilter:"all", stud:null, calMode:"month", calFilter:"all", todoDay:TODAY };
-if (!["today","barn","calendar","costs","studs","team","todo","account","plans","landing","integrations"].includes(ui.view)) ui.view = "today";
+const ui = { view: (location.hash||"").slice(1) || "today", mare:null, barnFilter:"all", barnQ:"", calMonth:TODAY.slice(0,7), calDay:TODAY, studSeg:"browse", studQ:"", studBreed:"", costPeriod:"ytd", costMare:"", costQ:"", costMore:false, barnSeg:"mares", foal:null, foalFilter:"all", stud:null, calMode:"month", calFilter:"all", todoDay:TODAY, studDisc:"", studShip:"", dashMonth:TODAY.slice(0,7), foalMonth:TODAY.slice(0,7), joinType:"mare", contactTopic:"", contactSent:null, authed:false };
+if (!["today","barn","calendar","costs","studs","team","todo","account","plans","landing","integrations","about","contact","mare-owners","stallion-owners","join","members"].includes(ui.view)) ui.view = "today";
 
 const arr = c => Object.entries(S[c]).map(([id,v]) => ({id, ...v}));
 
@@ -609,9 +833,20 @@ async function scheduleCollection(mareId, m, stud){
 
 // ---------- render: chrome ----------
 function renderTabs(){
-  const k = navKey();
-  const top = [["today","Dashboard"],["mares","My Mares"],["foals","Foals"],["stallions","My Stallions"],["search","Stallion Search"],["calendar","Calendar"],["todo","To-Do"],["account","Account"]];
-  $("#topnav").innerHTML = top.map(([v,l]) => `<button data-nav="${v}" ${k===v?'aria-current="page"':""}>${l}</button>`).join("");
+  const pub = isPublic(), k = navKey();
+  document.body.classList.toggle("is-public", pub);
+  const bn = $("#banner"); if (bn.textContent) bn.hidden = pub;
+  if (pub){
+    const top = [["mare-owners","Mare owners"],["stallion-owners","Stallion owners"],["about","About us"],["contact","Contact us"],["today","Herd management"]];
+    $("#topnav").innerHTML = top.map(([v,l]) => `<button data-nav="${v}" ${k===v?'aria-current="page"':""}>${l}</button>`).join("");
+    $("#topActs").innerHTML = `<button class="btn sm on-dark" data-auth="login">Log in</button><button class="btn sm teal hide-sm" data-nav="join">Join</button><button class="btn sm menu-btn" data-pubmenu aria-label="Menu">Menu</button>`;
+    $("#meAv").style.display = "none";
+  } else {
+    const top = [["today","Dashboard"],["mares","My Mares"],["foals","Foals"],["stallions","My Stallions"],["search","Stallion Search"],["calendar","Calendar"],["todo","To-Do"],["account","Account"]];
+    $("#topnav").innerHTML = top.map(([v,l]) => `<button data-nav="${v}" ${k===v?'aria-current="page"':""}>${l}</button>`).join("");
+    $("#topActs").innerHTML = `<button class="btn sm on-dark hide-sm" data-nav="landing">Public site</button>`;
+    $("#meAv").style.display = "";
+  }
   const horses = ["mares","foals","stallions","search"].includes(k);
   const bot = [["today","Home","today"],["todo","To-Do","check"],["calendar","Calendar","cal"],["mares","Horses","barn"],["account","Account","team"]];
   $("#tabs").innerHTML = bot.map(([v,l,i]) => `<button class="tab" data-nav="${v}" ${(k===v || (v==="mares" && horses))?'aria-current="page"':""}>${svg(i)}<span>${l}</span></button>`).join("");
@@ -619,7 +854,12 @@ function renderTabs(){
 function go(v){ ui.view = v; ui.mare = null; ui.foal = null; ui.stud = null; try{ history.replaceState(null,"","#"+v);}catch(_){} close(); render(); window.scrollTo(0,0); }
 function render(){
   renderTabs();
-  const app = $("#app");
+  const app = $("#app"), ae = document.activeElement;
+  const keep = ae && ae.id && app.contains(ae) && (ae.dataset.combo || ae.type === "search") ? {id:ae.id, v:ae.value, s:ae.selectionStart} : null;
+  _render(app);
+  if (keep){ const n = document.getElementById(keep.id); if (n && n !== ae){ n.value = keep.v; n.focus({preventScroll:true}); try { n.setSelectionRange(keep.s, keep.s); } catch(_){} } }
+}
+function _render(app){
   if (!ready){ app.innerHTML = `<div class="welcome"><h2>Opening the barn…</h2><p>Loading mares, checklists and stallion listings.</p></div>`; return; }
   if (ui.foal && S.foals[ui.foal]) app.innerHTML = viewFoal(ui.foal);
   else if (ui.stud && S.studs[ui.stud]) app.innerHTML = viewStud(ui.stud);
@@ -634,6 +874,12 @@ function render(){
   else if (ui.view === "plans") app.innerHTML = viewPlans();
   else if (ui.view === "landing") app.innerHTML = viewLanding();
   else if (ui.view === "integrations") app.innerHTML = viewIntegrations();
+  else if (ui.view === "about") app.innerHTML = viewAbout();
+  else if (ui.view === "contact") app.innerHTML = viewContact();
+  else if (ui.view === "mare-owners") app.innerHTML = viewMareOwners();
+  else if (ui.view === "stallion-owners") app.innerHTML = viewStallionOwners();
+  else if (ui.view === "join") app.innerHTML = viewJoin();
+  else if (ui.view === "members") app.innerHTML = viewMembers();
   else app.innerHTML = viewToday();
 }
 // ---------- pieces ----------
@@ -677,43 +923,6 @@ function mareCard(id){
   </button>`;
 }
 // ---------- views ----------
-function viewToday(){
-  const mares = arr("mares");
-  if (!mares.length && !arr("foals").length) return pageBar("Member home", esc(long(TODAY))) + welcome();
-  const open = openTasks(), over = open.filter(t => t.due < TODAY);
-  const todayList = arr("tasks").filter(t => liveTask(t) && (t.due === TODAY || (!t.done && t.due < TODAY))).sort((a,b) => (a.done?1:0)-(b.done?1:0) || a.due.localeCompare(b.due));
-  const alerts = [
-    ...over.map(t => ({t, txt:"overdue"})),
-    ...open.filter(t => t.due === TODAY).map(t => ({t, txt:"due today"})),
-    ...open.filter(t => t.due === addDays(TODAY,1)).map(t => ({t, txt:"tomorrow"})),
-    ...mares.filter(m => { const g = gestDay(m); return g != null && g >= 320; }).map(m => ({m, txt: gestDay(m) >= GEST ? `past due · day ${gestDay(m)}` : `foaling window · day ${gestDay(m)}`})),
-  ];
-  const byDay = calItems(), s0 = TODAY;
-  const strip = [0,1,2,3,4,5,6].map(i => { const d = addDays(s0, i), n = (byDay[d]||[]).filter(t=>!t.done).length; return `<button class="wd ${d===TODAY?"is-today":""}" data-calgo="${d}">${WD[parse(d).getDay()]}<b>${parse(d).getDate()}</b><span class="n">${n?n+" due":""}</span></button>`; }).join("");
-  const breeds = [...new Set(arr("studs").map(s=>s.breed).filter(Boolean))].sort();
-  return `${pageBar("Member home", esc(long(TODAY)), canWrite ? `<button class="btn sm" data-act="add-mare">+ Mare</button><button class="btn sm" data-cact="add-foal">+ Foal</button><button class="btn sm" data-act="add-stud">+ Stallion</button>` : "")}
-  <div class="finders">${jumpSelect()}<select class="search" id="dashSearch" aria-label="Stallion search by breed"><option value="">Stallion search by breed…</option>${breeds.map(b=>`<option>${esc(b)}</option>`).join("")}</select></div>
-  <div class="strip">
-    <span class="stat"><b>${mares.length}</b> mares</span><span class="stat"><b>${mares.filter(m=>m.status==="in-foal").length}</b> in foal</span>
-    <span class="stat"><b>${arr("foals").filter(f=>f.status==="raising"||f.status==="listed").length}</b> foals</span>
-    <span class="stat ${over.length?"alert":""}"><b>${over.length}</b> overdue</span>
-    ${(() => { const u = arr("expenses").filter(e => e.kind!=="income" && e.status==="unpaid"); return u.length ? `<span class="stat alert" data-go="costs" role="button" tabindex="0" style="cursor:pointer"><b>${money(u.reduce((s,e)=>s+(Number(e.amount)||0),0),false)}</b> unpaid</span>` : ""; })()}
-  </div>
-  <div class="dash">
-    <section class="sec"><div class="sec-h"><h2>Daily to-do</h2><span class="sp"></span><button class="btn link" data-nav="todo">Open to-do list</button></div>
-      ${todoGroups(todayList, "Nothing today.")}</section>
-    <div style="display:grid;gap:4px;min-width:0">
-      <section class="sec"><div class="sec-h"><h2>Today's alerts</h2><span class="eyebrow">${alerts.length}</span></div>
-        <div class="list">${alerts.length ? alerts.slice(0,8).map(a => a.t
-          ? `<div class="alert-row" data-task="${a.t.id}"><span class="dotx ${a.txt==="overdue"?"warn":""}"></span><span><b class="hlink" data-open="${horseOf(a.t).kind}:${horseOf(a.t).id}">${esc(horseOf(a.t).name)}</b> · ${esc(a.t.title)}</span><span class="due ${a.txt==="overdue"?"over":a.txt==="due today"?"today":""}">${a.txt==="overdue"?(-diff(a.t.due,TODAY))+"d late":a.txt==="due today"?"Today":"Tomorrow"}</span></div>`
-          : `<div class="alert-row" data-mare="${a.m.id}"><span class="dotx warn"></span><span><b>${esc(a.m.name)}</b> · ${esc(a.txt)}</span><span class="due">Due ${short(dueDate(a.m))}</span></div>`).join("") : `<div class="empty-row">No alerts today.</div>`}</div></section>
-      <section class="sec"><div class="sec-h"><h2>Calendar preview</h2><span class="sp"></span><div class="seg" style="margin:0">${[["day","Today"],["week","Week"],["month","Month"]].map(([k,v]) => `<button data-calmode="${k}">${v}</button>`).join("")}</div></div>
-        <div class="weekstrip">${strip}</div></section>
-    </div>
-  </div>
-  <section class="sec"><div class="sec-h"><h2>Foaling watch</h2><span class="eyebrow">Day 300+</span></div>
-    ${(() => { const w = mares.filter(m => (gestDay(m) ?? 0) >= 300).sort((a,b) => gestDay(b) - gestDay(a)); return w.length ? `<div class="mares">${w.map(m=>mareCard(m.id)).join("")}</div>` : `<div class="list"><div class="empty-row">No mares past day 300.</div></div>`; })()}</section>`;
-}
 function welcome(){
   return `<div class="welcome">
     <div class="eyebrow">${esc(long(TODAY))}</div>
@@ -760,7 +969,7 @@ function calMain(){
     : mode === "week" ? (() => { const s = addDays(ui.calDay, -parse(ui.calDay).getDay()); return "Week of " + short(s); })() : long(ui.calDay);
   const ctrls = `<div class="cal-tools"><div class="seg" style="margin:0">${[["day","Day"],["week","Week"],["month","Month"]].map(([k,v]) => `<button data-cm="${k}" aria-pressed="${mode===k}">${v}</button>`).join("")}</div>
     <select class="search" id="calFilter" aria-label="Filter" style="width:auto">${[["all","All horses"],["mare","Mares"],["foal","Foals"],["stallion","Stallions"]].map(([k,v]) => `<option value="${k}" ${ui.calFilter===k?"selected":""}>${v}</option>`).join("")}</select>
-    ${canWrite?`<button class="btn sm" data-act="add-event">+ Event</button>`:""}${true?`<button class="btn sm" data-act="print-cal">Download to print</button>`:""}</div>`;
+    ${canWrite?`<button class="btn sm" data-act="add-event">+ Event</button>`:""}<button class="btn sm" data-act="print-cal">${PRINT_L()}</button></div>`;
   const nav = `<div class="cal-h"><h1>${esc(head)}</h1><button class="icon-btn" data-cal="-1" aria-label="Previous">${svg("left")}</button><button class="btn sm" data-cal="0">Today</button><button class="icon-btn" data-cal="1" aria-label="Next">${svg("right")}</button></div>`;
   const legend = `<div class="legend">${Object.entries(CATS).map(([k,v])=>`<span class="cat c-${k}"><i></i>${v}</span>`).join("")}<span class="cat"><i style="background:var(--warn);border-radius:50%"></i>Overdue</span><span class="cat"><i style="background:none;border:1.5px solid var(--muted)"></i>Done</span></div>`;
   const sortT = l => (l||[]).slice().sort((a,b) => (a.done?1:0)-(b.done?1:0));
@@ -785,30 +994,6 @@ function calMain(){
   return `${nav}${ctrls}${legend}
     ${late.length ? `<section class="sec"><div class="sec-h"><h2>Overdue</h2></div><div class="list">${late.map(t=>taskRow(t)).join("")}</div></section>` : ""}
     <section class="sec"><div class="sec-h"><h2>${ui.calDay===TODAY?"Today":esc(short(ui.calDay))}</h2></div><div class="list">${ts.length ? ts.map(t=>taskRow(t)).join("") : `<div class="empty-row">Nothing scheduled.</div>`}</div></section>`;
-}
-function viewStuds(){
-  const mineList = arr("studs").filter(x => x.createdBy === me.id || local);
-  const seg = `<div class="seg"><button data-seg="browse" aria-pressed="${ui.studSeg==="browse"}">Stallion search</button><button data-seg="mine" aria-pressed="${ui.studSeg==="mine"}">My stallions</button><button data-seg="orders" aria-pressed="${ui.studSeg==="orders"}">Orders ${arr("orders").filter(o=>o.status!=="Delivered").length||""}</button></div>`;
-  if (ui.studSeg === "orders") return `${pageBar("Semen orders", crumb("account","Account"))}${seg}${viewOrders()}`;
-  if (ui.studSeg === "mine") return `${pageBar("My stallions", "Horses", canWrite ? `<button class="btn sm primary" data-act="add-stud">+ Add new stallion</button>` : "")}${seg}<div class="sec">${mineList.length ? mineList.map(studCard).join("") : `<div class="list"><div class="empty-row">Stand a stallion? Add him with collection days, chute fee and shipment cost so mare owners can book him.</div></div>`}</div>${canWrite ? `<button class="btn primary fab" data-act="add-stud">+ Add stallion</button>`:""}`;
-  const breeds = [...new Set(arr("studs").map(s=>s.breed).filter(Boolean))].sort();
-  const q = ui.studQ.toLowerCase();
-  const list = arr("studs").filter(s => (!ui.studBreed || s.breed===ui.studBreed) && (!q || [s.name,s.ranch,s.city,s.discipline,s.sireLine,s.lte].join(" ").toLowerCase().includes(q))).sort((a,b)=>(a.fee||0)-(b.fee||0));
-  return `${pageBar("Stallion search", "Breed, discipline, station or name")}${seg}
-  <div class="sec">
-    <div class="two"><input class="search" id="studQ" type="search" placeholder="Name, station, town, discipline" value="${esc(ui.studQ)}">
-    <select class="search" id="studBreed"><option value="">All breeds</option>${breeds.map(b=>`<option ${b===ui.studBreed?"selected":""}>${esc(b)}</option>`).join("")}</select></div>
-    ${list.length ? list.map(studCard).join("") : `<div class="list"><div class="empty-row">${arr("studs").length?"No stallions match.":"No stallions listed yet. Ranches list a stud with breed, fee, and how semen ships."}</div></div>`}
-  </div>
-  ${canWrite ? `<button class="btn primary fab" data-act="add-stud">+ Add stallion</button>`:""}`;
-}
-function studCard(s){
-  return `<button class="stud" data-stud="${s.id}">
-    <div class="stud-h">${cover(s)}<h3>${esc(s.name)}${s.sample?'<span class="tag">Sample</span>':""}</h3><span class="fee">$${Number(s.fee||0).toLocaleString()}</span></div>
-    <div class="muted" style="font-size:13px;margin-top:-4px">${esc([s.breed, s.color, s.height?s.height+" hh":"", s.lte?"LTE "+s.lte:""].filter(Boolean).join(" · "))}</div>
-    <div style="font-size:14px">${esc(s.ranch||"")}${s.city?` · ${esc(s.city)}`:""}</div>
-    <div class="chips">${(s.ship||[]).map(x=>`<span class="chip ship">${esc(x)}</span>`).join("")}${collLabel(s)?`<span class="chip">Collects ${esc(collLabel(s))}</span>`:""}${s.discipline?`<span class="chip">${esc(s.discipline)}</span>`:""}</div>
-  </button>`;
 }
 const OSTEPS = ["Requested","Confirmed","Shipped","Delivered"];
 function viewOrders(){
@@ -843,8 +1028,8 @@ function viewTeam(){
 }
 
 // ---------- sheets ----------
-function sheet(html, mount){
-  $("#layer").innerHTML = `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
+function sheet(html, mount, cls){
+  $("#layer").innerHTML = `<div class="scrim" data-close></div><div class="sheet ${cls||""}" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
   const first = $("#layer .sheet input, #layer .sheet select"); if (first) setTimeout(()=>first.focus({preventScroll:true}), 50);
   mount && mount($("#layer .sheet"));
 }
@@ -980,14 +1165,14 @@ function taskForm(tid, target, due){
   });
 }
 function studForm(sid){
-  const s = sid ? S.studs[sid] : {ship:["Cooled shipped"], collDays:[]};
+  const s = sid ? S.studs[sid] : {ship:["Cooled shipped"], collDays:[], ranch:acct().type === "stallion" ? acct().ranch || "" : "", city:acct().type === "stallion" ? acct().city || "" : "", contact:acct().type === "stallion" ? acct().phone || acct().email || "" : "", contactPref:CONTACT_PREFS[0]};
   const cd = collDays(s);
   sheet(`<h2>${sid ? "Edit "+esc(s.name) : "Add a stallion"}</h2><form class="form" id="sf">
     <div class="field"><label for="s-name">Stallion name</label><input id="s-name" name="name" required value="${esc(s.name)}"></div>
     <div class="two"><div class="field"><label for="s-breed">Breed</label><input id="s-breed" name="breed" list="sbreeds" required value="${esc(s.breed)}" placeholder="Start typing…"></div>
     <div class="field"><label for="s-color">Color</label><input id="s-color" name="color" value="${esc(s.color)}"></div></div>
     <div class="two"><div class="field"><label for="s-ht">Height (hands)</label><input id="s-ht" name="height" inputmode="decimal" placeholder="15.1" value="${esc(s.height)}"></div>
-    <div class="field"><label for="s-disc">Discipline</label><input id="s-disc" name="discipline" placeholder="Cutting, reining, racing…" value="${esc(s.discipline)}"></div></div>
+    <div class="field"><label for="s-disc">Discipline</label><input id="s-disc" name="discipline" list="sdiscs" placeholder="Cutting, reining, racing…" value="${esc(s.discipline)}"></div></div>
     <div class="field"><label for="s-lte">Lifetime earnings (LTE) & achievements</label><input id="s-lte" name="lte" value="${esc(s.lte)}" placeholder="$245,000 · NCHA Open finalist"></div>
     <div class="field"><label for="s-line">Pedigree & record</label><textarea id="s-line" name="sireLine" placeholder="Sire × dam sire, offspring earnings, titles">${esc(s.sireLine)}</textarea><div class="hint">Upload a pedigree file from the stallion's profile after saving.</div></div>
     <div class="two"><div class="field"><label for="s-ranch">Stallion station / farm</label><input id="s-ranch" name="ranch" required value="${esc(s.ranch)}"></div>
@@ -997,12 +1182,13 @@ function studForm(sid){
     <div class="field"><label for="s-chute">Chute fee ($)</label><input id="s-chute" name="chuteFee" inputmode="numeric" value="${esc(s.chuteFee||"")}"></div></div>
     <div class="field"><label for="s-ship">Shipment cost per dose ($)</label><input id="s-ship" name="shipFee" inputmode="numeric" value="${esc(s.shipFee||"")}"></div>
     <div class="field"><label>Semen available</label><div class="checks">${["Cooled shipped","Frozen","Live cover"].map(x => `<label><input type="checkbox" name="ship" value="${x}" ${(s.ship||[]).includes(x)?"checked":""}> ${x}</label>`).join("")}</div></div>
-    <div class="field"><label for="s-contact">Contact for mare owners</label><input id="s-contact" name="contact" placeholder="Phone or email" value="${esc(s.contact)}"></div>
+    <div class="two"><div class="field"><label for="s-contact">Contact for mare owners</label><input id="s-contact" name="contact" placeholder="Phone or email" value="${esc(s.contact)}"></div>
+    <div class="field"><label for="s-cpref">How they should reach you</label><select id="s-cpref" name="contactPref">${CONTACT_PREFS.map(x => `<option ${(s.contactPref||CONTACT_PREFS[0])===x?"selected":""}>${x}</option>`).join("")}</select></div></div>
     <div class="row-btns"><button class="btn primary" type="submit">${sid?"Save":"Publish stallion"}</button><button class="btn" type="button" data-close>Cancel</button></div>
-  </form><datalist id="sbreeds">${BREEDS.map(b=>`<option value="${b}">`).join("")}</datalist>`, root => {
+  </form><datalist id="sbreeds">${breedOptions()}</datalist><datalist id="sdiscs">${DISCIPLINES.map(x => `<option value="${x}">`).join("")}</datalist>`, root => {
     root.querySelector("#sf").addEventListener("submit", async e => {
       e.preventDefault(); const f = e.target;
-      const d = {...s, name:val(f,"name"), breed:val(f,"breed"), color:val(f,"color"), height:val(f,"height"), discipline:val(f,"discipline"), lte:val(f,"lte"), sireLine:val(f,"sireLine"), ranch:val(f,"ranch"), city:val(f,"city"), collDays:[...f.querySelectorAll('[name="cd"]:checked')].map(x=>+x.value), fee:num(val(f,"fee")), chuteFee:num(val(f,"chuteFee")), shipFee:num(val(f,"shipFee")), ship:[...f.querySelectorAll('[name="ship"]:checked')].map(x=>x.value), contact:val(f,"contact")};
+      const d = {...s, name:val(f,"name"), breed:val(f,"breed"), color:val(f,"color"), height:val(f,"height"), discipline:val(f,"discipline"), lte:val(f,"lte"), sireLine:val(f,"sireLine"), ranch:val(f,"ranch"), city:val(f,"city"), collDays:[...f.querySelectorAll('[name="cd"]:checked')].map(x=>+x.value), fee:num(val(f,"fee")), chuteFee:num(val(f,"chuteFee")), shipFee:num(val(f,"shipFee")), ship:[...f.querySelectorAll('[name="ship"]:checked')].map(x=>x.value), contact:val(f,"contact"), contactPref:val(f,"contactPref")};
       delete d.days;
       if (!sid){ d.createdBy = me.id; d.createdAt = new Date().toISOString(); }
       const nid = sid || uid(); close(); await put("studs", nid, d); ui.stud = nid; ui.view = "studs"; render(); toast(sid ? "Saved" : d.name + " is listed");
@@ -1505,17 +1691,6 @@ function plTable(pl){
     ${pl.sold || pl.fo.status==="lost" ? row("Profit", money(pl.profit,false), pl.margin!=null?Math.round(pl.margin*100)+"% margin":"", "tot "+plCls(pl.profit)) : pl.asking ? row("Projected at asking", money(pl.projected,false), "before commission", "tot "+plCls(pl.projected)) : row("Invested so far", money(pl.cost,false), "", "tot")}
   </div>`;
 }
-function viewFoal(id){
-  const fo = S.foals[id], pl = foalPL(id);
-  const ents = arr("expenses").filter(e => e.foalId === id).sort((a,b) => b.date.localeCompare(a.date));
-  return `${pageBar(esc(foalName(fo)) + (fo.sample?'<span class="tag">Sample</span>':""), `${crumb("foals","Foals")}<span>›</span><span>Foal profile</span>`, `<span class="pill fs-${fo.status}">${FSTATUS[fo.status]}</span>`)}
-  ${foalHeader(id)}
-  ${foalActions(id)}
-  <section class="sec"><div class="sec-h"><h2>Profit & loss</h2><span class="sp"></span>${canWrite ? (pl.sold ? `<button class="btn sm" data-cact="undo-sale" data-foal-id="${id}">Undo sale</button>` : `<button class="btn sm primary" data-cact="sell-foal" data-foal-id="${id}">Record sale</button>`) + `<button class="btn sm" data-cact="foal-cost" data-foal-id="${id}">+ Cost</button>` : ""}</div>${plTable(pl)}</section>
-  <section class="sec"><div class="sec-h"><h2>Ledger</h2><span class="sp"></span><span class="muted" style="font-size:13px">${ents.length}</span></div>
-    <div class="list">${ents.length ? ents.map(e => entRow(e)).join("") : `<div class="empty-row">No costs charged to this foal yet. Weaning shots, halter breaking, registration and sale costs go here.</div>`}</div></section>
-  <section class="sec"><div class="sec-h"><h2>Notes</h2></div><div class="pf"><textarea data-mf="foal:${id}:notes" rows="3" placeholder="Markings, temperament, prospects" ${canWrite?"":"disabled"}>${esc(fo.notes)}</textarea></div></section>`;
-}
 function foalActions(id){
   const ts = foalTasks(id);
   return `<section class="sec"><div class="sec-h"><h2>Action chart</h2><span class="eyebrow">From date of birth</span><span class="sp"></span>${canWrite?`<button class="btn sm" data-cact="foal-task" data-foal-id="${id}">+ Event</button>`:""}</div>
@@ -1646,7 +1821,7 @@ document.addEventListener("click", async ev => {
   else if (a === "undo-sale"){ const fo = S.foals[fid]; for (const s of ["_sale","_comm","_fees","_mkt"]) if (S.expenses[fid+s]) await del("expenses", fid+s); await put("foals", fid, {...fo, status: fo.asking ? "listed" : "raising", soldOn:"", soldPrice:0, buyer:"", saleType:""}); toast("Sale undone"); }
 });
 
-const photoUrl = p => "/_blob/" + p.id;
+const photoUrl = p => LURL[p.id] || "/_blob/" + p.id;
 function thumbs(kind, id, photos, big, canAdd = true){
   const ps = photos || [];
   const add = canAdd && canWrite && assets ? `<label class="thumb add" title="Add photo">+<span>Photo</span><input type="file" accept="image/*" data-photo-add="${kind}:${id}" hidden></label>` : "";
@@ -1675,9 +1850,9 @@ function groupTasks(list){
   for (const t of list){ const h = horseOf(t); if (h) g[h.kind].push(t); }
   return g;
 }
-function todoGroups(list, empty){
+function todoGroups(list, empty, stack){
   const g = groupTasks(list), names = {mare:"Mares", foal:"Foals", stallion:"Stallions"};
-  return `<div class="todo">${Object.entries(g).map(([k, ts]) => `<div class="todo-col"><div class="todo-h">${names[k]}<span>${ts.length}</span></div><div class="list">${ts.length ? ts.map(t => taskRow(t)).join("") : `<div class="empty-row">${empty}</div>`}</div></div>`).join("")}</div>`;
+  return `<div class="todo ${stack?"stack":""}">${Object.entries(g).map(([k, ts]) => `<div class="todo-col"><div class="todo-h">${names[k]}<span>${ts.length}</span></div><div class="list">${ts.length ? ts.map(t => taskRow(t)).join("") : `<div class="empty-row">${empty}</div>`}</div></div>`).join("")}</div>`;
 }
 function actionTable(id){
   const rows = mareTasks(id).filter(t => isExam(t)).sort((a,b) => a.due.localeCompare(b.due));
@@ -1698,7 +1873,8 @@ function viewStud(sid){
   const nc = nextCollections(s, 6), ts = studTasks(sid).filter(t => !t.done), bredTo = arr("mares").filter(m => m.stallionId === sid);
   return `${pageBar(esc(s.name) + (s.sample?'<span class="tag">Sample</span>':""), `${mine ? crumb("stallions","My stallions") : crumb("search","Stallion search")}<span>›</span><span>Stallion profile</span>`, `<span class="fee">${money(s.fee||0,false)} stud fee</span>`)}
   ${studHeader(sid, mine)}
-  ${nc.length ? `<section class="sec"><div class="sec-h"><h2>Breeding calendar</h2><span class="eyebrow">Next collections</span></div><div class="chips">${nc.map(d => `<span class="chip ship">${esc(wdShort(d))}</span>`).join("")}</div><p class="hint">Select him for a mare and her pre-breeding ultrasound lands the day before his next collection. Payment portal comes with the full app; shipment requests and fees land in Costs today.</p></section>` : ""}
+  ${portalCard(s, mine)}
+  ${nc.length ? `<section class="sec"><div class="sec-h"><h2>Breeding calendar</h2><span class="eyebrow">Next collections</span></div><div class="chips">${nc.map(d => `<span class="chip ship">${esc(wdShort(d))}</span>`).join("")}</div><p class="hint">Select him for a mare and her pre-breeding ultrasound lands the day before his next collection.</p></section>` : ""}
   ${s.sireLine ? `<section class="sec"><div class="sec-h"><h2>Pedigree & record</h2></div><div class="notes">${esc(s.sireLine)}</div></section>` : ""}
   ${bredTo.length ? `<section class="sec"><div class="sec-h"><h2>Mares booked to him</h2></div><div class="mares">${bredTo.map(m => mareCard(m.id)).join("")}</div></section>` : ""}
   ${mine && ts.length ? `<section class="sec"><div class="sec-h"><h2>Station to-do</h2></div><div class="list">${ts.map(t => taskRow(t,false)).join("")}</div></section>` : ""}`;
@@ -1812,9 +1988,12 @@ td.box{width:22px}td.box span{display:inline-block;width:13px;height:13px;border
 footer{margin-top:24px;color:#777;font:11px Arial,sans-serif}@media print{body{margin:12mm}}</style></head><body>
 <h1>${e(title)}</h1><p class="sub">${e(sub)}</p>
 ${sections.map(s => `<h2>${e(s.h)} (${s.rows.length})</h2>${s.rows.length ? `<table><thead><tr><th></th><th>Date</th><th>Horse</th><th>Task</th><th>Assigned</th><th>Notes</th></tr></thead><tbody>${s.rows.map(t => { const h = horseOf(t); return `<tr><td class="box">${t.done?"✓":"<span></span>"}</td><td class="d ${!t.done&&t.due<TODAY?"late":""}">${e(short(t.due))}</td><td>${e(h?h.name:"")}</td><td>${e(t.title)}</td><td>${e(t.assignee?pname(t.assignee):"")}</td><td>${e([t.lo?"L: "+t.lo:"",t.ro?"R: "+t.ro:"",t.tone?"Tone: "+t.tone:"",t.notes||""].filter(Boolean).join(" · "))}</td></tr>`; }).join("")}</tbody></table>` : `<p>Nothing.</p>`}`).join("")}
-<footer>Marebook · printed ${e(long(TODAY))}</footer></body></html>`;
+<footer>Marebook · ${e(LEGAL)} · printed ${e(long(TODAY))}</footer></body></html>`;
 }
-async function saveDoc(filename, html){ await saveFile(filename, html, "text/html"); }
+async function saveDoc(filename, html){
+  if (local){ try { const w = window.open("", "_blank"); if (w){ w.document.open(); w.document.write(html.replace("</body>", "<script>setTimeout(function(){print()},350)<\/script></body>")); w.document.close(); return; } } catch(_){} }
+  await saveFile(filename, html, "text/html");
+}
 async function printTodo(){
   const day = ui.todoDay || TODAY;
   const list = arr("tasks").filter(t => liveTask(t) && (t.due === day || (day === TODAY && !t.done && t.due < TODAY))).sort((a,b) => a.due.localeCompare(b.due));
@@ -1845,12 +2024,14 @@ function navKey(){
   if (ui.stud) return (S.studs[ui.stud] && (S.studs[ui.stud].createdBy === me.id || local)) ? "stallions" : "search";
   if (ui.view === "barn") return ui.barnSeg === "foals" ? "foals" : "mares";
   if (ui.view === "studs") return ui.studSeg === "browse" ? "search" : ui.studSeg === "mine" ? "stallions" : "account";
-  if (["costs","team","plans","account","landing","integrations"].includes(ui.view)) return "account";
+  if (PUBLIC_VIEWS.includes(ui.view)) return ui.view;
+  if (["costs","team","plans","account","integrations","members"].includes(ui.view)) return "account";
   return ui.view;
 }
 function nav(k){
-  const map = {today:["today"], mares:["barn",{barnSeg:"mares"}], foals:["barn",{barnSeg:"foals"}], stallions:["studs",{studSeg:"mine"}], search:["studs",{studSeg:"browse"}], orders:["studs",{studSeg:"orders"}], calendar:["calendar"], todo:["todo"], account:["account"], costs:["costs"], team:["team"], plans:["plans"], landing:["landing"], integrations:["integrations"]};
+  const map = {today:["today"], mares:["barn",{barnSeg:"mares"}], foals:["barn",{barnSeg:"foals"}], stallions:["studs",{studSeg:"mine"}], search:["studs",{studSeg:"browse"}], orders:["studs",{studSeg:"orders"}], calendar:["calendar"], todo:["todo"], account:["account"], costs:["costs"], team:["team"], plans:["plans"], landing:["landing"], integrations:["integrations"], about:["about"], contact:["contact",{contactSent:null}], "mare-owners":["mare-owners"], "stallion-owners":["stallion-owners"], join:["join"], members:["members"], pricing:["landing"]};
   const [v, extra] = map[k] || ["today"]; Object.assign(ui, extra || {}); go(v);
+  if (k === "pricing") setTimeout(() => { const t = document.getElementById("pricing"); t && t.scrollIntoView({behavior:"smooth"}); }, 60);
 }
 function pageBar(title, crumbs, acts){
   return `<div class="pagebar"><div class="ttl">${crumbs ? `<div class="crumbs">${crumbs}</div>` : ""}<h1>${title}</h1></div>${acts ? `<div class="acts">${acts}</div>` : ""}</div>`;
@@ -1866,7 +2047,7 @@ function photoBlock(kind, id, o, canAdd){
   const main = ps[0] ? `<button class="pf-main" data-photo="${kind}:${id}:0" aria-label="Open photo"><img src="${esc(photoUrl(ps[0]))}" alt=""></button>`
     : add ? `<label class="pf-main" title="Add photo">${camIcon}<span>Add a photo</span><input type="file" accept="image/*" data-photo-add="${kind}:${id}" hidden></label>` : `<div class="pf-main">${camIcon}</div>`;
   const strip = ps.slice(1).map((p,i) => `<button class="thumb" data-photo="${kind}:${id}:${i+1}"><img src="${esc(photoUrl(p))}" alt="" loading="lazy"></button>`).join("") + (add && ps.length ? `<label class="thumb add" title="Add photo">+<input type="file" accept="image/*" data-photo-add="${kind}:${id}" hidden></label>` : "");
-  return `<div class="pf-photo">${main}${strip ? `<div class="pf-strip">${strip}</div>` : ""}<div class="hint">Thumbnails · take a picture or choose from photos</div></div>`;
+  return `<div class="pf-photo">${main}${strip ? `<div class="pf-strip">${strip}</div>` : ""}<div class="hint">${add ? "Take a picture or choose from your photos" : ps.length ? "" : "No photos yet"}</div>${videoBlock(kind, id, o, canAdd)}</div>`;
 }
 const fld = (label, inner, wide) => `<div class="pf ${wide?"wide":""}"><span class="lbl">${label}</span>${inner}</div>`;
 const inp = (ref, field, v, type, extra) => `<input ${type?`type="${type}"`:""} data-mf="${ref}:${field}" value="${esc(v ?? "")}" ${extra||""} ${canWrite?"":"disabled"}>`;
@@ -1892,7 +2073,7 @@ function mareHeader(id){
     ${fld("Color", inp(r,"color",m.color))}
     ${fld("Registry & number", `<div class="row">${inp(r,"registry",m.registry,"",'placeholder="AQHA" style="flex:0 1 90px"')}${inp(r,"regNo",m.regNo,"",'placeholder="Reg #"')}</div>`)}
     <div class="pf-foot">${canWrite ? `${m.status==="in-foal"||m.status==="bred" ? `<button class="btn primary" data-act="foaled" data-id="${id}">Record foaling</button>` : ""}<button class="btn" data-act="edit-mare" data-id="${id}">All fields</button>${m.status!=="in-foal" ? `<button class="btn" data-nav="search">Find a stallion</button>` : ""}` : ""}<span class="hint">Changes save as you go.</span></div>
-  </div></section><datalist id="breeds5">${BREEDS.map(b=>`<option value="${b}">`).join("")}</datalist>`;
+  </div></section><datalist id="breeds5">${breedOptions()}</datalist>`;
 }
 async function applyMare(id, patch){
   const prev = S.mares[id]; if (!prev) return; const d = {...prev, ...patch};
@@ -1912,7 +2093,7 @@ async function applyMare(id, patch){
 // ---------- foal profile ----------
 function foalHeader(id){
   const fo = S.foals[id], r = "foal:"+id, mares = arr("mares").sort((a,b)=>a.name.localeCompare(b.name));
-  return `<section class="profile">${photoBlock("foal", id, fo)}
+  return `<section class="profile solo">
   <div class="pf-fields">
     ${fld("Foal name", inp(r,"name",fo.name,"",'placeholder="Add when registered"'), true)}
     ${fld("Dam", `<select data-mf="${r}:damId" ${canWrite?"":"disabled"}>${S.mares[fo.damId]?"":`<option value="">${esc(damName(fo))}</option>`}${mares.map(m=>`<option value="${m.id}" ${fo.damId===m.id?"selected":""}>${esc(m.name)}</option>`).join("")}</select>`)}
@@ -1942,7 +2123,8 @@ function studHeader(sid, mine){
   return `<section class="profile">${photoBlock("stallion", sid, s, mine)}
   <div class="pf-fields">
     ${fld("Stallion name", mine ? inp(r,"name",s.name) : `<div class="ro big">${esc(s.name)}</div>`, true)}
-    ${fld("Breed", mine ? inp(r,"breed",s.breed,"",'list="breeds5"') : ro(s.breed))}
+    ${fld("Breed", mine ? inp(r,"breed",s.breed,"",'list="breeds6" placeholder="Type AQHA, APHA…"') : ro(breedLabel(s.breed)))}
+    ${fld("Discipline", mine ? inp(r,"discipline",s.discipline,"",'list="discs6"') : ro(s.discipline))}
     ${fld("LTE", mine ? inp(r,"lte",s.lte,"",'placeholder="$0 · titles"') : ro(s.lte))}
     ${fld("Pedigree", s.pedigree ? `<a class="btn sm" href="${esc(photoUrl(s.pedigree))}" target="_blank" rel="noopener">View pedigree</a>` : mine && assets ? `<label class="btn sm">Upload pedigree<input type="file" accept="image/*,application/pdf" data-pedigree="${sid}" hidden></label>` : ro("Not uploaded"))}
     ${fld("Stallion station / farm", mine ? inp(r,"ranch",s.ranch) : ro(s.ranch))}
@@ -1952,8 +2134,9 @@ function studHeader(sid, mine){
     ${fld("Chute fee", mine ? inp(r,"chuteFee",s.chuteFee||"","",'inputmode="decimal"') : ro(s.chuteFee ? money(s.chuteFee) : "None"))}
     ${fld("Shipment cost (per dose)", mine ? inp(r,"shipFee",s.shipFee||"","",'inputmode="decimal"') : ro(s.shipFee ? money(s.shipFee) : "—"))}
     ${fld("Semen", `<div class="ro">${esc((s.ship||[]).join(", ") || "—")}</div>`)}
-    <div class="pf-foot">${canWrite ? `<button class="btn primary" data-act="pick-mare" data-id="${sid}">Select for a mare</button>${(s.ship||[]).some(x=>x!=="Live cover") ? `<button class="btn" data-act="order" data-id="${sid}">Purchase shipment</button>` : ""}` : ""}${s.contact ? `<span class="hint">Contact: <span class="mono" style="user-select:all">${esc(s.contact)}</span></span>` : ""}${mine && canWrite ? `<button class="btn" data-act="edit-stud" data-id="${sid}">All fields</button>` : ""}</div>
-  </div></section>`;
+    ${fld("Contact preference", mine ? `<select data-mf="${r}:contactPref" ${canWrite?"":"disabled"}>${CONTACT_PREFS.map(x => `<option ${(s.contactPref||CONTACT_PREFS[0])===x?"selected":""}>${x}</option>`).join("")}</select>` : ro(s.contactPref || "Through Marebook"))}
+    <div class="pf-foot">${mine && canWrite ? `<button class="btn primary" data-act="pick-mare" data-id="${sid}">Select for a mare</button><button class="btn" data-act="edit-stud" data-id="${sid}">All fields</button><span class="hint">Changes save as you go.</span>` : `<span class="hint">Listed by ${esc(s.ranch || "the station")}${s.city ? " · " + esc(s.city) : ""}.</span>`}</div>
+  </div></section><datalist id="breeds6">${breedOptions()}</datalist><datalist id="discs6">${DISCIPLINES.map(x => `<option value="${x}">`).join("")}</datalist>`;
 }
 async function applyStud(id, patch){
   const prev = S.studs[id]; if (!prev) return;
@@ -2011,33 +2194,18 @@ function viewAccount(){
     ${tile("orders","Semen orders", `${arr("orders").filter(o=>o.status!=="Delivered").length} open`)}
     ${tile("integrations","Integrations","Google & Apple Calendar, QuickBooks, receipts, texts, contracts")}
     ${tile("team","Team","Barn staff, vets, trainers, roles")}
-    ${tile("landing","Public home page","What visitors see before they sign up")}
+    ${tile("members","Members & inquiries", `${arr("members").filter(m => m.kind === "member").length} sign-ups · ${arr("members").filter(m => m.kind === "inquiry").length} messages`)}
+    ${tile("landing","Public site","Home, mare owners, stallion owners, about, contact")}
   </div></section>
+  <section class="sec"><div class="row-btns"><button class="btn sm" data-act="logout">Log out</button></div></section>
   ${canWrite ? `<section class="sec"><div class="sec-h"><h2>Sample data</h2></div><div class="row-btns">${arr("mares").some(m=>m.sample) ? `<button class="btn danger sm" data-act="clear-sample">Remove sample data</button>` : `<button class="btn sm" data-act="load-sample">Load a sample barn</button>`}<button class="btn sm" data-cact="prices">Prices for reminders</button>${local ? `<button class="btn sm" data-act="reset-demo">Reset demo</button>` : ""}</div></section>` : ""}`;
 }
-function viewLanding(){
-  const f = (t, p) => `<div class="feature"><h3>${t}</h3><p>${p}</p></div>`;
-  return `<div class="landing">
-  <section class="hero"><div class="eyebrow" style="color:inherit;opacity:.8">Marebook · for broodmare managers, foal-out farms and stallion stations</div><h1>Never miss a breeding milestone again.</h1><p>Digital breeding calendar, reminders and horse records. Enter an ovulation date and Marebook schedules every ultrasound, shot and foal-care step after it, for your whole team.</p><div class="row-btns"><button class="btn light" data-nav="plans">Start membership</button><button class="btn ghost" data-nav="today">Log in</button><button class="btn ghost" data-scroll="pricing">See pricing</button></div></section>
-  <section><div class="sec-h" style="margin-bottom:10px"><h2>Features</h2></div><div class="features">
-    ${f("Ovulation-driven reminders","Carry mares get 14, 25, 35, 45 and 60-day ultrasounds. Donor mares get the day-8 flush. Foal heat lands on days 6–8.")}
-    ${f("Action charts","Left ovary, right ovary, uterine tone and ovulation on every exam, in one chart per mare.")}
-    ${f("Foal care from birth","Plasma, deworming, vaccines and weaning scheduled from the date of birth.")}
-    ${f("Stallion search","Collection days, chute fees and shipment costs. Pick a stallion and the mare's ultrasound lines up with his schedule.")}
-    ${f("Daily to-do for the whole barn","Mares, foals and stallions in one printable list, assigned to the people doing the work.")}
-    ${f("Costs and foal profit","Every stud fee and vet bill, and what each foal really cost against what it sold for.")}
-  </div></section>
-  <section id="pricing"><div class="sec-h" style="margin-bottom:10px"><h2>Pricing</h2><span class="eyebrow">By number of horses</span></div>${planCards(false)}</section>
-  <section class="howto"><b>Support</b><span>Questions about your barn or membership? Help articles and email support come with launch.</span></section>
-  </div>`;
-}
-
 // ---------- v5 events ----------
 document.addEventListener("click", async ev => {
   const el = ev.target.closest("[data-nav],[data-yn],[data-cd],[data-plan],[data-calgo],[data-calmode],[data-todoshift],[data-scroll],.brand"); if (!el) return;
   const d = el.dataset;
   if (el.classList.contains("brand")){ nav("today"); return; }
-  if (d.nav){ nav(d.nav); return; }
+  if (d.nav){ if (d.topic) ui.contactTopic = d.topic; if (d.jt) ui.joinType = d.jt; nav(d.nav); return; }
   if (d.scroll){ const t = document.getElementById(d.scroll); t && t.scrollIntoView({behavior:"smooth"}); return; }
   if (d.calgo){ ui.calDay = d.calgo; ui.calMonth = d.calgo.slice(0,7); ui.calMode = "day"; nav("calendar"); return; }
   if (d.calmode){ ui.calMode = d.calmode; ui.calDay = TODAY; ui.calMonth = TODAY.slice(0,7); nav("calendar"); return; }
@@ -2221,10 +2389,496 @@ document.addEventListener("change", async ev => {
   if (t.dataset && t.dataset.role && canWrite){ const cur = (S.settings.roles||{}).map || {}; await put("settings", "roles", {map: {...cur, [t.dataset.role]: t.value}}); toast("Role saved"); }
 });
 window.addEventListener("offline", () => { $("#banner").hidden = false; $("#banner").textContent = "You're offline. Keep working; changes catch up when you reconnect."; });
-window.addEventListener("online", () => { if (local){ $("#banner").textContent = "Demo mode: changes save on this device only."; } else { $("#banner").hidden = true; } });
+window.addEventListener("online", () => { if (local){ $("#banner").textContent = "Preview: changes, photos and videos save on this device only."; } else { $("#banner").hidden = true; } });
+
+// ---------- v7: brand, public site, member home, media ----------
+const LEGAL = "Hixson Group Enterprises LLC";
+const BREED_ABBR = {"American Quarter Horse":"AQHA","American Paint Horse":"APHA","Appaloosa":"ApHC","Thoroughbred":"TB","Arabian":"AHA","Morgan":"AMHA","Tennessee Walking Horse":"TWH","American Saddlebred":"ASB","Standardbred":"STB","Missouri Fox Trotter":"MFT","Paso Fino":"PF","Friesian":"FHANA","Andalusian":"PRE","Warmblood":"WB","Hanoverian":"HANN","Oldenburg":"OLD","Dutch Warmblood":"KWPN","Holsteiner":"HOLST","Trakehner":"TRAK","Percheron":"PERC","Belgian":"BEL","Clydesdale":"CLYD","Draft cross":"DX","Mustang":"MUST","Palomino":"PHBA","Pinto":"PtHA","Buckskin":"IBHA","Miniature Horse":"AMHR","Pony of the Americas":"POA","Welsh Pony":"WPCS"};
+const abbr = b => BREED_ABBR[b] || "";
+const breedLabel = b => b ? (abbr(b) ? abbr(b) + " · " + b : b) : "Breed not listed";
+const DISCIPLINES = ["Cutting","Reining","Reined cow horse","Barrel racing","Roping","Ranch versatility","Western pleasure","Halter","Hunter / jumper","Dressage","Eventing","Racing","Trail","All-around"];
+const POSITIONS = ["Owner","Stallion manager","Broodmare / barn manager","Booking office","Veterinarian","Other"];
+const CONTACT_PREFS = ["Through Marebook","Phone call","Text message","Email"];
+const PUBLIC_VIEWS = ["landing","about","contact","mare-owners","stallion-owners","join"];
+const isPublic = () => PUBLIC_VIEWS.includes(ui.view) && !ui.mare && !ui.foal && !ui.stud;
+const acct = () => S.settings.account || {};
+const firstName = n => String(n || "").trim().split(/\s+/)[0] || "";
+const initials = n => String(n || "").split(/\s+/).filter(w => /^[A-Za-z]/.test(w)).slice(0,2).map(w => w[0].toUpperCase()).join("");
+const discOf = () => [...new Set([...DISCIPLINES, ...arr("studs").map(s => s.discipline).filter(Boolean)])].sort();
+const PRINT_L = () => local ? "Print" : "Download to print";
+const breedOptions = () => BREEDS.map(b => `<option value="${esc(b)}" label="${esc(breedLabel(b))}">`).join("");
+let logoN = 0;
+function logoSvg(){
+  const n = "lg" + (++logoN);
+  return `<svg class="logo" viewBox="0 0 142 50" role="img" aria-label="Marebook"><defs><radialGradient id="${n}o" cx="34%" cy="32%" r="72%"><stop offset="0" stop-color="#c8f2ff"/><stop offset=".42" stop-color="#3aa7d6"/><stop offset="1" stop-color="#0a3550"/></radialGradient><linearGradient id="${n}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#aeb7bd"/></linearGradient></defs>
+    <circle cx="25" cy="25" r="21.5" fill="none" stroke="#2c8c8f" stroke-width="1.5"/>
+    <circle cx="9.6" cy="35.5" r="6" fill="url(#${n}o)"/><circle cx="8" cy="33.6" r="1.6" fill="#fff" opacity=".55"/>
+    <text x="20" y="26" font-family="'Cormorant Garamond',Georgia,serif" font-weight="600" font-size="25" fill="url(#${n}s)">Mare</text>
+    <text x="47" y="45" font-family="'Pinyon Script','Snell Roundhand','Apple Chancery',cursive" font-size="22" fill="url(#${n}s)">Book</text></svg>`;
+}
+
+// ----- local media store (public demo: photos & video stay on this device) -----
+const LURL = {};
+const idb = {
+  db: null,
+  open(){ return new Promise((res, rej) => { try { const r = indexedDB.open("marebook-media", 1); r.onupgradeneeded = () => r.result.createObjectStore("blobs"); r.onsuccess = () => res(this.db = r.result); r.onerror = () => rej(r.error); } catch(e){ rej(e); } }); },
+  store(mode){ return this.db.transaction("blobs", mode).objectStore("blobs"); }
+};
+async function shrinkImage(file){
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || !window.createImageBitmap) return file;
+  try {
+    const bmp = await createImageBitmap(file), k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    if (k === 1 && file.size < 600000) return file;
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(b => r(b || file), "image/jpeg", .86));
+  } catch(_){ return file; }
+}
+const localAssets = {
+  async upload(blob, opt){
+    if (blob.size > 20 * 1024 * 1024) throw {code:"too_large"};
+    if (!idb.db) await idb.open();
+    const b = await shrinkImage(blob), id = uid() + uid();
+    await new Promise((res, rej) => { const rq = idb.store("readwrite").put(b, id); rq.onsuccess = res; rq.onerror = () => rej(rq.error); });
+    LURL[id] = URL.createObjectURL(b);
+    return {id, url:LURL[id], sizeBytes:b.size, contentType:(opt && opt.type) || b.type};
+  },
+  async delete(id){ try { if (!idb.db) await idb.open(); idb.store("readwrite").delete(id); } catch(_){} if (LURL[id]) URL.revokeObjectURL(LURL[id]); delete LURL[id]; return {deleted:true}; },
+  async loadAll(){ await idb.open(); await new Promise(res => { const rq = idb.store("readonly").openCursor(); rq.onsuccess = () => { const c = rq.result; if (!c){ res(); return; } LURL[c.key] = URL.createObjectURL(c.value); c.continue(); }; rq.onerror = () => res(); }); },
+  async clear(){ try { if (!idb.db) await idb.open(); idb.store("readwrite").clear(); } catch(_){} }
+};
+
+// ----- typeahead (My Mares, Foals, My Stallions, Stallion Search) -----
+const COMBO = {};
+function combo(id, ph, items){
+  COMBO[id] = items;
+  return `<div class="combo"><input class="search" type="search" id="${id}" data-combo="${id}" role="combobox" aria-expanded="false" aria-controls="${id}-lb" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="${esc(ph)}"><ul class="lb" id="${id}-lb" role="listbox" hidden></ul></div>`;
+}
+const hl = (label, q) => { const s = esc(label); if (!q) return s; const i = label.toLowerCase().indexOf(q); return i < 0 ? s : esc(label.slice(0,i)) + "<mark>" + esc(label.slice(i, i+q.length)) + "</mark>" + esc(label.slice(i+q.length)); };
+function comboFilter(input){
+  const id = input.dataset.combo, q = input.value.trim().toLowerCase(), items = COMBO[id] || [], lb = document.getElementById(id + "-lb"); if (!lb) return;
+  const score = it => { const l = it.label.toLowerCase(); return l.startsWith(q) ? 0 : l.split(/\s+/).some(w => w.startsWith(q)) ? 1 : 2; };
+  let list = items.filter(it => !q || it.label.toLowerCase().includes(q) || (it.sub || "").toLowerCase().includes(q));
+  list.sort((a,b) => (a.group || "").localeCompare(b.group || "") || (q ? score(a) - score(b) : 0) || a.label.localeCompare(b.label));
+  list = list.slice(0, 50);
+  let html = "", g = null;
+  list.forEach((it, i) => {
+    if (it.group && it.group !== g){ g = it.group; html += `<li class="grp" role="presentation">${esc(g)}</li>`; }
+    html += `<li role="option" id="${id}-o${i}" data-ref="${esc(it.ref)}" aria-selected="${i === 0 && q ? "true" : "false"}"><span>${hl(it.label, q)}</span>${it.sub ? `<small>${esc(it.sub)}</small>` : ""}</li>`;
+  });
+  if (!list.length) html = `<li class="none" role="presentation">${items.length ? "No match. Check the spelling or add a new one." : "None added yet."}</li>`;
+  lb.innerHTML = html; lb.hidden = false; input.setAttribute("aria-expanded", "true");
+}
+function comboClose(input){ const lb = document.getElementById(input.dataset.combo + "-lb"); if (lb) lb.hidden = true; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant"); }
+function comboPick(input, li){ if (!li || !li.dataset.ref) return; input.value = ""; comboClose(input); openHorse(li.dataset.ref); }
+document.addEventListener("focusin", ev => { const t = ev.target; if (t.dataset && t.dataset.combo) comboFilter(t); });
+document.addEventListener("input", ev => { const t = ev.target; if (t.dataset && t.dataset.combo) comboFilter(t); });
+document.addEventListener("focusout", ev => { const t = ev.target; if (t.dataset && t.dataset.combo) setTimeout(() => { if (document.activeElement !== t) comboClose(t); }, 160); });
+document.addEventListener("keydown", ev => {
+  const t = ev.target; if (!t.dataset || !t.dataset.combo) return;
+  const lb = document.getElementById(t.dataset.combo + "-lb"); if (!lb) return;
+  const opts = [...lb.querySelectorAll('[role="option"]')]; let i = opts.findIndex(o => o.getAttribute("aria-selected") === "true");
+  if (ev.key === "ArrowDown" || ev.key === "ArrowUp"){
+    ev.preventDefault(); if (lb.hidden) comboFilter(t);
+    i = ev.key === "ArrowDown" ? Math.min(opts.length - 1, i + 1) : Math.max(0, i - 1);
+    opts.forEach((o, j) => o.setAttribute("aria-selected", j === i ? "true" : "false"));
+    if (opts[i]){ opts[i].scrollIntoView({block:"nearest"}); t.setAttribute("aria-activedescendant", opts[i].id); }
+  } else if (ev.key === "Enter"){ ev.preventDefault(); comboPick(t, opts[i >= 0 ? i : 0]); }
+  else if (ev.key === "Escape"){ comboClose(t); }
+});
+document.addEventListener("mousedown", ev => { const li = ev.target.closest(".combo [role=option]"); if (!li) return; ev.preventDefault(); comboPick(li.closest(".combo").querySelector("[data-combo]"), li); });
+
+// ----- mini month calendar (member home, foal page) -----
+function miniCal(key, filter){
+  const ym = ui[key] || TODAY.slice(0,7), [y, mo] = ym.split("-").map(Number);
+  const byDay = {};
+  for (const t of arr("tasks")){ const h = horseOf(t); if (!h || (filter && !filter(t, h))) continue; (byDay[t.due] = byDay[t.due] || []).push(t); }
+  const first = new Date(y, mo-1, 1), start = new Date(first); start.setDate(1 - first.getDay());
+  let cells = "";
+  for (let i = 0; i < 42; i++){
+    const d = new Date(start); d.setDate(start.getDate() + i); if (i === 35 && d.getMonth() !== mo-1) break;
+    const s = iso(d), ts = byDay[s] || [], open = ts.filter(t => !t.done), late = open.some(() => s < TODAY);
+    cells += `<button class="mc ${d.getMonth()!==mo-1?"out":""} ${s===TODAY?"is-today":""} ${late?"late":""}" data-calgo="${s}" aria-label="${esc(long(s))}: ${ts.length} item${ts.length===1?"":"s"}"><span>${d.getDate()}</span><i class="mdots">${open.slice(0,3).map(t => `<b class="${t.cat}"></b>`).join("")}</i></button>`;
+  }
+  return `<div class="mcal-h"><b>${esc(first.toLocaleDateString(undefined,{month:"long", year:"numeric"}))}</b><span class="sp" style="flex:1"></span><button class="icon-btn sm" data-mcal="${key}:-1" aria-label="Previous month">${svg("left")}</button><button class="icon-btn sm" data-mcal="${key}:0" aria-label="This month" style="width:auto;padding:0 8px;font-size:12px;font-weight:700">Today</button><button class="icon-btn sm" data-mcal="${key}:1" aria-label="Next month">${svg("right")}</button></div>
+    <div class="mcal">${["S","M","T","W","T","F","S"].map(x => `<span class="dw">${x}</span>`).join("")}${cells}</div>`;
+}
+
+// ----- media: video clips beside photos -----
+function videoBlock(kind, id, o, canAdd){
+  const vs = o.videos || [], add = canAdd !== false && canWrite && assets;
+  return `<div class="vids"><div class="lbl-row"><span class="eyebrow">Videos</span>${add ? `<label class="btn sm">+ Video<input type="file" accept="video/mp4,video/webm,video/quicktime,video/*" data-video-add="${kind}:${id}" hidden></label>` : ""}</div>
+    ${vs.length ? vs.map((v, i) => `<figure class="vid"><video src="${esc(photoUrl(v))}" controls preload="metadata" playsinline></video>${add ? `<button class="btn link sm" data-vdel="${kind}:${id}:${i}">Remove video</button>` : ""}</figure>`).join("")
+      : `<div class="vid-empty">${add ? "Add a clip: moving out, a sale video, a vet scan. MP4 or phone video, up to 20 MB (about 30 seconds)." : "No videos yet."}</div>`}</div>`;
+}
+document.addEventListener("change", async ev => {
+  const inp = ev.target; if (!inp.dataset || !inp.dataset.videoAdd) return;
+  const [kind, id] = inp.dataset.videoAdd.split(":"), c = COLL_OF[kind], f = inp.files && inp.files[0]; if (!f || !assets || !S[c][id]) return;
+  if (f.size > 20 * 1024 * 1024){ toast("That clip is over 20 MB. Trim it to about 30 seconds."); return; }
+  toast("Uploading video…");
+  try {
+    const type = f.type === "video/webm" ? "video/webm" : "video/mp4";
+    const r = await assets.upload(f, {type});
+    const o = S[c][id]; await put(c, id, {...o, videos:[...(o.videos || []), {id:r.id, type:r.contentType, name:f.name}].slice(0, 6)}); toast("Video added");
+  } catch(e){ toast(e && e.code === "too_large" ? "That clip is over 20 MB. Trim it to about 30 seconds." : e && e.code === "unsupported_type" ? "Use an MP4 or WebM video." : "Couldn't upload the video. Try again."); }
+});
+
+// ----- member home -----
+function alertsList(alerts){
+  return `<div class="list">${alerts.length ? alerts.slice(0,8).map(a => a.t
+    ? `<div class="alert-row" data-task="${a.t.id}"><span class="dotx ${a.txt==="overdue"?"warn":""}"></span><span><b class="hlink" data-open="${horseOf(a.t).kind}:${horseOf(a.t).id}">${esc(horseOf(a.t).name)}</b> · ${esc(a.t.title)}</span><span class="due ${a.txt==="overdue"?"over":a.txt==="due today"?"today":""}">${a.txt==="overdue"?(-diff(a.t.due,TODAY))+"d late":a.txt==="due today"?"Today":"Tomorrow"}</span></div>`
+    : `<div class="alert-row" data-mare="${a.m.id}"><span class="dotx warn"></span><span><b>${esc(a.m.name)}</b> · ${esc(a.txt)}</span><span class="due">Due ${short(dueDate(a.m))}</span></div>`).join("") : `<div class="empty-row">No alerts today. Enjoy the quiet.</div>`}</div>`;
+}
+function viewToday(){
+  const mares = arr("mares"), a = acct(), hr = new Date().getHours();
+  const greet = (hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening") + (a.contact ? ", " + firstName(a.contact) : "");
+  if (!mares.length && !arr("foals").length && !arr("studs").length) return pageBar(esc(greet), esc(long(TODAY))) + welcome();
+  const open = openTasks(), over = open.filter(t => t.due < TODAY);
+  const todayList = arr("tasks").filter(t => liveTask(t) && (t.due === TODAY || (!t.done && t.due < TODAY))).sort((x,y) => (x.done?1:0)-(y.done?1:0) || x.due.localeCompare(y.due));
+  const alerts = [
+    ...over.map(t => ({t, txt:"overdue"})),
+    ...open.filter(t => t.due === TODAY).map(t => ({t, txt:"due today"})),
+    ...open.filter(t => t.due === addDays(TODAY,1)).map(t => ({t, txt:"tomorrow"})),
+    ...mares.filter(m => { const g = gestDay(m); return g != null && g >= 320; }).map(m => ({m, txt: gestDay(m) >= GEST ? `past due · day ${gestDay(m)}` : `foaling window · day ${gestDay(m)}`})),
+  ];
+  const mine = arr("studs").filter(s => s.createdBy === me.id || local);
+  const mareItems = mares.map(m => ({ref:"mare:"+m.id, label:m.name, sub:[STATUS[m.status], abbr(m.breed) || m.breed, ageOf(m) != null ? ageOf(m)+" yrs" : ""].filter(Boolean).join(" · ")}));
+  const foalItems = arr("foals").map(f => ({ref:"foal:"+f.id, label:foalName(f), sub:[f.sex, ageLabel(f.foaledOn), "out of " + damName(f), f.status === "sold" ? "sold" : ""].filter(Boolean).join(" · ")}));
+  const studItems = mine.map(s => ({ref:"stallion:"+s.id, label:s.name, sub:[abbr(s.breed) || s.breed, s.ranch].filter(Boolean).join(" · ")}));
+  const searchItems = arr("studs").filter(s => (!ui.studBreed || s.breed === ui.studBreed) && (!ui.studDisc || s.discipline === ui.studDisc)).map(s => ({ref:"stallion:"+s.id, label:s.name, sub:[s.discipline, s.ranch, money(s.fee||0,false)+" fee"].filter(Boolean).join(" · "), group:breedLabel(s.breed)}));
+  const breeds = [...new Set(arr("studs").map(s => s.breed).filter(Boolean))].sort();
+  const hrow = (label, n, ctl) => `<div class="hrow"><div class="lbl">${label}<i>${n}</i></div><div class="ctl">${ctl}</div></div>`;
+  const add = (attr, l) => canWrite ? `<button class="btn sm" ${attr}>+ ${l}</button>` : "";
+  const unpaid = arr("expenses").filter(e => e.kind !== "income" && e.status === "unpaid");
+  const feat = arr("studs").filter(s => s.featured)[0];
+  const watch = mares.filter(m => (gestDay(m) ?? 0) >= 300).sort((x,y) => gestDay(y) - gestDay(x));
+  return `${pageBar(esc(greet), `${esc(a.ranch || "Member home")} · ${esc(long(TODAY))}`, `<button class="btn sm" data-act="print-todo">${PRINT_L()} to-do</button>`)}
+  <div class="strip">
+    <span class="stat"><b>${mares.length}</b> mares</span><span class="stat"><b>${mares.filter(m => m.status === "in-foal").length}</b> in foal</span>
+    <span class="stat"><b>${arr("foals").filter(f => f.status === "raising" || f.status === "listed").length}</b> foals on the ground</span>
+    <span class="stat ${over.length?"alert":""}"><b>${over.length}</b> overdue</span>
+    ${unpaid.length ? `<span class="stat alert" data-go="costs" role="button" tabindex="0" style="cursor:pointer"><b>${money(unpaid.reduce((s,e) => s + (Number(e.amount)||0), 0), false)}</b> unpaid</span>` : ""}
+  </div>
+  <div class="home">
+    <div class="home-col">
+      <section class="card"><div class="card-h"><h2>Herd</h2><span class="sp" style="flex:1"></span><span class="eyebrow">Type a name to jump</span></div>
+        ${hrow("My mares", mares.length, combo("cMares", "Start typing a mare's name…", mareItems) + add('data-act="add-mare"', "Add new mare"))}
+        ${hrow("Foals", arr("foals").length, combo("cFoals", "Start typing a foal's name…", foalItems) + (mares.length ? add('data-cact="add-foal"', "Add new foal") : ""))}
+        ${hrow("My stallions", mine.length, combo("cStuds", "Start typing a stallion's name…", studItems) + add('data-act="add-stud"', "Add new stallion"))}
+        ${hrow("Stallion search", arr("studs").length, `<div class="ss"><select class="search" id="dashBreed" aria-label="Breed"><option value="">All breeds</option>${breeds.map(b => `<option value="${esc(b)}" ${b===ui.studBreed?"selected":""}>${esc(breedLabel(b))}</option>`).join("")}</select><select class="search" id="dashDisc" aria-label="Discipline"><option value="">All disciplines</option>${discOf().map(x => `<option ${x===ui.studDisc?"selected":""}>${esc(x)}</option>`).join("")}</select></div>${combo("cSearch", "Stallion name…", searchItems)}<button class="btn sm primary" data-nav="search">Search</button>`)}
+      </section>
+      <section class="card"><div class="card-h"><h2>Today's alerts</h2><span class="sp" style="flex:1"></span><span class="eyebrow">${alerts.length}</span></div>${alertsList(alerts)}</section>
+    </div>
+    <div class="home-col">
+      <section class="card"><div class="card-h"><h2>Calendar</h2><span class="sp" style="flex:1"></span><div class="seg sm">${[["day","Today"],["week","Week"],["month","Month"]].map(([k,v]) => `<button data-calmode="${k}">${v}</button>`).join("")}</div></div>
+        ${miniCal("dashMonth")}
+        <div class="card-f"><button class="btn link" data-nav="calendar">Open full calendar</button><button class="btn sm" data-act="print-cal-month">${PRINT_L()}</button></div></section>
+      <section class="card"><div class="card-h"><h2>Daily to-do</h2><span class="sp" style="flex:1"></span><span class="eyebrow">${todayList.filter(t => !t.done).length} open</span></div>
+        ${todoGroups(todayList, "Nothing today.", true)}
+        <div class="card-f"><button class="btn link" data-nav="todo">Open to-do list</button><button class="btn sm" data-act="print-todo">${PRINT_L()}</button></div></section>
+    </div>
+  </div>
+  <section class="sec"><div class="sec-h"><h2>Foaling watch</h2><span class="eyebrow">Day 300+</span></div>
+    ${watch.length ? `<div class="mares">${watch.map(m => mareCard(m.id)).join("")}</div>` : `<div class="list"><div class="empty-row">No mares past day 300.</div></div>`}</section>
+  ${feat ? `<section class="sec"><div class="sec-h"><h2>Featured stallion</h2><span class="eyebrow">Sponsored placement</span></div><div class="studs-grid">${studCard(feat)}</div></section>` : ""}`;
+}
+
+// ----- foal page laid out like the wireframe: Date·Action | Photos & video | Calendar -----
+function foalTimeline(id){
+  const ts = foalTasks(id);
+  if (!ts.length) return `<div class="empty-row" style="padding:6px 0">Add a date of birth to schedule plasma/IgG, deworming, vaccinations and weaning.</div>`;
+  return `<ol class="tl">${ts.map(t => `<li class="${t.done?"done":""} ${!t.done&&t.due<TODAY?"late":""}"><button class="chk" role="checkbox" aria-checked="${!!t.done}" data-toggle="${t.id}" aria-label="Mark done" ${canWrite?"":"disabled"}>${svg("check",3)}</button><div class="tl-b" data-ftask="${t.id}"><span class="tl-d">${short(t.due)}${t.due.slice(0,4)!==TODAY.slice(0,4)?" "+t.due.slice(0,4):""}</span><span class="tl-t">${esc(t.title)}</span><span class="tl-m">${t.auto?"Auto":"Manual"}${t.done&&t.doneAt?" · done "+short(t.doneAt):""}${!t.done&&t.due<TODAY?" · late":""}</span></div></li>`).join("")}</ol>`;
+}
+function viewFoal(id){
+  const fo = S.foals[id], pl = foalPL(id), next = foalTasks(id).find(t => !t.done);
+  const ents = arr("expenses").filter(e => e.foalId === id).sort((a,b) => b.date.localeCompare(a.date));
+  return `${pageBar(esc(foalName(fo)) + (fo.sample?'<span class="tag">Sample</span>':""), `${crumb("foals","Foals")}<span>›</span><span>Foal profile</span>`, `<span class="pill fs-${fo.status}">${FSTATUS[fo.status]}</span>`)}
+  ${foalHeader(id)}
+  <section class="fgrid">
+    <div class="card"><div class="card-h"><h2>Date · Action</h2><span class="sp" style="flex:1"></span>${canWrite?`<button class="btn sm" data-cact="foal-task" data-foal-id="${id}">+ Event</button>`:""}</div>${foalTimeline(id)}</div>
+    <div class="card"><div class="card-h"><h2>Photos & video</h2></div>${photoBlock("foal", id, fo)}</div>
+    <div class="card"><div class="card-h"><h2>Calendar</h2></div>${miniCal("foalMonth", t => t.foalId === id)}${next ? `<div class="next" style="margin-top:12px"><span class="cat c-${next.cat}"><i></i></span><span>Next: ${esc(next.title)}</span>${dueLabel(next.due)}</div>` : ""}</div>
+  </section>
+  <section class="sec"><div class="sec-h"><h2>Profit & loss</h2><span class="sp"></span>${canWrite ? (pl.sold ? `<button class="btn sm" data-cact="undo-sale" data-foal-id="${id}">Undo sale</button>` : `<button class="btn sm primary" data-cact="sell-foal" data-foal-id="${id}">Record sale</button>`) + `<button class="btn sm" data-cact="foal-cost" data-foal-id="${id}">+ Cost</button>` : ""}</div>${plTable(pl)}</section>
+  <section class="sec"><div class="sec-h"><h2>Ledger</h2><span class="sp"></span><span class="muted" style="font-size:13px">${ents.length}</span></div>
+    <div class="list">${ents.length ? ents.map(e => entRow(e)).join("") : `<div class="empty-row">No costs charged to this foal yet. Weaning shots, halter breaking, registration and sale costs go here.</div>`}</div></section>
+  <section class="sec"><div class="sec-h"><h2>Notes</h2></div><div class="pf"><textarea data-mf="foal:${id}:notes" rows="3" placeholder="Markings, temperament, prospects" ${canWrite?"":"disabled"}>${esc(fo.notes)}</textarea></div></section>`;
+}
+
+// ----- stallion cards, search, booking & payment portal -----
+function studCard(s){
+  const img = s.photos && s.photos[0] ? `<img src="${esc(photoUrl(s.photos[0]))}" alt="" loading="lazy">` : `<span class="mono-g">${esc(initials(s.name))}</span>`;
+  return `<button class="stud2" data-stud="${s.id}"><div class="stud2-img">${img}${s.featured?'<span class="feat">Featured</span>':""}</div>
+    <div class="stud2-b"><div class="stud2-k">${esc([abbr(s.breed) || s.breed, s.discipline].filter(Boolean).join(" · "))}</div>
+    <h3>${esc(s.name)}${s.sample?'<span class="tag">Sample</span>':""}</h3>
+    <div class="stud2-m">${esc([s.ranch, s.city].filter(Boolean).join(" · "))}</div>
+    ${s.lte ? `<div class="stud2-lte">LTE ${esc(s.lte)}</div>` : ""}
+    <div class="chips">${(s.ship||[]).map(x => `<span class="chip ship">${esc(x)}</span>`).join("")}${collLabel(s) ? `<span class="chip">Collects ${esc(collLabel(s))}</span>` : ""}</div>
+    <div class="stud2-f"><span><b>${money(s.fee||0,false)}</b> stud fee</span>${s.chuteFee ? `<span>${money(s.chuteFee,false)} chute</span>` : ""}${s.shipFee ? `<span>${money(s.shipFee,false)}/dose shipping</span>` : ""}</div></div></button>`;
+}
+function viewStuds(){
+  const mineList = arr("studs").filter(x => x.createdBy === me.id || local);
+  const seg = `<div class="seg"><button data-seg="browse" aria-pressed="${ui.studSeg==="browse"}">Stallion search</button><button data-seg="mine" aria-pressed="${ui.studSeg==="mine"}">My stallions</button><button data-seg="orders" aria-pressed="${ui.studSeg==="orders"}">Orders ${arr("orders").filter(o => o.status !== "Delivered").length || ""}</button></div>`;
+  if (ui.studSeg === "orders") return `${pageBar("Semen orders", crumb("account","Account"))}${seg}${viewOrders()}`;
+  if (ui.studSeg === "mine") return `${pageBar("My stallions", "Horses", canWrite ? `<button class="btn sm primary" data-act="add-stud">+ Add new stallion</button>` : "")}${seg}<div class="sec">${mineList.length ? `<div class="studs-grid">${mineList.map(studCard).join("")}</div>` : `<div class="list"><div class="empty-row">Stand a stallion? Add him with collection days, chute fee and shipment cost so mare owners can book him.</div></div>`}</div>${canWrite ? `<button class="btn primary fab" data-act="add-stud">+ Add stallion</button>` : ""}`;
+  const all = arr("studs"), breeds = [...new Set(all.map(s => s.breed).filter(Boolean))].sort(), q = ui.studQ.toLowerCase();
+  const list = all.filter(s => (!ui.studBreed || s.breed === ui.studBreed) && (!ui.studDisc || s.discipline === ui.studDisc) && (!ui.studShip || (s.ship||[]).includes(ui.studShip)) && (!q || [s.name, s.ranch, s.city, s.discipline, s.sireLine, s.lte, s.breed, abbr(s.breed)].join(" ").toLowerCase().includes(q)))
+    .sort((a,b) => (b.featured?1:0) - (a.featured?1:0) || (a.fee||0) - (b.fee||0));
+  const groups = {}; for (const s of list) (groups[s.breed || ""] = groups[s.breed || ""] || []).push(s);
+  const filtersOn = ui.studBreed || ui.studDisc || ui.studShip || q;
+  return `${pageBar("Stallion search", "By breed, discipline, station or name")}${seg}
+  <div class="sec">
+    <div class="sfilters"><input class="search" id="studQ" type="search" placeholder="Name, station, town, sire line" value="${esc(ui.studQ)}">
+      <select class="search" id="studBreed" aria-label="Breed"><option value="">All breeds</option>${breeds.map(b => `<option value="${esc(b)}" ${b===ui.studBreed?"selected":""}>${esc(breedLabel(b))}</option>`).join("")}</select>
+      <select class="search" id="studDisc" aria-label="Discipline"><option value="">All disciplines</option>${discOf().map(x => `<option ${x===ui.studDisc?"selected":""}>${esc(x)}</option>`).join("")}</select></div>
+    <div class="filters">${[["","Any semen"],["Cooled shipped","Cooled shipped"],["Frozen","Frozen"],["Live cover","Live cover"]].map(([k,v]) => `<button class="fchip" data-shipf="${k}" aria-pressed="${(ui.studShip||"")===k}">${v}</button>`).join("")}${filtersOn ? `<button class="fchip" data-clearf>Clear filters</button>` : ""}</div>
+    ${list.length ? Object.keys(groups).sort().map(b => `<h2 class="grp-h">${esc(breedLabel(b))}<span>${groups[b].length}</span></h2><div class="studs-grid">${groups[b].map(studCard).join("")}</div>`).join("")
+      : `<div class="list"><div class="empty-row">${all.length ? "No stallions match. Try another breed or discipline." : "No stallions listed yet. Ranches list a stallion with breed, fee and how semen ships."}</div></div>`}
+  </div>
+  ${canWrite ? `<button class="btn primary fab" data-act="add-stud">+ Add stallion</button>` : ""}`;
+}
+function portalCard(s, mine){
+  const c = s.contact || "", isMail = /@/.test(c), tel = c.replace(/[^\d+]/g, "");
+  const contactBtn = c && (isMail || tel.length >= 7) ? `<a class="btn" href="${isMail ? "mailto:" + esc(c) + "?subject=" + encodeURIComponent("Breeding inquiry: " + s.name) : "tel:" + esc(tel)}">Contact stallion owner</a>` : "";
+  if (mine) return `<section class="sec"><div class="card portal"><div class="card-h"><h2>Payment portal</h2><span class="sp" style="flex:1"></span><span class="pill bred">Opens at launch</span></div>
+    <p class="muted">Connect a Stripe account and mare owners pay stud fees, chute fees and shipments right here, with payouts to your bank. Until launch, shipment requests arrive under Orders and you settle directly.</p>
+    <div class="row-btns"><button class="btn primary" data-act="portal-setup">Set up payments</button><button class="btn" data-nav="orders">View orders</button></div>
+    <p class="hint">Mare owners are told to reach you by: ${esc(s.contactPref || "Through Marebook")}${c ? " · " + esc(c) : ""}.</p></div></section>`;
+  return `<section class="sec"><div class="card portal"><div class="card-h"><h2>Book ${esc(s.name)}</h2><span class="sp" style="flex:1"></span>${s.contactPref ? `<span class="eyebrow">Prefers ${esc(s.contactPref.toLowerCase())}</span>` : ""}</div>
+    <div class="kpis">${kpi("Stud fee", money(s.fee||0,false))}${kpi("Chute fee", s.chuteFee ? money(s.chuteFee,false) : "None")}${kpi("Shipment", s.shipFee ? money(s.shipFee,false) : "—", "per dose")}</div>
+    <div class="row-btns">${canWrite && (s.ship||[]).some(x => x !== "Live cover") ? `<button class="btn primary" data-act="order" data-id="${s.id}">Purchase shipment</button>` : ""}${canWrite ? `<button class="btn" data-act="pick-mare" data-id="${s.id}">Select for a mare</button>` : ""}${contactBtn}</div>
+    <p class="hint">Card payment in the app opens at launch. Shipment requests go to the station now and appear under Orders.</p></div></section>`;
+}
+
+// ----- public site -----
+function adBanner(){
+  return `<aside class="ad" aria-label="Sponsored placement"><span class="ad-k">Sponsored placement</span><div class="ad-b"><b>Put your brand in front of every broodmare barn in Parker County.</b><span>Banner placements for vets, feed stores, transport and stallion stations open for the 2027 breeding season.</span></div><button class="btn gold" data-nav="contact" data-topic="Sponsorship / advertising">Advertise with Marebook</button></aside>`;
+}
+function viewLanding(){
+  const f = (t, p) => `<div class="feature"><h3>${t}</h3><p>${p}</p></div>`;
+  const flow = [["Ovulation","Day 0"],["Pregnancy check","Day 14"],["Heartbeat","Day 25"],["Ultrasounds","35 · 45 · 60"],["EHV-1 vaccines","5 · 7 · 9 mo"],["Foaling watch","Day 320"],["Foal heat","6–8 days after"],["Foal care","Plasma → weaning"]];
+  const studs = arr("studs").sort((a,b) => (b.featured?1:0) - (a.featured?1:0)).slice(0,3);
+  return `<div class="pub">
+  <section class="hero-x"><span class="ring-deco" aria-hidden="true"></span>${logoSvg()}
+    <div class="eyebrow">Weatherford, Texas · For broodmare managers, foal-out farms and stallion stations</div>
+    <h1>Never miss a breeding milestone <em>again.</em></h1>
+    <p>A digital breeding calendar, reminders and horse records in one place. Enter an ovulation date and Marebook schedules every ultrasound, vaccine and foal-care step that follows, for everyone who works your barn.</p>
+    <div class="row-btns"><button class="btn teal" data-nav="join">Start membership</button><button class="btn on-dark" data-auth="login">Log in</button><button class="btn on-dark" data-nav="pricing">See pricing</button></div>
+  </section>
+  ${adBanner()}
+  <section class="pub-sec"><div class="pub-h"><div class="eyebrow">Who it's for</div><h2>One book for the whole breeding operation.</h2></div>
+    <div class="aud">
+      <button data-nav="mare-owners"><span class="n">i.</span><h3>Mare owners</h3><p>Mare profiles, action charts and a calendar that knows her 14, 25, 35, 45 and 60-day checks the moment she ovulates.</p><span class="go">For mare owners →</span></button>
+      <button data-nav="stallion-owners"><span class="n">ii.</span><h3>Stallion owners</h3><p>List your stallion with collection days, LTE, pedigree and shipment costs. Mare owners book shipments from his page.</p><span class="go">For stallion owners →</span></button>
+      <button data-nav="today"><span class="n">iii.</span><h3>Herd management</h3><p>Daily to-do for every hand on the place, grouped by mares, foals and stallions, printable for the barn wall.</p><span class="go">Open the herd app →</span></button>
+    </div></section>
+  <section class="pub-sec"><div class="pub-h"><div class="eyebrow">The calendar runs itself</div><h2>From open mare to weaned foal.</h2><p>Every step lands on the calendar and the daily to-do automatically. Mark it done and the mare's or foal's page updates with it.</p></div>
+    <ol class="flow">${flow.map(([a,b], i) => `<li><i>${i+1}</i><b>${a}</b><span>${b}</span></li>`).join("")}</ol></section>
+  <section class="pub-sec"><div class="pub-h"><div class="eyebrow">Features</div><h2>Built the way a foaling barn works.</h2></div><div class="features">
+    ${f("Ovulation-driven reminders","Carry mares get 14, 25, 35, 45 and 60-day ultrasounds. Donor mares get the day-8 flush. Foal heat lands on days 6–8.")}
+    ${f("Action charts","Left ovary, right ovary, uterine tone and ovulation on every exam. Dictate findings at the chute.")}
+    ${f("Foal care from birth","Plasma, deworming, vaccines and weaning scheduled from the date of birth, with photos and video on every foal.")}
+    ${f("Stallion search","Search by breed and discipline. Pick a stallion and the mare's ultrasound lines up with his collection days.")}
+    ${f("Costs and foal profit","Every stud fee and vet bill, and what each foal really cost against what it sold for.")}
+    ${f("Calendar & QuickBooks","Send reminders to Google or Apple Calendar. Export the year's costs for QuickBooks and your tax preparer.")}
+  </div></section>
+  ${studs.length ? `<section class="pub-sec"><div class="pub-h"><div class="eyebrow">Stallion search</div><h2>Standing this season.</h2><p>${studs.some(s => s.sample) ? "Sample listings shown." : "Listed by their stations."}</p></div><div class="studs-grid">${studs.map(studCard).join("")}</div></section>` : ""}
+  <section class="pub-sec" id="pricing"><div class="pub-h"><div class="eyebrow">Membership</div><h2>Priced by the size of your herd.</h2><p>Bronze, Silver and Platinum tiers by number of horses. Stallion listings are $9.99 a month each.</p></div>${planCards(false)}</section>
+  <section class="cta"><div class="eyebrow" style="color:var(--gold)">Breeding season, handled</div><h2>Put this season's mares on Marebook.</h2><p>Start with two mares free. Upgrade when the barn fills up.</p><div class="row-btns"><button class="btn teal" data-nav="join">Start membership</button><button class="btn on-dark" data-nav="contact">Talk to us</button></div></section>
+  </div>`;
+}
+function viewMareOwners(){
+  const f = (t, p) => `<div class="feature"><h3>${t}</h3><p>${p}</p></div>`;
+  return `<div class="pub">
+  <section class="hero-x lite"><span class="ring-deco" aria-hidden="true"></span><div class="eyebrow">For mare owners & foal-out barns</div><h1>Every mare's season on <em>one</em> calendar.</h1>
+    <p>Name, age, breed, maiden, Carry or Flush. Enter her foaling or ovulation date and Marebook writes her whole season onto the calendar and the daily to-do.</p>
+    <div class="row-btns"><button class="btn teal" data-nav="join" data-jt="mare">Join as a mare owner</button><button class="btn on-dark" data-nav="today">See the herd app</button></div></section>
+  <section class="pub-sec"><div class="pub-h"><div class="eyebrow">The mare profile</div><h2>Everything about her, and everything she needs next.</h2></div><div class="features">
+    ${f("Carry: yes","Check Ovulated on the action chart and her 14-day, 25-day heartbeat, 35, 45 and 60-day ultrasounds go on the calendar, then EHV-1 at 5, 7 and 9 months through foaling.")}
+    ${f("Embryo transfer","Flush: yes schedules the embryo flush 8 days from ovulation. Collection days on the stallion's page set her pre-breeding ultrasound.")}
+    ${f("Foaling date","Enter it and a foal-heat ultrasound lands 6–8 days later (if she's carrying again), with one tap to add the new foal.")}
+    ${f("Action chart","Date, action, left ovary, right ovary, uterine tone, ovulated, notes. Type or dictate the findings.")}
+    ${f("Foal profiles","Dam, sire, recipient #, date of birth, color, filly or colt, photos and video, and the care schedule from day one.")}
+    ${f("Your team, on the same page","Barn manager, hands, vet and trainer see the same to-do. Print it for the barn wall.")}
+  </div></section>
+  ${adBanner()}
+  <section class="cta"><h2>Start with two mares, free.</h2><p>Bronze covers up to 10 horses, Silver 35, Platinum unlimited.</p><div class="row-btns"><button class="btn teal" data-nav="join" data-jt="mare">Create your barn</button><button class="btn on-dark" data-nav="pricing">Compare plans</button></div></section></div>`;
+}
+function viewStallionOwners(){
+  const f = (t, p) => `<div class="feature"><h3>${t}</h3><p>${p}</p></div>`;
+  return `<div class="pub">
+  <section class="hero-x lite"><span class="ring-deco" aria-hidden="true"></span><div class="eyebrow">For stallion owners & stations</div><h1>List your stallion. Let the <em>mares</em> find you.</h1>
+    <p>A stallion page mare owners can actually book from: photos, LTE, pedigree, where he stands, collection days, chute fee and shipment cost.</p>
+    <div class="row-btns"><button class="btn teal" data-nav="join" data-jt="stallion">List a stallion</button><button class="btn on-dark" data-nav="search">Browse Stallion Search</button></div></section>
+  <section class="pub-sec"><div class="pub-h"><div class="eyebrow">The stallion page</div><h2>Built for bookings, not just a brochure.</h2></div><div class="features">
+    ${f("Found by breed and discipline","Mare owners search AQHA, APHA, TB and more, then narrow by cutting, reining, racing or any discipline.")}
+    ${f("Collection days that schedule mares","When an owner selects him for a mare, her pre-breeding ultrasound lands the day before his next collection.")}
+    ${f("Photos, LTE and pedigree","Upload professional photos or snap them on your phone, list lifetime earnings and titles, attach the pedigree.")}
+    ${f("Shipment requests and contracts","Orders arrive with the mare, dates and carrier. Each one produces a breeding contract with the details filled in.")}
+    ${f("Payment portal","Stud fees, chute fees and shipments paid in the app with payouts to your bank (opens at launch).")}
+    ${f("Contact your way","Choose how mare owners reach you: through Marebook, a call, a text or email.")}
+  </div></section>
+  <section class="pub-sec"><div class="pub-h"><div class="eyebrow">Listing prices</div><h2>Simple, per stallion.</h2></div><div class="plans">
+    <div class="plan"><h3>Listing</h3><div class="price">$9.99<small> / month</small></div><div class="hint">or $99 a year</div><ul><li>Full stallion page in Stallion Search</li><li>Shipment orders and contracts</li><li>Collection-day scheduling for mare owners</li></ul><button class="btn sm primary" data-nav="join" data-jt="stallion">List a stallion</button></div>
+    <div class="plan"><h3>Featured</h3><div class="price">$29<small> / month</small></div><div class="hint">per stallion</div><ul><li>Top of his breed in Stallion Search</li><li>Featured on the member home page</li><li>Gold Featured badge</li></ul><button class="btn sm" data-nav="contact" data-topic="Stallion listing">Ask about Featured</button></div>
+    <div class="plan"><h3>Platinum members</h3><div class="price">Included</div><div class="hint">one listing</div><ul><li>One stallion listing included with Platinum</li><li>Station tools and shipment tasks</li></ul><button class="btn sm" data-nav="pricing">See Platinum</button></div>
+  </div></section>
+  <section class="cta"><h2>Standing a stallion this season?</h2><p>Create your station account, add him, and he's in Stallion Search today.</p><div class="row-btns"><button class="btn teal" data-nav="join" data-jt="stallion">Create station account</button></div></section></div>`;
+}
+function viewAbout(){
+  return `<div class="pub">
+  <section class="hero-x lite"><span class="ring-deco" aria-hidden="true"></span><div class="eyebrow">About us</div><h1>Made in the <em>Cutting Horse Capital</em> of the World.</h1>
+    <p>Marebook started in Weatherford, Texas, with people who manage broodmares for a living, and the stack of whiteboards, notebooks and phone alarms it takes to get a mare from open to foaling.</p></section>
+  <section class="two-col"><div class="pub-h"><div class="eyebrow">What Marebook is</div><h2>A home for mare and foal records, and a calendar that keeps the barn on time.</h2></div>
+    <div class="pitch"><p class="quote">“Ease of use is critical. It should feel like the barn calendar, only it never forgets.”</p>
+      <ul><li>Storage for mare, foal and stallion records, photos and video.</li><li>An alert and calendar system for day-to-day broodmare and barn management, from open mare to foaling: ultrasounds, medications, vaccinations and treatments.</li><li>A team space, so owners, managers, hands and vets work from the same list.</li></ul></div></section>
+  <section class="pub-sec"><div class="pub-h"><div class="eyebrow">Who we serve</div><h2>Mare owners, foal-out facilities, stallion stations and individual owners.</h2><p>Marebook doesn't sell mares, stallions or semen. Ranches and stations list their own stallions; mares are often foaled out and rebred at stations, and Marebook keeps everyone on the same schedule.</p></div></section>
+  <section class="pub-sec"><div class="pub-h"><div class="eyebrow">Where it's going</div><h2>The roadmap.</h2></div>
+    <div class="roadmap"><div class="now"><b>Now</b><span>Mare, foal and stallion profiles, reminder engine, calendar, daily to-do, Stallion Search, costs and foal profit.</span></div><div><b>Launch</b><span>Secure accounts, membership billing, iPhone and Android apps, text reminders, payment portal for shipments.</span></div><div><b>Next</b><span>Networking by breed, informative how-to videos, advertising for stock, industry sponsors and partnerships.</span></div><div><b>Later</b><span>Mare and stallion matching based on genetics, merchandise and a mare fan page.</span></div></div></section>
+  <section class="cta"><div class="eyebrow" style="color:var(--gold)">${esc(LEGAL)}, d/b/a Marebook</div><h2>Questions, partnerships or press?</h2><p>We'd like to hear from breeders, stations, vets and sponsors.</p><div class="row-btns"><button class="btn teal" data-nav="contact">Contact us</button><button class="btn on-dark" data-nav="join">Become a member</button></div></section></div>`;
+}
+const TOPICS = ["Membership question","Stallion listing","Sponsorship / advertising","Support","Other"];
+function viewContact(){
+  if (ui.contactSent) return `<div class="pub"><section class="card thanks" style="margin-top:28px;display:grid;gap:10px"><div class="eyebrow">Message received</div><h1 style="font-size:40px">Thank you, ${esc(firstName(ui.contactSent))}.</h1><p class="muted" style="margin:0;max-width:48ch">The Marebook team will get back to you shortly.</p><div class="row-btns"><button class="btn primary" data-nav="landing">Back to home</button><button class="btn" data-act="contact-again">Send another</button></div></section></div>`;
+  const t = ui.contactTopic && TOPICS.includes(ui.contactTopic) ? ui.contactTopic : TOPICS[0];
+  return `<div class="pub"><section class="two-col" style="margin-top:28px">
+    <div class="pitch"><div class="eyebrow">Contact us</div><h1 style="font-size:clamp(38px,5vw,56px);line-height:1.02">Let's talk horses.</h1><p class="muted" style="margin:0;font-size:16px;line-height:1.6">Membership questions, listing a stallion, sponsoring the app or help with your barn. Send a note and we'll reply by email or phone.</p>
+      <ul><li><span><b>Marebook</b> · Weatherford, Texas</span></li><li><span><b>Sponsors & advertising</b> · banner placements, featured stallions, partnerships</span></li><li><span><b>Members</b> · help with mares, foals, calendars and your team</span></li></ul></div>
+    <form class="card form" id="contactF"><div class="two"><div class="field"><label for="c-name">Name</label><input id="c-name" name="name" required autocomplete="name"></div><div class="field"><label for="c-email">Email</label><input id="c-email" name="email" type="email" required autocomplete="email"></div></div>
+      <div class="two"><div class="field"><label for="c-phone">Phone (optional)</label><input id="c-phone" name="phone" type="tel" autocomplete="tel"></div><div class="field"><label for="c-topic">Topic</label><select id="c-topic" name="topic">${TOPICS.map(x => `<option ${x===t?"selected":""}>${x}</option>`).join("")}</select></div></div>
+      <div class="field"><label for="c-msg">Message</label><textarea id="c-msg" name="message" rows="5" required placeholder="How many mares, which stallion, or what you'd like to advertise"></textarea></div>
+      <button class="btn primary block" type="submit">Send message</button></form></section></div>`;
+}
+function viewJoin(){
+  const t = ui.joinType === "stallion" ? "stallion" : "mare";
+  const fl = (id, label, input) => `<div class="field"><label for="${id}">${label}</label>${input}</div>`;
+  const fields = t === "stallion"
+    ? `${fl("j-ranch","Ranch name (company name)",`<input id="j-ranch" name="ranch" required autocomplete="organization">`)}
+       ${fl("j-addr","Address",`<input id="j-addr" name="address" autocomplete="street-address" placeholder="Street, town, state">`)}
+       <div class="two">${fl("j-contact","Contact name",`<input id="j-contact" name="contact" required autocomplete="name">`)}${fl("j-pos","Position",`<select id="j-pos" name="position">${POSITIONS.map(p => `<option>${p}</option>`).join("")}</select>`)}</div>`
+    : `<div class="two">${fl("j-contact","Your name",`<input id="j-contact" name="contact" required autocomplete="name">`)}${fl("j-ranch","Farm or barn name",`<input id="j-ranch" name="ranch" autocomplete="organization">`)}</div>
+       ${fl("j-addr","Town, state",`<input id="j-addr" name="address" autocomplete="address-level2" placeholder="Weatherford, TX">`)}
+       ${fl("j-plan","Membership",`<select id="j-plan" name="plan">${PLANS.map(p => `<option value="${p.k}" ${p.k==="bronze"?"selected":""}>${p.name} · ${p.price ? "$"+p.price+"/mo" : "free"} · ${p.horses===Infinity ? "unlimited" : "up to "+p.horses} horses</option>`).join("")}</select>`)}`;
+  const pitch = t === "stallion"
+    ? `<div class="eyebrow">Stallion owners</div><h1 style="font-size:clamp(38px,5vw,54px);line-height:1.02">Create your station account.</h1><ul><li>A stallion page in Stallion Search, found by breed and discipline</li><li>Collection days that schedule mare owners' ultrasounds</li><li>Shipment orders, breeding contracts and the payment portal at launch</li></ul>`
+    : `<div class="eyebrow">Mare owners</div><h1 style="font-size:clamp(38px,5vw,54px);line-height:1.02">Start your membership.</h1><ul><li>Mare and foal profiles with photos and video</li><li>A calendar and daily to-do that schedule themselves</li><li>Your whole team on the same page</li></ul>`;
+  return `<div class="pub"><section class="two-col" style="margin-top:28px">
+    <div class="pitch">${pitch}<p class="hint">Already a member? <button class="btn link" data-auth="login">Log in</button></p></div>
+    <div class="card"><div class="seg" style="margin:0 0 14px"><button data-jt="mare" aria-pressed="${t==="mare"}">Mare owner / barn</button><button data-jt="stallion" aria-pressed="${t==="stallion"}">Stallion owner</button></div>
+      <form class="form" id="joinF">${fields}
+        <div class="two">${fl("j-email","Email",`<input id="j-email" name="email" type="email" required autocomplete="email">`)}${fl("j-phone","Phone",`<input id="j-phone" name="phone" type="tel" autocomplete="tel" placeholder="817-555-0100">`)}</div>
+        ${fl("j-pw","Password",`<input id="j-pw" name="pw" type="password" minlength="8" required autocomplete="new-password"><div class="hint">8 or more characters.</div>`)}
+        <label class="chkl"><input type="checkbox" name="agree" required> I agree to the Marebook membership terms</label>
+        <button class="btn primary block" type="submit">${t === "stallion" ? "Create station account" : "Start membership"}</button>
+        <p class="hint">Preview: this sets up your barn profile here and your password isn't saved. Secure sign-in and billing arrive with launch.</p></form></div></section></div>`;
+}
+function authSheet(mode){
+  let rem = ""; try { rem = localStorage.getItem("marebook-remember") || ""; } catch(_){}
+  if (mode === "forgot"){
+    sheet(`<div class="auth"><h2>Reset your password</h2><p class="muted" style="margin:0">We'll send a reset link by email or a 6-digit PIN by text.</p>
+      <form class="form" id="fpF"><div class="seg" style="margin:0"><button type="button" data-fpm="email" aria-pressed="true">Email link</button><button type="button" data-fpm="sms" aria-pressed="false">Text a PIN</button></div>
+        <div class="field"><label for="fp-to" id="fpL">Email</label><input id="fp-to" name="to" type="email" required autocomplete="email" value="${esc(rem)}"></div>
+        <button class="btn primary block" type="submit">Send</button><button class="btn link" type="button" data-auth="login">Back to log in</button></form></div>`, root => {
+      const f = root.querySelector("#fpF"), to = root.querySelector("#fp-to");
+      root.querySelectorAll("[data-fpm]").forEach(b => b.addEventListener("click", () => { const sms = b.dataset.fpm === "sms"; root.querySelectorAll("[data-fpm]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); to.type = sms ? "tel" : "email"; to.autocomplete = sms ? "tel" : "email"; to.value = ""; root.querySelector("#fpL").textContent = sms ? "Mobile number" : "Email"; to.focus(); }));
+      f.addEventListener("submit", ev => { ev.preventDefault(); const sms = to.type === "tel";
+        root.querySelector(".auth").innerHTML = `<h2>${sms ? "Check your phone" : "Check your email"}</h2><p class="muted" style="margin:0">${sms ? "Enter the 6-digit PIN we texted to reset your password." : "Follow the link we emailed to choose a new password."}</p><p class="hint">Preview: reset messages start sending at launch.</p><button class="btn primary block" data-auth="login">Back to log in</button>`; });
+    }, "modal");
+    return;
+  }
+  sheet(`<div class="auth"><div class="logo-band">${logoSvg()}</div><div><h2 style="margin:0">Welcome back</h2><p class="muted" style="margin:4px 0 0">Log in to your barn.</p></div>
+    <form class="form" id="lgF"><div class="field"><label for="l-email">Email</label><input id="l-email" name="email" type="email" autocomplete="username" required value="${esc(rem)}"></div>
+      <div class="field"><label for="l-pw">Password</label><input id="l-pw" name="pw" type="password" autocomplete="current-password" required></div>
+      <div class="auth-row"><label class="chkl"><input type="checkbox" name="remember" ${rem ? "checked" : ""}> Remember me</label><button type="button" class="btn link" data-auth="forgot">Forgot password?</button></div>
+      <button class="btn primary block" type="submit">Log in</button></form>
+    <div class="notmember">Not a member? <button type="button" class="btn link" data-nav="join">Join Marebook</button></div>
+    <p class="hint" style="margin:0">Preview: logging in opens the demo barn. Nothing you type is sent anywhere; secure accounts arrive with launch.</p></div>`, root => {
+    const f = root.querySelector("#lgF");
+    f.addEventListener("submit", ev => { ev.preventDefault();
+      const email = val(f, "email"); f.querySelector('[name="pw"]').value = "";
+      try { if (f.querySelector('[name="remember"]').checked) localStorage.setItem("marebook-remember", email); else localStorage.removeItem("marebook-remember"); } catch(_){}
+      ui.authed = true; close(); nav("today"); toast("Welcome back"); });
+  }, "modal");
+}
+function pubMenu(){
+  const items = [["landing","Home"],["mare-owners","Mare owners"],["stallion-owners","Stallion owners"],["about","About us"],["contact","Contact us"],["today","Herd management"],["pricing","Pricing"]];
+  sheet(`<div class="menu-list">${items.map(([k,l]) => `<button data-nav="${k}">${l}</button>`).join("")}</div><div class="row-btns" style="margin-top:14px"><button class="btn primary" data-nav="join">Join</button><button class="btn" data-auth="login">Log in</button></div>`);
+}
+
+// ----- members & inquiries (admin) -----
+function viewMembers(){
+  const ms = arr("members").sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  const mem = ms.filter(m => m.kind === "member"), inq = ms.filter(m => m.kind === "inquiry");
+  const d = s => s ? short(s.slice(0,10)) + " " + s.slice(0,4) : "";
+  return `${pageBar("Members & inquiries", crumb("account","Account"), `<button class="btn sm" data-act="members-csv">Export CSV</button><button class="btn sm" data-act="copy-emails">Copy emails</button>`)}
+  <section class="sec"><div class="kpis">${kpi("Members", mem.length, "all sign-ups")}${kpi("Mare owners", mem.filter(m => m.type === "mare").length)}${kpi("Stallion owners", mem.filter(m => m.type === "stallion").length)}${kpi("Messages", inq.length, "from Contact us")}</div></section>
+  <section class="sec"><div class="sec-h"><h2>Members</h2></div>${mem.length ? `<div class="tbl-wrap"><table class="tbl act"><thead><tr><th>Joined</th><th>Name</th><th>Ranch / farm</th><th>Type</th><th>Position</th><th>Email</th><th>Phone</th><th>Plan</th></tr></thead><tbody>${mem.map(m => `<tr><td>${d(m.createdAt)}</td><td>${esc(m.contact)}</td><td>${esc(m.ranch)}</td><td>${m.type === "stallion" ? "Stallion owner" : "Mare owner"}</td><td>${esc(m.position)}</td><td>${esc(m.email)}</td><td>${esc(m.phone)}</td><td>${esc((PLANS.find(p => p.k === m.plan) || {name: m.plan === "listing" ? "Listing" : m.plan || ""}).name)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="list"><div class="empty-row">No sign-ups yet. Everyone who joins from the public site lands here.</div></div>`}</section>
+  <section class="sec"><div class="sec-h"><h2>Messages</h2></div><div class="list">${inq.length ? inq.map(m => `<div class="ent" style="grid-template-columns:minmax(0,1fr) auto;cursor:default"><div><div class="t">${esc(m.name)} · ${esc(m.topic)}</div><div class="m"><span>${esc(m.email)}</span>${m.phone ? `<span>${esc(m.phone)}</span>` : ""}</div><div style="font-size:14px;margin-top:4px;white-space:pre-wrap">${esc(m.message)}</div></div><span class="due">${d(m.createdAt)}</span></div>`).join("") : `<div class="empty-row">No messages yet.</div>`}</div></section>
+  <p class="hint">Every sign-up and Contact us message is stored here so reminders and updates can go to the whole list. Bulk email arrives with launch; for now, Copy emails pastes into the BCC line of any email.</p>`;
+}
+
+// ----- v7 events -----
+document.addEventListener("click", async ev => {
+  const el = ev.target.closest("[data-auth],[data-pubmenu],[data-mcal],[data-vdel],[data-jt],[data-shipf],[data-clearf]"); if (!el) return;
+  const d = el.dataset;
+  if (d.jt && !d.nav){ ui.joinType = d.jt; render(); return; }
+  if (d.auth){ close(); authSheet(d.auth); return; }
+  if ("pubmenu" in d){ pubMenu(); return; }
+  if (d.mcal){ const [k, n] = d.mcal.split(":"); if (+n === 0) ui[k] = TODAY.slice(0,7); else { const [y, m] = (ui[k] || TODAY.slice(0,7)).split("-").map(Number); ui[k] = iso(new Date(y, m-1 + +n, 1)).slice(0,7); } render(); return; }
+  if ("shipf" in d){ ui.studShip = d.shipf; render(); return; }
+  if ("clearf" in d){ ui.studShip = ""; ui.studBreed = ""; ui.studDisc = ""; ui.studQ = ""; render(); return; }
+  if (d.vdel && canWrite){
+    if (!el.dataset.armed){ el.dataset.armed = "1"; el.textContent = "Tap again to remove"; setTimeout(() => { if (el.isConnected){ delete el.dataset.armed; el.textContent = "Remove video"; } }, 3500); return; }
+    const [kind, id, i] = d.vdel.split(":"), c = COLL_OF[kind], o = S[c][id], v = (o.videos || [])[+i]; if (!v) return;
+    await put(c, id, {...o, videos: o.videos.filter((_, j) => j !== +i)}); if (assets){ try { await assets.delete(v.id); } catch(_){} } toast("Video removed");
+  }
+});
+document.addEventListener("click", async ev => {
+  const el = ev.target.closest("[data-act]"); if (!el) return;
+  const a = el.dataset.act;
+  if (a === "logout"){ ui.authed = false; nav("landing"); toast("Logged out"); }
+  else if (a === "portal-setup") toast("Stripe payouts connect at launch. Requests keep arriving under Orders until then.");
+  else if (a === "contact-again"){ ui.contactSent = null; render(); }
+  else if (a === "print-cal-month"){ ui.calMode = "month"; ui.calMonth = ui.dashMonth || TODAY.slice(0,7); await printCal(); }
+  else if (a === "members-csv"){
+    const ms = arr("members"), cols = ["kind","createdAt","type","contact","name","ranch","position","address","email","phone","plan","topic","message"];
+    await saveFile(`marebook-members-${TODAY}.csv`, [cols.join(",")].concat(ms.map(m => cols.map(c => csvQ(m[c])).join(","))).join("\n"), "text/csv");
+  }
+  else if (a === "copy-emails"){
+    const em = [...new Set(arr("members").map(m => m.email).filter(Boolean))].join(", ");
+    if (!em){ toast("No emails yet"); return; }
+    try { await navigator.clipboard.writeText(em); toast("Emails copied"); }
+    catch(_){ sheet(`<h2>Member emails</h2><div class="field"><textarea rows="5" readonly onfocus="this.select()">${esc(em)}</textarea></div><div class="row-btns"><button class="btn" data-close>Done</button></div>`); }
+  }
+});
+document.addEventListener("submit", async ev => {
+  const f = ev.target;
+  if (f.id === "joinF"){
+    ev.preventDefault(); const g = n => val(f, n), type = ui.joinType === "stallion" ? "stallion" : "mare";
+    const addr = g("address"), parts = addr.split(",").map(x => x.trim()).filter(Boolean);
+    const rec = {kind:"member", type, ranch:g("ranch"), address:addr, contact:g("contact"), position: type === "stallion" ? g("position") : "Owner", email:g("email"), phone:g("phone"), plan: type === "mare" ? g("plan") : "listing", createdAt:new Date().toISOString(), createdBy:me.id};
+    f.querySelector('[name="pw"]').value = "";
+    await put("members", uid(), rec);
+    await put("settings", "account", {...rec, city: parts.slice(-2).join(", ")});
+    if (type === "mare" && rec.plan) await put("settings", "plan", {tier:rec.plan, updatedBy:me.id});
+    ui.authed = true;
+    if (type === "stallion"){ nav("stallions"); setTimeout(() => studForm(), 80); toast(`Welcome, ${firstName(rec.contact)}. Add your first stallion.`); }
+    else { nav("today"); toast(`Welcome to Marebook, ${firstName(rec.contact)}`); }
+  }
+  if (f.id === "contactF"){
+    ev.preventDefault(); const g = n => val(f, n);
+    await put("members", uid(), {kind:"inquiry", name:g("name"), email:g("email"), phone:g("phone"), topic:g("topic"), message:g("message"), createdAt:new Date().toISOString(), createdBy:me.id});
+    ui.contactSent = g("name") || "friend"; render(); window.scrollTo(0,0);
+  }
+});
+document.addEventListener("change", ev => {
+  const t = ev.target;
+  if (t.id === "dashBreed"){ ui.studBreed = t.value; render(); }
+  if (t.id === "dashDisc" || t.id === "studDisc"){ ui.studDisc = t.value; render(); }
+});
 
 // ---------- sample data ----------
-async function loadSample(){
+async function loadSample(quiet){
   const mk = (n, o) => ({sample:true, createdBy:me.id, createdAt:new Date().toISOString(), ...o, name:n});
   const mares = {
     smp_juniper: mk("Juniper Red Moon", {breed:"American Quarter Horse", registry:"AQHA", color:"Sorrel", born:"2015", maiden:"no", carry:"yes", et:"no", lte:"$18,400", stallionId:"smp_ace", status:"in-foal", ovulationDate:addDays(TODAY,-216), foalDate:addDays(TODAY,-395), coverDate:addDays(TODAY,-216), coverType:"Cooled shipped AI", sire:"Hickory Creek Ace", budget:6500, notes:"Foals easy, usually 4–5 days past due. Watch for waxing."}),
@@ -2233,7 +2887,7 @@ async function loadSample(){
     smp_dolly: mk("Tuff Dolly Gal", {breed:"American Quarter Horse", registry:"AQHA", color:"Buckskin", born:"2016", maiden:"no", carry:"no", et:"yes", lte:"$41,200", stallionId:"smp_ace", status:"open", notes:"Donor mare: performance career, embryos go to recipients. Her 2026 filly was carried by Recip #214."}),
   };
   const studs = {
-    smp_ace: {sample:true, name:"Hickory Creek Ace", breed:"American Quarter Horse", color:"Palomino", height:"15.1", discipline:"Cutting", sireLine:"Sample listing · NCHA open finalist", ranch:"Hickory Creek Ranch", city:"Stephenville, TX", fee:2500, chuteFee:250, shipFee:200, lte:"$186,000 · NCHA Open finalist", ship:["Cooled shipped","Frozen"], collDays:[1,3,5], contact:"bookings@hickorycreek.example", createdBy:me.id},
+    smp_ace: {sample:true, featured:true, name:"Hickory Creek Ace", breed:"American Quarter Horse", color:"Palomino", height:"15.1", discipline:"Cutting", sireLine:"Sample listing · NCHA open finalist", ranch:"Hickory Creek Ranch", city:"Stephenville, TX", fee:2500, chuteFee:250, shipFee:200, lte:"$186,000 · NCHA Open finalist", ship:["Cooled shipped","Frozen"], collDays:[1,3,5], contact:"bookings@hickorycreek.example", contactPref:"Email", createdBy:me.id},
     smp_cat: {sample:true, name:"Brazos Midnight Cat", breed:"American Quarter Horse", color:"Black", height:"14.3", discipline:"Reining", sireLine:"Sample listing · NRHA money earner", ranch:"Brazos Bend Stallions", city:"Granbury, TX", fee:3000, chuteFee:0, shipFee:500, lte:"$92,500 · NRHA money earner", ship:["Frozen","Live cover"], collDays:[], days:"Frozen only · by appointment", createdBy:me.id},
     smp_rio: {sample:true, name:"Red Desert Rio", breed:"American Paint Horse", color:"Sorrel tobiano", height:"15.2", discipline:"Ranch versatility", sireLine:"Sample listing · APHA World Show qualifier", ranch:"Red Desert Paints", city:"Tucson, AZ", fee:1500, chuteFee:200, shipFee:200, lte:"APHA World Show qualifier", ship:["Cooled shipped","Frozen"], collDays:[2,4,6], createdBy:me.id},
   };
@@ -2249,7 +2903,7 @@ async function loadSample(){
   await put("foals", "smp_f4", {sample:true, registry:"AQHA", createdBy:me.id, name:"Dolly's Ace Dually", damId:"smp_dolly", damName:"Tuff Dolly Gal", sire:"Hickory Creek Ace", recipient:"Recip #214", foaledOn:addDays(TODAY,-95), sex:"Filly", color:"Buckskin", status:"raising", prodOverride:6800, notes:"Embryo transfer foal. Cost to produce includes flush and recipient lease."});
   await genFoalTasks("smp_f4", S.foals.smp_f4 || {foaledOn:addDays(TODAY,-95), sample:true}, addDays(TODAY,-2));
   await genFoalTasks("smp_f2", S.foals.smp_f2 || {foaledOn:addDays(TODAY,-395), sample:true}, TODAY);
-  toast("Sample barn loaded");
+  if (!quiet) toast("Sample barn loaded");
 }
 async function clearSample(){
   for (const t of arr("tasks")) if (t.sample || (S.mares[t.mareId]||{}).sample) await del("tasks", t.id);
@@ -2298,7 +2952,7 @@ document.addEventListener("click", async e => {
   else if (d.act === "edit-stud") studForm(d.id);
   else if (d.act === "print-todo") printTodo();
   else if (d.act === "print-cal") printCal();
-  else if (d.act === "reset-demo"){ try { localStorage.removeItem(DEMO_KEY); } catch(_){} for (const c of COLLS) S[c] = {}; await loadSample(); toast("Demo reset to the sample barn"); }
+  else if (d.act === "reset-demo"){ try { localStorage.removeItem(DEMO_KEY); } catch(_){} await localAssets.clear(); for (const c of COLLS) S[c] = {}; await loadSample(); toast("Demo reset to the sample barn"); }
   else if (d.act === "add-stud") studForm();
   else if (d.act === "order"){ orderForm(d.id); }
   else if (d.act === "del-stud"){ close(); ui.stud = null; for (const t of studTasks(d.id)) await del("tasks", t.id); await del("studs", d.id); toast("Listing removed"); }
@@ -2313,6 +2967,7 @@ document.addEventListener("change", e => { if (e.target.id === "studBreed"){ ui.
 document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
 
 // ---------- boot ----------
+$(".brand").innerHTML = logoSvg(); $("#footLogo").innerHTML = logoSvg(); $("#yr").textContent = TODAY.slice(0,4);
 render();
 (async () => {
   const c = window.claude;
@@ -2325,8 +2980,10 @@ render();
   }
   if (!db){
     local = true; me = me.id ? me : {id:"local"};
-    $("#banner").hidden = false; $("#banner").textContent = "Demo mode: changes save on this device only.";
-    ready = true; if (!loadLocal()) await loadSample(); render(); return;
+    if (!location.hash) ui.view = "landing";
+    try { await localAssets.loadAll(); assets = localAssets; } catch(_){}
+    $("#banner").hidden = false; $("#banner").textContent = "Preview: changes, photos and videos save on this device only.";
+    ready = true; if (!loadLocal()) await loadSample(true); render(); return;
   }
   let pending = COLLS.length;
   for (const coll of COLLS){
