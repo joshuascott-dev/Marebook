@@ -1,4 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Marebook: mare, foal and stallion records with a breeding calendar that runs itself."><meta name="theme-color" content="#2b5a44"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif;background:#f1f4f1}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Marebook</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Marebook: mare, foal and stallion records with a breeding calendar that runs itself."><meta name="theme-color" content="#2b5a44"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif;background:#f1f4f1}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>Marebook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
@@ -502,18 +503,18 @@ const COLLS = ["mares","tasks","studs","orders","expenses","recurring","settings
 let db = null, user = null, assets = null, downloads = null, me = {id:null}, local = false, ready = false, canWrite = true;
 let profiles = {};
 const ui = { view: (location.hash||"").slice(1) || "today", mare:null, barnFilter:"all", barnQ:"", calMonth:TODAY.slice(0,7), calDay:TODAY, studSeg:"browse", studQ:"", studBreed:"", costPeriod:"ytd", costMare:"", costQ:"", costMore:false, barnSeg:"mares", foal:null, foalFilter:"all", stud:null, calMode:"month", calFilter:"all", todoDay:TODAY };
-if (!["today","barn","calendar","costs","studs","team","todo","account","plans","landing"].includes(ui.view)) ui.view = "today";
+if (!["today","barn","calendar","costs","studs","team","todo","account","plans","landing","integrations"].includes(ui.view)) ui.view = "today";
 
 const arr = c => Object.entries(S[c]).map(([id,v]) => ({id, ...v}));
 
 async function put(c, id, data){
-  if (local || !db){ S[c][id] = data; render(); return; }
+  if (local || !db){ S[c][id] = data; saveLocal(); render(); return; }
   try { await db.collection(c).doc(id).set(data); }
   catch(e){ handleErr(e); }
 }
 async function patch(c, id, data){ const cur = S[c][id] || {}; return put(c, id, {...cur, ...data}); }
 async function del(c, id){
-  if (local || !db){ delete S[c][id]; render(); return; }
+  if (local || !db){ delete S[c][id]; saveLocal(); render(); return; }
   try { await db.collection(c).doc(id).delete(); } catch(e){ handleErr(e); }
 }
 function handleErr(e){
@@ -632,6 +633,7 @@ function render(){
   else if (ui.view === "account") app.innerHTML = viewAccount();
   else if (ui.view === "plans") app.innerHTML = viewPlans();
   else if (ui.view === "landing") app.innerHTML = viewLanding();
+  else if (ui.view === "integrations") app.innerHTML = viewIntegrations();
   else app.innerHTML = viewToday();
 }
 // ---------- pieces ----------
@@ -758,7 +760,7 @@ function calMain(){
     : mode === "week" ? (() => { const s = addDays(ui.calDay, -parse(ui.calDay).getDay()); return "Week of " + short(s); })() : long(ui.calDay);
   const ctrls = `<div class="cal-tools"><div class="seg" style="margin:0">${[["day","Day"],["week","Week"],["month","Month"]].map(([k,v]) => `<button data-cm="${k}" aria-pressed="${mode===k}">${v}</button>`).join("")}</div>
     <select class="search" id="calFilter" aria-label="Filter" style="width:auto">${[["all","All horses"],["mare","Mares"],["foal","Foals"],["stallion","Stallions"]].map(([k,v]) => `<option value="${k}" ${ui.calFilter===k?"selected":""}>${v}</option>`).join("")}</select>
-    ${canWrite?`<button class="btn sm" data-act="add-event">+ Event</button>`:""}${downloads?`<button class="btn sm" data-act="print-cal">Download to print</button>`:""}</div>`;
+    ${canWrite?`<button class="btn sm" data-act="add-event">+ Event</button>`:""}${true?`<button class="btn sm" data-act="print-cal">Download to print</button>`:""}</div>`;
   const nav = `<div class="cal-h"><h1>${esc(head)}</h1><button class="icon-btn" data-cal="-1" aria-label="Previous">${svg("left")}</button><button class="btn sm" data-cal="0">Today</button><button class="icon-btn" data-cal="1" aria-label="Next">${svg("right")}</button></div>`;
   const legend = `<div class="legend">${Object.entries(CATS).map(([k,v])=>`<span class="cat c-${k}"><i></i>${v}</span>`).join("")}<span class="cat"><i style="background:var(--warn);border-radius:50%"></i>Overdue</span><span class="cat"><i style="background:none;border:1.5px solid var(--muted)"></i>Done</span></div>`;
   const sortT = l => (l||[]).slice().sort((a,b) => (a.done?1:0)-(b.done?1:0));
@@ -820,7 +822,7 @@ function viewOrders(){
       <div class="muted" style="font-size:13px;margin-top:-6px">${esc(o.type)} · for ${esc(m?m.name:"—")} · needed ${o.neededBy?short(o.neededBy):"—"} · ${esc(o.carrier)}</div>
       <div class="steps">${OSTEPS.map((x,j)=>`<div class="step ${j<=i?"on":""}"><i></i>${x}</div>`).join("")}</div>
       ${o.tracking?`<div class="mono" style="font-size:12.5px">Tracking ${esc(o.tracking)}</div>`:""}
-      <div class="row-btns">${canAdv?`<button class="btn sm primary" data-adv="${o.id}">Mark ${OSTEPS[i+1].toLowerCase()}</button>`:""}${o.requestedBy===me.id&&i===0&&canWrite?`<button class="btn sm danger" data-cancel="${o.id}">Cancel request</button>`:""}<span class="muted" style="font-size:12.5px;align-self:center">Requested by ${esc(pname(o.requestedBy)||"you")}</span></div>
+      <div class="row-btns">${canAdv?`<button class="btn sm primary" data-adv="${o.id}">Mark ${OSTEPS[i+1].toLowerCase()}</button>`:""}${o.requestedBy===me.id&&i===0&&canWrite?`<button class="btn sm danger" data-cancel="${o.id}">Cancel request</button>`:""}<button class="btn sm" data-contract="${o.id}">Breeding contract</button><span class="muted" style="font-size:12.5px;align-self:center">Requested by ${esc(pname(o.requestedBy)||"you")}</span></div>
     </div>`;}).join("")}
     <p class="hint">Station owners advance orders. Payment and the breeding contract are settled with the station directly.</p></div>`;
 }
@@ -832,7 +834,7 @@ function viewTeam(){
   const unassigned = open.filter(t=>!t.assignee && diff(t.due,TODAY)<=14);
   return `${pageBar("Team", crumb("account","Account"))}
   <section class="sec"><div class="sec-h"><h2>On this barn</h2></div>
-    <div class="list">${people.length ? people.map(p=>`<div class="person"><img src="${esc(pav(p.id))}" alt=""><span class="n">${esc(pname(p.id))}${p.id===me.id?' <span class="muted">(you)</span>':""}</span><span class="muted" style="font-size:13px">${p.n} open${p.over?` · <span style="color:var(--warn)">${p.over} late</span>`:""}</span></div>`).join("") : `<div class="empty-row">${local?"Team members appear once the barn is saved.":"Just you so far."}</div>`}</div></section>
+    <div class="list">${people.length ? people.map(p=>`<div class="person"><img src="${esc(pav(p.id))}" alt=""><span class="n">${esc(pname(p.id))}${p.id===me.id?' <span class="muted">(you)</span>':""}</span><span class="muted" style="font-size:13px">${p.n} open${p.over?` · <span style="color:var(--warn)">${p.over} late</span>`:""}</span><select class="datein" data-role="${esc(p.id)}" aria-label="Role" ${canWrite?"":"disabled"}>${ROLES.map(r => `<option ${roleOf(p.id)===r?"selected":""}>${r}</option>`).join("")}</select></div>`).join("") : `<div class="empty-row">${local?"Team members appear once the barn is saved.":"Just you so far."}</div>`}</div></section>
   <section class="sec"><div class="howto"><b>Add hands, vets and trainers</b><ol><li>Tap Share on this page.</li><li>Add each person and give them Contributor access so they can tick off tasks.</li><li>Assign any checklist item by tapping it.</li></ol></div></section>
   ${owedSection()}
   <section class="sec"><div class="sec-h"><h2>Unassigned · next 14 days</h2></div>
@@ -1199,7 +1201,7 @@ function viewCosts(){
     ${kpi("Income", money(income,false), inc.length+" entries", income?"good":"")}
     ${kpi("Net", money(net,false), isMareF(f)?"after overhead share":"income − spending", net<0?"warn":"good")}
   </div></section>
-  ${canWrite ? `<div class="row-btns" style="margin-top:12px"><button class="btn primary" data-cact="add-exp" data-mare-id="${isMareF(f)?f:""}">+ Log cost</button><button class="btn" data-cact="add-inc" data-mare-id="${isMareF(f)?f:""}">+ Income</button><button class="btn" data-cact="prices">Prices</button>${downloads?`<button class="btn" data-cact="export">Export CSV</button>`:""}</div>` : ""}
+  ${canWrite ? `<div class="row-btns" style="margin-top:12px"><button class="btn primary" data-cact="add-exp" data-mare-id="${isMareF(f)?f:""}">+ Log cost</button><button class="btn" data-cact="add-inc" data-mare-id="${isMareF(f)?f:""}">+ Income</button><button class="btn" data-cact="prices">Prices</button>${true?`<button class="btn" data-cact="export">Export CSV</button>`:""}</div>` : ""}
 
   ${unpaid.length ? `<section class="sec"><div class="sec-h"><h2>Bills to pay</h2><span class="sp"></span><span class="money">${money(unpaidAmt)}</span></div>
     <div class="list">${unpaid.map(e => `<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border-top:1px solid var(--line)">${entRow(e, f).replace('class="ent"','class="ent" style="border-top:0"')}${canWrite?`<button class="btn sm" style="margin-right:12px" data-pay="${e.id}">Paid</button>`:""}</div>`).join("").replace('border-top:1px solid var(--line)"','"')}</div></section>` : ""}
@@ -1253,13 +1255,14 @@ function expForm(eid, pre){
       <div class="field"><label for="e-by">Paid by</label><select id="e-by" name="paidBy">${people.map(id => `<option value="${esc(id)}" ${e.paidBy===id?"selected":""}>${esc(pname(id))}${id===me.id?" (you)":""}</option>`).join("")}</select></div></div>
     <div class="checks"><label><input type="checkbox" name="reimburse" ${e.reimburse?"checked":""}> Paid out of pocket, owed back</label>${e.reimburse?`<label><input type="checkbox" name="reimbursed" ${e.reimbursed?"checked":""}> Repaid</label>`:""}</div>`}
     ${e.receipt ? `<div class="receipt">${/^image\//.test(e.receipt.type||"") ? `<img src="/_blob/${esc(e.receipt.id)}" alt="Receipt">` : `<a href="/_blob/${esc(e.receipt.id)}" target="_blank" rel="noopener">${esc(e.receipt.name||"Receipt")}</a>`}<label><input type="checkbox" name="dropReceipt"> Remove</label></div>` : ""}
-    ${assets && canWrite ? `<div class="field"><label for="e-file">${e.receipt?"Replace receipt":"Receipt or invoice"}</label><input id="e-file" name="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"></div>` : ""}
+    ${assets && canWrite ? `<div class="field"><label for="e-file">${e.receipt?"Replace receipt":"Receipt or invoice"}</label><input id="e-file" name="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">${sampleImg ? `<div class="row-btns" style="margin-top:6px"><button class="btn sm primary" type="button" id="scanBtn">Scan receipt with AI</button><span class="hint">Fills vendor, date, amount and category from the photo.</span></div>` : ""}</div>` : ""}
     <div class="field"><label for="e-notes">Notes</label><textarea id="e-notes" name="notes" placeholder="Invoice #, drug lot, what was done">${esc(e.notes)}</textarea></div>
     ${e.taskId && S.tasks[e.taskId] ? `<div class="hint">Linked to checklist item: ${esc(S.tasks[e.taskId].title)}</div>` : ""}${e.orderId ? `<div class="hint">Linked to a semen order.</div>` : ""}
     <div class="row-btns"><button class="btn primary" type="submit" ${canWrite?"":"disabled"}>${eid?"Save":"Add entry"}</button><button class="btn" type="button" data-close>Cancel</button>${eid && canWrite?`<button class="btn danger" type="button" id="delExp">Delete</button>`:""}</div>
     <div id="delExpBox"></div>
   </form>`, root => {
     const f = root.querySelector("#ef");
+    const sb = root.querySelector("#scanBtn"); sb && sb.addEventListener("click", () => scanReceipt(root));
     const fsel = f.querySelector('[name="foalId"]');
     fsel && fsel.addEventListener("change", () => { root.querySelector("#mareField").hidden = !!fsel.value; });
     const read = () => ({...e, foalId: fsel ? fsel.value : (e.foalId||""), title:val(f,"title"), amount:val(f,"amount"), date:val(f,"date"), cat:val(f,"cat"), vendor:val(f,"vendor"), notes:val(f,"notes"), mareIds:[...f.querySelectorAll('[name="mare"]:checked')].map(x=>x.value),
@@ -1328,15 +1331,13 @@ function pricesForm(){
   });
 }
 async function exportCsv(){
-  if (!downloads) return;
   const f = ui.costMare, rows = entries(ui.costPeriod, f).sort((a,b) => a.date.localeCompare(b.date));
   const q = v => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; };
   const head = ["Date","Type","Description","Category","Group","Amount","Share for filter","Charged to","Vendor","Status","Due","Method","Paid by","Owed back","Repaid","Notes"];
   const lines = [head.join(",")].concat(rows.map(e => [e.date, isExp(e)?"Cost":"Income", e.title, catLabel(e), isExp(e)?bucketOf(e):"Income", (Number(e.amount)||0).toFixed(2), share(e,f).toFixed(2),
     e.foalId ? "Foal: " + (S.foals[e.foalId] ? foalName(S.foals[e.foalId]) : "") : (e.mareIds||[]).length ? e.mareIds.map(i => S.mares[i] ? S.mares[i].name : "").join("; ") : "Barn overhead", e.vendor, e.status||"", e.dueDate||"", e.method||"", pname(e.paidBy), e.reimburse?"yes":"", e.reimbursed?"yes":"", e.notes].map(q).join(",")));
   const label = (f === "barn" ? "overhead" : f && S.mares[f] ? S.mares[f].name.replace(/[^\w]+/g,"-").toLowerCase() : "all") + "-" + ui.costPeriod;
-  try { await downloads.save({filename:`marebook-costs-${label}.csv`, data: lines.join("\n")}); }
-  catch(err){ if (!err || err.code !== "declined") toast("Export isn't available here."); }
+  await saveFile(`marebook-costs-${label}.csv`, lines.join("\n"), "text/csv");
 }
 
 // cost events
@@ -1712,6 +1713,7 @@ function examForm(tid, mareId){
   <form class="form" id="xf">
     <div class="two"><div class="field"><label for="x-date">Date</label><input id="x-date" name="due" type="date" required value="${esc(t.due)}"></div>
     <div class="field"><label for="x-act">Action</label>${auto ? `<input id="x-act" value="${esc(t.title)}" disabled>` : `<input id="x-act" name="title" list="xacts" required value="${esc(t.title)}"><datalist id="xacts">${EXAM_ACTIONS.map(a=>`<option value="${a}">`).join("")}</datalist>`}</div></div>
+    <div class="field"><label for="xSay">Say or type the findings</label><textarea id="xSay" rows="2" placeholder="Left 35 millimeter follicle, right CL, edema 2"></textarea><div class="row-btns" style="margin-top:6px"><button class="btn sm" type="button" id="xMic">Dictate</button><button class="btn sm" type="button" id="xFill">Fill in the chart</button></div></div>
     <div class="two"><div class="field"><label for="x-lo">Left ovary</label><input id="x-lo" name="lo" value="${esc(t.lo)}" placeholder="35 mm follicle, CL…"></div>
     <div class="field"><label for="x-ro">Right ovary</label><input id="x-ro" name="ro" value="${esc(t.ro)}" placeholder="Small follicles"></div></div>
     <div class="field"><label for="x-tone">Uterine tone</label><select id="x-tone" name="tone">${TONES.map(x=>`<option ${t.tone===x?"selected":""}>${x}</option>`).join("")}</select></div>
@@ -1720,7 +1722,7 @@ function examForm(tid, mareId){
     ${m && !m.ovulationDate ? `<p class="hint">Checking Ovulated sets ${esc(m.name)}'s ovulation date to this exam's date and schedules ${carries(m)?"her 14, 25, 35, 45 and 60-day ultrasounds":""}${carries(m)&&isET(m)?" and ":""}${isET(m)?"a day-8 flush":""}${!carries(m)&&!isET(m)?"her pregnancy checks":""}.</p>` : ""}
     <div class="row-btns"><button class="btn primary" type="submit" ${canWrite?"":"disabled"}>Save</button>${tid && canWrite ? `<button class="btn" type="button" id="xCost">Log cost</button>` : ""}<button class="btn" type="button" data-close>Cancel</button>${tid && !auto && canWrite ? `<button class="btn danger" type="button" id="xDel">Delete</button>` : ""}</div>
   </form>`, root => {
-    const f = root.querySelector("#xf");
+    const f = root.querySelector("#xf"); attachDictation(root);
     f.addEventListener("submit", async ev => { ev.preventDefault();
       const done = f.querySelector('[name="done"]').checked, ovul = f.querySelector('[name="ovulated"]').checked;
       const d = {...t, due:val(f,"due"), lo:val(f,"lo"), ro:val(f,"ro"), tone:val(f,"tone"), notes:val(f,"notes"), ovulated:ovul, exam:true, done, doneBy: done ? (t.doneBy || me.id) : null, doneAt: done ? (t.doneAt || val(f,"due")) : null};
@@ -1812,11 +1814,7 @@ footer{margin-top:24px;color:#777;font:11px Arial,sans-serif}@media print{body{m
 ${sections.map(s => `<h2>${e(s.h)} (${s.rows.length})</h2>${s.rows.length ? `<table><thead><tr><th></th><th>Date</th><th>Horse</th><th>Task</th><th>Assigned</th><th>Notes</th></tr></thead><tbody>${s.rows.map(t => { const h = horseOf(t); return `<tr><td class="box">${t.done?"✓":"<span></span>"}</td><td class="d ${!t.done&&t.due<TODAY?"late":""}">${e(short(t.due))}</td><td>${e(h?h.name:"")}</td><td>${e(t.title)}</td><td>${e(t.assignee?pname(t.assignee):"")}</td><td>${e([t.lo?"L: "+t.lo:"",t.ro?"R: "+t.ro:"",t.tone?"Tone: "+t.tone:"",t.notes||""].filter(Boolean).join(" · "))}</td></tr>`; }).join("")}</tbody></table>` : `<p>Nothing.</p>`}`).join("")}
 <footer>Marebook · printed ${e(long(TODAY))}</footer></body></html>`;
 }
-async function saveDoc(filename, html){
-  if (!downloads) return;
-  try { await downloads.save({filename, data:html}); toast("Saved. Open the file and print it from your browser."); }
-  catch(e){ if (!e || e.code !== "declined") toast("Download isn't available here."); }
-}
+async function saveDoc(filename, html){ await saveFile(filename, html, "text/html"); }
 async function printTodo(){
   const day = ui.todoDay || TODAY;
   const list = arr("tasks").filter(t => liveTask(t) && (t.due === day || (day === TODAY && !t.done && t.due < TODAY))).sort((a,b) => a.due.localeCompare(b.due));
@@ -1847,11 +1845,11 @@ function navKey(){
   if (ui.stud) return (S.studs[ui.stud] && (S.studs[ui.stud].createdBy === me.id || local)) ? "stallions" : "search";
   if (ui.view === "barn") return ui.barnSeg === "foals" ? "foals" : "mares";
   if (ui.view === "studs") return ui.studSeg === "browse" ? "search" : ui.studSeg === "mine" ? "stallions" : "account";
-  if (["costs","team","plans","account","landing"].includes(ui.view)) return "account";
+  if (["costs","team","plans","account","landing","integrations"].includes(ui.view)) return "account";
   return ui.view;
 }
 function nav(k){
-  const map = {today:["today"], mares:["barn",{barnSeg:"mares"}], foals:["barn",{barnSeg:"foals"}], stallions:["studs",{studSeg:"mine"}], search:["studs",{studSeg:"browse"}], orders:["studs",{studSeg:"orders"}], calendar:["calendar"], todo:["todo"], account:["account"], costs:["costs"], team:["team"], plans:["plans"], landing:["landing"]};
+  const map = {today:["today"], mares:["barn",{barnSeg:"mares"}], foals:["barn",{barnSeg:"foals"}], stallions:["studs",{studSeg:"mine"}], search:["studs",{studSeg:"browse"}], orders:["studs",{studSeg:"orders"}], calendar:["calendar"], todo:["todo"], account:["account"], costs:["costs"], team:["team"], plans:["plans"], landing:["landing"], integrations:["integrations"]};
   const [v, extra] = map[k] || ["today"]; Object.assign(ui, extra || {}); go(v);
 }
 function pageBar(title, crumbs, acts){
@@ -1968,7 +1966,7 @@ function viewTodo(){
   const day = ui.todoDay || TODAY;
   const list = arr("tasks").filter(t => liveTask(t) && (t.due === day || (day === TODAY && !t.done && t.due < TODAY))).sort((a,b) => (a.done?1:0)-(b.done?1:0) || a.due.localeCompare(b.due));
   const left = list.filter(t => !t.done).length;
-  return `${pageBar("Daily to-do", `${day===TODAY?"Today":esc(long(day))} · ${left} open`, `<input class="datein" type="date" id="todoDay" value="${day}" aria-label="Date">${canWrite?`<button class="btn sm" data-act="add-event">+ Task</button>`:""}${downloads?`<button class="btn sm" data-act="print-todo">Print list</button>`:""}`)}
+  return `${pageBar("Daily to-do", `${day===TODAY?"Today":esc(long(day))} · ${left} open`, `<input class="datein" type="date" id="todoDay" value="${day}" aria-label="Date">${canWrite?`<button class="btn sm" data-act="add-event">+ Task</button>`:""}${true?`<button class="btn sm" data-act="print-todo">Print list</button>`:""}`)}
   <div class="row-btns" style="margin-top:12px"><button class="btn sm" data-todoshift="-1">‹ Previous day</button><button class="btn sm" data-todoshift="0">Today</button><button class="btn sm" data-todoshift="1">Next day ›</button></div>
   <section class="sec">${todoGroups(list, day === TODAY ? "Nothing today." : "Nothing that day.")}</section>
   <p class="hint">Tick a task to complete it; the horse's profile and the calendar update with it. Tap a task to edit, assign or log its cost.</p>`;
@@ -2011,10 +2009,11 @@ function viewAccount(){
     ${tile("plans","Membership", `${cur.name} · ${n} of ${cur.horses===Infinity?"unlimited":cur.horses} horses`)}
     ${tile("costs","Costs & profit","Ledger, bills, foal profit, budgets")}
     ${tile("orders","Semen orders", `${arr("orders").filter(o=>o.status!=="Delivered").length} open`)}
-    ${tile("team","Team","Barn staff, vets, trainers, assignments")}
+    ${tile("integrations","Integrations","Google & Apple Calendar, QuickBooks, receipts, texts, contracts")}
+    ${tile("team","Team","Barn staff, vets, trainers, roles")}
     ${tile("landing","Public home page","What visitors see before they sign up")}
   </div></section>
-  ${canWrite ? `<section class="sec"><div class="sec-h"><h2>Sample data</h2></div><div class="row-btns">${arr("mares").some(m=>m.sample) ? `<button class="btn danger sm" data-act="clear-sample">Remove sample data</button>` : `<button class="btn sm" data-act="load-sample">Load a sample barn</button>`}<button class="btn sm" data-cact="prices">Prices for reminders</button></div></section>` : ""}`;
+  ${canWrite ? `<section class="sec"><div class="sec-h"><h2>Sample data</h2></div><div class="row-btns">${arr("mares").some(m=>m.sample) ? `<button class="btn danger sm" data-act="clear-sample">Remove sample data</button>` : `<button class="btn sm" data-act="load-sample">Load a sample barn</button>`}<button class="btn sm" data-cact="prices">Prices for reminders</button>${local ? `<button class="btn sm" data-act="reset-demo">Reset demo</button>` : ""}</div></section>` : ""}`;
 }
 function viewLanding(){
   const f = (t, p) => `<div class="feature"><h3>${t}</h3><p>${p}</p></div>`;
@@ -2058,6 +2057,171 @@ document.addEventListener("change", async ev => {
   else if (kind === "stud"){ if (field === "name" && !v) return; await applyStud(id, {[field]: v}); }
 });
 
+
+// ---------- v6: integrations ----------
+let sampleFn = null, sampleImg = false;
+const DEMO_KEY = "marebook-demo-v1";
+let saveT;
+function saveLocal(){ clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(DEMO_KEY, JSON.stringify(S)); } catch(_){} }, 300); }
+function loadLocal(){ try { const raw = localStorage.getItem(DEMO_KEY); if (!raw) return false; const o = JSON.parse(raw); for (const c of COLLS) S[c] = o[c] || {}; return true; } catch(_){ return false; } }
+async function saveFile(filename, data, mime){
+  if (downloads){
+    try { await downloads.save({filename, data}); toast("Saved " + filename); }
+    catch(e){ if (!e || e.code !== "declined") toast("Download isn't available here."); }
+    return;
+  }
+  try {
+    const url = URL.createObjectURL(new Blob([data], {type: mime || "text/plain"}));
+    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000); toast("Downloaded " + filename);
+  } catch(_){ toast("Download isn't available here."); }
+}
+const csvQ = v => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; };
+const whoOf = e => e.foalId ? (S.foals[e.foalId] ? foalName(S.foals[e.foalId]) : "Foal") : (e.mareIds||[]).length ? e.mareIds.map(i => S.mares[i] ? S.mares[i].name : "").join("; ") : "Barn overhead";
+
+// Calendar (.ics) for Google Calendar and Apple Calendar
+function icsText(){
+  const esc2 = s => String(s||"").replace(/\\/g,"\\\\").replace(/[,;]/g, m => "\\"+m).replace(/\n/g,"\\n");
+  const from = addDays(TODAY,-30), to = addDays(TODAY,400), stamp = new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";
+  const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Marebook//Breeding calendar//EN","CALSCALE:GREGORIAN","X-WR-CALNAME:Marebook"];
+  for (const t of arr("tasks")){
+    const h = horseOf(t); if (!h || t.done || t.due < from || t.due > to) continue;
+    const d = t.due.replace(/-/g,""), d2 = addDays(t.due,1).replace(/-/g,"");
+    lines.push("BEGIN:VEVENT", `UID:${t.id}@marebook`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${d2}`, `SUMMARY:${esc2(h.name + ": " + t.title)}`, `DESCRIPTION:${esc2((CATS[t.cat]||"Care") + " · from Marebook")}`, "BEGIN:VALARM","ACTION:DISPLAY","TRIGGER:-PT12H",`DESCRIPTION:${esc2(h.name + ": " + t.title)}`,"END:VALARM","END:VEVENT");
+  }
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}
+async function exportIcs(){ await saveFile(`marebook-calendar-${TODAY}.ics`, icsText(), "text/calendar"); }
+
+// QuickBooks export
+async function exportQuickBooks(){
+  const y = ui.qbYear || TODAY.slice(0,4);
+  const rows = arr("expenses").filter(e => e.date.slice(0,4) === y).sort((a,b) => a.date.localeCompare(b.date));
+  const head = ["Date","Transaction type","Payee / customer","Account","Class","Amount","Payment method","Status","Memo"];
+  const lines = [head.join(",")].concat(rows.map(e => [e.date, isExp(e) ? (e.status === "unpaid" ? "Bill" : "Expense") : "Sales receipt", e.vendor || "", isExp(e) ? catLabel(e) : (INC[e.cat] || "Income"), whoOf(e), (Number(e.amount)||0).toFixed(2), e.method || "", e.status || "paid", e.title + (e.notes ? " · " + e.notes : "")].map(csvQ).join(",")));
+  await saveFile(`marebook-quickbooks-${y}.csv`, lines.join("\n"), "text/csv");
+}
+// Schedule F style tax summary
+const SCHED_F = {stud:"Veterinary, breeding, and medicine", booking:"Veterinary, breeding, and medicine", chute:"Veterinary, breeding, and medicine", meds:"Veterinary, breeding, and medicine", et:"Veterinary, breeding, and medicine", vrepro:"Veterinary, breeding, and medicine", vfoal:"Veterinary, breeding, and medicine", vgen:"Veterinary, breeding, and medicine", vacc:"Veterinary, breeding, and medicine", dental:"Veterinary, breeding, and medicine",
+  ship:"Freight and trucking", haul:"Freight and trucking", hay:"Feed", feed:"Feed", board:"Rent or lease (other)", mcare:"Rent or lease (other)", bedding:"Supplies", fsup:"Supplies", farrier:"Custom hire (machine work) / other", labor:"Labor hired", training:"Labor hired", ins:"Insurance (other than health)", fac:"Repairs and maintenance", reg:"Other expenses", commission:"Other expenses", marketing:"Other expenses", other:"Other expenses"};
+async function exportTax(){
+  const y = ui.qbYear || TODAY.slice(0,4), tot = {}, inc = {};
+  for (const e of arr("expenses")){ if (e.date.slice(0,4) !== y) continue; const a = Number(e.amount)||0; if (isExp(e)){ const k = SCHED_F[e.cat] || "Other expenses"; tot[k] = (tot[k]||0) + a; } else { const k = INC[e.cat] || "Other income"; inc[k] = (inc[k]||0) + a; } }
+  const lines = ["Section,Line,Amount"].concat(Object.entries(inc).map(([k,v]) => ["Income", k, v.toFixed(2)].map(csvQ).join(",")), Object.entries(tot).sort((a,b)=>b[1]-a[1]).map(([k,v]) => ["Expenses", k, v.toFixed(2)].map(csvQ).join(",")), ["", "Prepared from Marebook for your accountant; confirm line assignments before filing.", ""].map(csvQ).join(","));
+  await saveFile(`marebook-farm-tax-summary-${y}.csv`, lines.join("\n"), "text/csv");
+}
+// Breeding contract
+function contractDoc(oid){
+  const o = S.orders[oid], s = S.studs[o.studId] || {}, m = S.mares[o.mareId] || {}, e = esc;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Breeding contract</title><style>body{font:14px/1.6 Georgia,serif;max-width:720px;margin:40px auto;padding:0 20px;color:#111}h1{font-size:24px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 6px;text-transform:uppercase;letter-spacing:.06em}table{border-collapse:collapse;width:100%}td{border-bottom:1px solid #ccc;padding:6px 4px;vertical-align:top}td:first-child{width:40%;color:#555}.sig{display:flex;gap:40px;margin-top:40px}.sig div{flex:1;border-top:1px solid #111;padding-top:6px;font-size:12px}.note{font-size:12px;color:#666;margin-top:24px}</style></head><body>
+<h1>Stallion breeding contract</h1><div>${e(s.ranch || "Stallion station")} · ${e(s.city || "")}</div>
+<h2>Stallion</h2><table><tr><td>Name</td><td>${e(s.name)}</td></tr><tr><td>Breed</td><td>${e(s.breed)}</td></tr><tr><td>Station / farm</td><td>${e(s.ranch)}</td></tr><tr><td>Collection days</td><td>${e(collLabel(s))}</td></tr></table>
+<h2>Mare</h2><table><tr><td>Name</td><td>${e(m.name)}</td></tr><tr><td>Breed</td><td>${e(m.breed)}</td></tr><tr><td>Registration</td><td>${e([m.registry, m.regNo].filter(Boolean).join(" #"))}</td></tr><tr><td>Maiden</td><td>${e(yn(m.maiden))}</td></tr></table>
+<h2>Fees and shipment</h2><table><tr><td>Stud fee</td><td>${money(s.fee||0)}</td></tr><tr><td>Chute fee</td><td>${s.chuteFee?money(s.chuteFee):"None"}</td></tr><tr><td>Shipment</td><td>${e(o.type)} · ${e(o.doses)} dose(s) · ${s.shipFee?money(s.shipFee)+" per dose":"—"} · ${e(o.carrier)}</td></tr><tr><td>Needed by</td><td>${o.neededBy ? e(long(o.neededBy)) : "—"}</td></tr><tr><td>Ship to</td><td>${e(o.shipTo)}</td></tr></table>
+<h2>Terms</h2><p>Terms to be supplied by the stallion owner: live foal guarantee, rebreeding privileges, refund policy, registration papers and breeder's certificate timing.</p>
+<div class="sig"><div>Stallion owner / agent · date</div><div>Mare owner · date</div></div>
+<p class="note">Generated by Marebook on ${e(long(TODAY))}. A template for discussion, not legal advice; have it reviewed before use. E-signature through DocuSign comes with the full app.</p></body></html>`;
+}
+
+// Receipt scanning with Claude (Claude version only)
+async function scanReceipt(root){
+  const fileEl = root.querySelector('[name="file"]'), f = fileEl && fileEl.files && fileEl.files[0];
+  if (!f){ toast("Choose a receipt photo first"); fileEl && fileEl.click(); return; }
+  if (!/^image\//.test(f.type)){ toast("Scanning reads photos (JPG, PNG). PDFs attach but don't scan."); return; }
+  const btn = root.querySelector("#scanBtn"); btn.disabled = true; btn.textContent = "Reading receipt…";
+  const cats = Object.entries(EXP).map(([k,v]) => `${k} = ${v[0]}`).join("; ");
+  try {
+    const r = await sampleFn.json(`This image is a receipt or invoice for a horse breeding operation. Reply with only a JSON object: {"vendor": string, "date": "YYYY-MM-DD" or "", "amount": number (the total paid), "title": short description under 8 words, "category": one key from this list, "notes": invoice number or itemized summary under 20 words}. Category keys: ${cats}. Use "" or 0 when unreadable.`, {images:[f], modelTier:"default"});
+    const set = (n, v) => { const el = root.querySelector(`[name="${n}"]`); if (el && v != null && v !== "") { el.value = v; el.dispatchEvent(new Event("input", {bubbles:true})); } };
+    set("vendor", r.vendor); if (/^\d{4}-\d{2}-\d{2}$/.test(r.date||"")) set("date", r.date); if (Number(r.amount)) set("amount", Number(r.amount).toFixed(2)); set("title", r.title); if (EXP[r.category]) set("cat", r.category); set("notes", r.notes);
+    toast("Filled from the receipt. Check it, then save.");
+  } catch(e){
+    toast(e && e.code === "not_granted" ? "Receipt scanning needs your OK to use Claude." : e && e.code === "rate_limited" ? "Too many scans at once. Try again in a minute." : "Couldn't read that receipt. Fill it in by hand.");
+  } finally { btn.disabled = false; btn.textContent = "Scan receipt with AI"; }
+}
+
+// Voice or typed exam findings -> action chart fields
+function parseFindings(text){
+  const t = " " + text.toLowerCase().replace(/millimet(er|re)s?/g, "mm") + " ";
+  const words = {one:1,two:2,three:3,four:4};
+  const grab = side => { const m = t.match(new RegExp(side + "(?: ovary)?[,: ]+(.*?)(?=\\b(?:left|right|uterus|uterine|tone|edema|good|fair|poor|fluid|notes?)\\b|[,.;]|$)")); return m ? m[1].replace(/\b(has|is|with|a|an)\b/g,"").replace(/\b(cl|ch)\b/g, x => x.toUpperCase()).replace(/\s+/g," ").replace(/^[\s,]+|[\s,]+$/g,"").trim() : ""; };
+  let tone = "";
+  const ed = t.match(/edema\s*(?:grade\s*)?(one|two|three|1|2|3)/); if (ed) tone = "Edema " + (words[ed[1]] || ed[1]);
+  else if (/fluid/.test(t)) tone = "Fluid present"; else if (/\bgood\b/.test(t)) tone = "Good"; else if (/\bfair\b/.test(t)) tone = "Fair"; else if (/\bpoor\b/.test(t)) tone = "Poor";
+  const ovulated = /ovulat/.test(t) && !/(not|hasn'?t|has not|no)\s+ovulat/.test(t);
+  return {lo: grab("left"), ro: grab("right"), tone, ovulated};
+}
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function attachDictation(root){
+  const box = root.querySelector("#xSay"), mic = root.querySelector("#xMic"), fill = root.querySelector("#xFill"); if (!box) return;
+  fill.addEventListener("click", () => {
+    const p = parseFindings(box.value); const set = (n, v) => { const el = root.querySelector(`[name="${n}"]`); if (el && v) el.value = v; };
+    set("lo", p.lo); set("ro", p.ro); if (p.tone) set("tone", p.tone); if (p.ovulated) root.querySelector('[name="ovulated"]').checked = true;
+    toast("Filled from your notes. Check before saving.");
+  });
+  if (!mic) return;
+  if (!SR){ mic.disabled = true; mic.title = "Dictation isn't available in this browser; type instead."; return; }
+  mic.addEventListener("click", () => {
+    try {
+      const rec = new SR(); rec.lang = "en-US"; rec.interimResults = false;
+      mic.textContent = "Listening…"; mic.disabled = true;
+      rec.onresult = ev => { box.value = (box.value + " " + ev.results[0][0].transcript).trim(); fill.click(); };
+      rec.onerror = () => toast("Couldn't hear that. Type the findings instead.");
+      rec.onend = () => { mic.textContent = "Dictate"; mic.disabled = false; };
+      rec.start();
+    } catch(_){ toast("Dictation isn't available here. Type the findings instead."); mic.textContent = "Dictate"; mic.disabled = false; }
+  });
+}
+
+// Text reminders (settings + preview; sending comes with the full app)
+function smsPreview(){
+  const tomorrow = addDays(TODAY, 1), list = openTasks().filter(t => t.due <= tomorrow);
+  if (!list.length) return "Marebook: nothing due today or tomorrow.";
+  const g = groupTasks(list), bits = [];
+  for (const [k, ts] of Object.entries(g)) if (ts.length) bits.push(ts.slice(0,4).map(t => `${horseOf(t).name}: ${t.title}${t.due < TODAY ? " (late)" : t.due === tomorrow ? " (tomorrow)" : ""}`).join("\n"));
+  return `Marebook · ${short(TODAY)}\n${bits.join("\n")}${list.length > 8 ? `\n+${list.length-8} more in the app` : ""}`;
+}
+const ROLES = ["Owner","Barn manager","Staff","Vet","Trainer"];
+function roleOf(id){ return ((S.settings.roles||{}).map||{})[id] || (id === me.id ? "Owner" : "Staff"); }
+
+function viewIntegrations(){
+  const sms = (S.settings.sms || {}), years = [...new Set(arr("expenses").map(e => e.date.slice(0,4)))].sort().reverse();
+  if (!ui.qbYear) ui.qbYear = years[0] || TODAY.slice(0,4);
+  const card = (title, status, body, cls) => `<div class="feature"><div class="sec-h" style="margin:0"><h3>${title}</h3><span class="sp"></span><span class="pill ${cls||""}">${status}</span></div>${body}</div>`;
+  const ready = "in-foal", later = "bred";
+  return `${pageBar("Integrations", crumb("account","Account"))}
+  <section class="sec"><div class="features">
+    ${card("Google & Apple Calendar", "Works now", `<p>Every open reminder (ultrasounds, flush, shots, foal care) for the next 13 months, with an alert the evening before.</p><div class="row-btns"><button class="btn sm primary" data-ig="ics">Download calendar file</button></div><p class="hint">Google Calendar: Settings → Import & export → Import. iPhone or Mac: open the file and tap Add. The full app adds a live subscription link that updates itself.</p>`, ready)}
+    ${card("QuickBooks", "Export now · live sync Phase 2", `<p>Costs and income for the year, with QuickBooks-ready columns: transaction type, payee, account, class (the mare or foal) and memo.</p><div class="row-btns"><select class="search" id="qbYear" style="width:auto">${(years.length?years:[TODAY.slice(0,4)]).map(y=>`<option ${y===ui.qbYear?"selected":""}>${y}</option>`).join("")}</select><button class="btn sm primary" data-ig="qb">Export for QuickBooks</button></div><p class="hint">Hand it to your bookkeeper or import it in QuickBooks Online. In the full app, entries post to QuickBooks automatically.</p>`, later)}
+    ${card("Farm tax summary", "Works now", `<p>The year's costs totaled by IRS farm-expense line (feed, veterinary and breeding, freight, labor, insurance) plus income by type.</p><div class="row-btns"><button class="btn sm primary" data-ig="tax">Download ${esc(ui.qbYear)} summary</button></div><p class="hint">For your accountant; they confirm the line assignments.</p>`, ready)}
+    ${card("Receipt scanning", sampleImg ? "Works now" : "Claude version", `<p>Snap the vet bill and AI reads the vendor, date, total and category into the cost entry.</p><p class="hint">${sampleImg ? "Costs → Log cost → choose a photo → Scan receipt with AI." : "Available in the Marebook page inside Claude; the public demo attaches receipts without reading them."}</p>`, sampleImg ? ready : later)}
+    ${card("Voice entry for exams", SR ? "Works now" : "Type or dictate", `<p>In any exam, say or type "left 35 millimeter follicle, right CL, edema 2" and Marebook fills the action chart.</p><p class="hint">Open a mare → Action chart → + Exam → Dictate. ${SR ? "" : "This browser can't dictate; typing works everywhere, or use your phone keyboard's mic."}</p>`, ready)}
+    ${card("Breeding contracts", "Generate now · e-sign Phase 2", `<p>Every semen order can produce a breeding contract with the stallion, mare, fees and shipment filled in.</p><div class="row-btns"><button class="btn sm" data-nav="orders">Go to orders</button></div><p class="hint">E-signature through DocuSign comes with the full app.</p>`, later)}
+    ${card("Text message reminders", sms.on ? "Set up" : "Phase 2", `<p>A morning text with what's due, sent to whoever works the barn.</p><div class="pf" style="gap:8px"><label for="smsPhones" class="lbl">Phone numbers (one per line)</label><textarea id="smsPhones" rows="2" placeholder="817-555-0142 Kelly">${esc(sms.phones||"")}</textarea><label for="smsTime" class="lbl">Send at</label><input id="smsTime" type="time" value="${esc(sms.time||"06:30")}" style="max-width:140px"></div><div class="row-btns"><button class="btn sm primary" data-ig="sms">Save</button></div><pre class="notes" style="font-family:var(--f-mono);font-size:12px">${esc(smsPreview())}</pre><p class="hint">Preview of tomorrow's text. Sending starts with the full app (Twilio, about a cent per text).</p>`, sms.on ? ready : later)}
+    ${card("Vet & team access", "Roles now · limits Phase 2", `<p>Mark each person as owner, barn manager, staff, vet or trainer on the Team page.</p><div class="row-btns"><button class="btn sm" data-nav="team">Set roles</button></div><p class="hint">The full app limits vets to exams and records and keeps costs private to owners.</p>`, later)}
+    ${card("Works offline", local ? "On this device" : "Saves when online", `<p>${local ? "This demo saves to this device, so it keeps working with no signal." : "Changes save as you go and catch up when the connection returns."}</p><p class="hint">The full app keeps a phone copy of the barn and syncs when the signal comes back.</p>`, ready)}
+    ${card("Foaling alarms", "Phase 3", `<p>Alerts from foaling cameras and sensors land in Today's alerts beside the mare's foaling window.</p><p class="hint">Kelly: which monitors do local barns use? That decides the first one to connect.</p>`, later)}
+  </div></section>`;
+}
+
+// v6 events
+document.addEventListener("click", async ev => {
+  const el = ev.target.closest("[data-ig],[data-contract]"); if (!el) return;
+  const k = el.dataset.ig;
+  if (el.dataset.contract){ const oid = el.dataset.contract; const o = S.orders[oid]; await saveFile(`breeding-contract-${(S.mares[o.mareId]||{name:"mare"}).name.replace(/[^\w]+/g,"-").toLowerCase()}.html`, contractDoc(oid), "text/html"); return; }
+  if (k === "ics") await exportIcs();
+  else if (k === "qb") await exportQuickBooks();
+  else if (k === "tax") await exportTax();
+  else if (k === "sms"){ if (!canWrite) return; await put("settings", "sms", {phones: $("#smsPhones").value.trim(), time: $("#smsTime").value, on: !!$("#smsPhones").value.trim(), updatedBy: me.id}); toast("Text reminders saved"); }
+});
+document.addEventListener("change", async ev => {
+  const t = ev.target;
+  if (t.id === "qbYear"){ ui.qbYear = t.value; render(); }
+  if (t.dataset && t.dataset.role && canWrite){ const cur = (S.settings.roles||{}).map || {}; await put("settings", "roles", {map: {...cur, [t.dataset.role]: t.value}}); toast("Role saved"); }
+});
+window.addEventListener("offline", () => { $("#banner").hidden = false; $("#banner").textContent = "You're offline. Keep working; changes catch up when you reconnect."; });
+window.addEventListener("online", () => { if (local){ $("#banner").textContent = "Demo mode: changes save on this device only."; } else { $("#banner").hidden = true; } });
 
 // ---------- sample data ----------
 async function loadSample(){
@@ -2134,6 +2298,7 @@ document.addEventListener("click", async e => {
   else if (d.act === "edit-stud") studForm(d.id);
   else if (d.act === "print-todo") printTodo();
   else if (d.act === "print-cal") printCal();
+  else if (d.act === "reset-demo"){ try { localStorage.removeItem(DEMO_KEY); } catch(_){} for (const c of COLLS) S[c] = {}; await loadSample(); toast("Demo reset to the sample barn"); }
   else if (d.act === "add-stud") studForm();
   else if (d.act === "order"){ orderForm(d.id); }
   else if (d.act === "del-stud"){ close(); ui.stud = null; for (const t of studTasks(d.id)) await del("tasks", t.id); await del("studs", d.id); toast("Listing removed"); }
@@ -2151,7 +2316,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
 render();
 (async () => {
   const c = window.claude;
-  [db, user, assets, downloads] = c && c.use ? await Promise.all(["db","user","assets","downloads"].map(n => c.use(n).catch(()=>null))) : [null, null, null, null];
+  [db, user, assets, downloads, sampleFn] = c && c.use ? await Promise.all(["db","user","assets","downloads","sample"].map(n => c.use(n).catch(()=>null))) : [null, null, null, null, null];
+  if (sampleFn){ try { const lim = await sampleFn.limits(); sampleImg = !!(lim && lim.images); } catch(_){ sampleImg = false; } }
   if (user){
     me = await user.me();
     if (me.avatarUrl){ $("#meAv").src = me.avatarUrl; $("#meAv").hidden = false; }
@@ -2159,8 +2325,8 @@ render();
   }
   if (!db){
     local = true; me = me.id ? me : {id:"local"};
-    $("#banner").hidden = false; $("#banner").textContent = "Preview mode: showing a sample barn. Changes aren't saved.";
-    ready = true; await loadSample(); render(); return;
+    $("#banner").hidden = false; $("#banner").textContent = "Demo mode: changes save on this device only.";
+    ready = true; if (!loadLocal()) await loadSample(); render(); return;
   }
   let pending = COLLS.length;
   for (const coll of COLLS){
@@ -2174,4 +2340,5 @@ render();
 })();
 })();
 </script>
+
 </body></html>
