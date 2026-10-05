@@ -1,0 +1,21 @@
+{
+  "name": "Marebook",
+  "short_name": "Marebook",
+  "description": "Mare, foal and stallion records with a breeding calendar that runs itself.",
+  "start_url": "/#today",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0e10",
+  "theme_color": "#0a0e10",
+  "categories": ["productivity", "business", "lifestyle"],
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "Daily to-do", "url": "/#todo"},
+    {"name": "Calendar", "url": "/#calendar"}
+  ]
+}

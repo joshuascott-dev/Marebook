@@ -4,6 +4,12 @@
 <meta name="theme-color" content="#0a0e10">
 <meta property="og:title" content="Marebook"><meta property="og:description" content="Never miss a breeding milestone again. Mare, foal and stallion records with a calendar that runs itself."><meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e10'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%232c8c8f' stroke-width='3'/%3E%3Ccircle cx='17' cy='44' r='7' fill='%233aa7d6'/%3E%3Ctext x='35' y='41' text-anchor='middle' font-family='Georgia,serif' font-size='26' fill='%23e8eced'%3EM%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Marebook">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <style>:root{color-scheme:light}body{margin:0;background:#f5f3ee}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -645,6 +651,22 @@ body.is-public .tabs, body.is-public .fab{display:none}
 .season-grid b{font-family:var(--f-display);font-size:30px;line-height:1}
 .season-grid small{font-size:12.5px;color:var(--muted)}
 .season .hint{margin:12px 0 10px}
+.cycle .kpis{margin-bottom:12px}
+.cstrip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;margin-top:4px}
+.cs{height:16px;border-radius:3px;background:var(--sunk)}
+.cs.heat{background:color-mix(in srgb,var(--gold) 55%,var(--surface))}
+.cs.ov{background:var(--gold)}
+.cs.now{box-shadow:0 0 0 2px var(--ink);position:relative;z-index:1}
+.cstrip-l{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:4px;font-family:var(--f-mono)}
+.fol{margin-top:12px;border-radius:10px;padding:10px 12px;display:grid;gap:2px;font-size:13.5px;background:var(--brass-soft)}
+.fol.hot{background:var(--warn-soft)} .fol.hot b{color:var(--warn)}
+.install{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:14px;align-items:center;background:radial-gradient(500px 200px at 0% 0%,rgb(44 140 143 / .14),transparent 70%),var(--surface)}
+.install-ic{width:58px;height:58px;border-radius:14px;background:var(--night);display:grid;place-items:center;overflow:hidden}
+.install-ic .logo{width:52px!important;height:auto!important}
+.install b{display:block;font-family:var(--f-display);font-size:21px}
+.install span{font-size:13.5px;color:var(--muted)}
+@media (max-width:620px){.install{grid-template-columns:auto minmax(0,1fr)}.install .btn{grid-column:1/-1}}
+.steps-ios{margin:0 0 12px;padding-left:20px;display:grid;gap:8px;font-size:15px}
 @media print{.top,.tabs,.site-foot,.fab,#banner{display:none!important}}
 </style>
 
@@ -758,12 +780,14 @@ if (!["today","barn","calendar","costs","studs","team","todo","account","plans",
 const arr = c => Object.entries(S[c]).map(([id,v]) => ({id, ...v}));
 
 async function put(c, id, data){
+  if (cloud){ if (S[c][id] && S[c][id]._ext) { toast("That listing belongs to another barn"); return; } cloudWrite("up", c, id, data); return; }
   if (local || !db){ S[c][id] = data; saveLocal(); render(); return; }
   try { await db.collection(c).doc(id).set(data); }
   catch(e){ handleErr(e); }
 }
 async function patch(c, id, data){ const cur = S[c][id] || {}; return put(c, id, {...cur, ...data}); }
 async function del(c, id){
+  if (cloud){ if (S[c][id] && S[c][id]._ext) return; cloudWrite("del", c, id); return; }
   if (local || !db){ delete S[c][id]; saveLocal(); render(); return; }
   try { await db.collection(c).doc(id).delete(); } catch(e){ handleErr(e); }
 }
@@ -850,7 +874,7 @@ async function genFoalTasks(foalId, fo, doneBefore){
 async function scheduleCollection(mareId, m, stud){
   const s = stud || S.studs[m.stallionId]; if (!s || m.ovulationDate) return null;
   if (!(m.status === "open" || m.status === "bred")) return null;
-  const nxt = nextCollections(s, 1, addDays(TODAY, 1))[0]; if (!nxt) return null;
+  const ci = cycleInfo(m); const nxt = ci && notPregnant(m) ? alignedCollection(s, ci.nextOv) : nextCollections(s, 1, addDays(TODAY, 1))[0]; if (!nxt) return null;
   const pb = S.tasks[mareId + "_x_prebreed"], br = S.tasks[mareId + "_x_breed"];
   if (!(pb && pb.done)) await put("tasks", mareId + "_x_prebreed", {...(pb||{}), mareId, title:`Ultrasound to time breeding · order for ${wdShort(nxt)} collection (${s.name})`, due:addDays(nxt, -1), cat:"vet", exam:true, auto:true, done:false, sample:!!m.sample});
   if (!(br && br.done)) await put("tasks", mareId + "_x_breed", {...(br||{}), mareId, title:`Semen arrives · breed (${s.name}, collected ${short(nxt)})`, due:addDays(nxt, 1), cat:"breeding", auto:true, done:false, sample:!!m.sample});
@@ -886,6 +910,7 @@ function render(){
   if (keep){ const n = document.getElementById(keep.id); if (n && n !== ae){ n.value = keep.v; n.focus({preventScroll:true}); try { n.setSelectionRange(keep.s, keep.s); } catch(_){} } }
 }
 function _render(app){
+  if (CLOUD_ON && ready && !cloud && !isPublic()){ app.innerHTML = authGate(); return; }
   if (!ready){ app.innerHTML = `<div class="welcome"><h2>Opening the barn…</h2><p>Loading mares, checklists and stallion listings.</p></div>`; return; }
   if (ui.foal && S.foals[ui.foal]) app.innerHTML = viewFoal(ui.foal);
   else if (ui.stud && S.studs[ui.stud]) app.innerHTML = viewStud(ui.stud);
@@ -981,6 +1006,7 @@ function viewMare(id){
   ${g != null ? `<section class="sec"><div class="big-gest"><div class="d">Day ${g} <small>of ~${GEST} days · from ${m.ovulationDate?"ovulation":"breeding date"} · due ${short(dueDate(m))}</small></div>${gestBar(m)}<div class="chips">${seasonChip(m)}<span class="chip">Foal will be ${ageAtTwo(dueDate(m))} months old on Jan 1, ${parse(dueDate(m)).getFullYear()+2}, when it's a two-year-old</span></div></div></section>` : ""}
   ${(m.status === "open" || (m.status === "foaled" && carries(m))) ? (() => { const w = currentCrop(), st = seasonStatus(w); return `<section class="sec"><div class="howto"><b>${w.year} foal crop · ${esc(st.t)}</b><span>Breed ${esc(m.name)} ${short(w.open)} – ${short(w.close)} to foal ${MONTHS_L[season().start-1]}–${MONTHS_L[season().end-1]} (${MONTHS_L[season().ideal-1]} is ideal: breed ${short(w.idealFrom)} – ${short(w.idealTo)}). ${TODAY >= w.open ? `Bred today, she'd foal about ${short(addDays(TODAY, GEST))}, ${parse(addDays(TODAY, GEST)).getFullYear()}.` : ""}</span></div></section>`; })() : ""}
   ${stud && collDays(stud).length && !m.ovulationDate ? `<section class="sec"><div class="howto"><b>${esc(stud.name)} collects ${esc(collLabel(stud))}</b><span>Next collections: ${nc.map(wdShort).join(", ")}. Her pre-breeding ultrasound is set for the day before the next one.</span>${canWrite?`<div class="row-btns"><button class="btn sm" data-stud="${stud.id}">Stallion profile</button><button class="btn sm primary" data-act="order" data-id="${stud.id}">Order semen</button></div>`:""}</div></section>` : ""}
+  ${cycleCard(id)}
   ${actionTable(id)}
   <section class="sec"><div class="sec-h"><h2>Reminders & care</h2><span class="sp"></span>${canWrite?`<button class="btn sm" data-act="add-task" data-id="${id}">+ Task</button>`:""}</div>
     <div class="list">${open.length ? open.map(t=>taskRow(t,false)).join("") : `<div class="empty-row">${m.status==="open"?"Check Ovulated in the action chart to build her breeding checklist.":"All caught up."}</div>`}</div>
@@ -1029,7 +1055,7 @@ function viewOrders(){
   if (!os.length) return `<div class="sec"><div class="list"><div class="empty-row">No semen orders yet. Pick a stallion under Browse studs and tap Order semen.</div></div></div>`;
   return `<div class="sec">${os.map(o => {
     const s = S.studs[o.studId] || {name:"Removed listing"}, m = S.mares[o.mareId];
-    const i = OSTEPS.indexOf(o.status), canAdv = canWrite && i < 3 && (s.createdBy === me.id || local);
+    const i = OSTEPS.indexOf(o.status), canAdv = canWrite && i < 3 && (ownsStud(s));
     return `<div class="order">
       <div class="stud-h"><h3>${esc(s.name)}</h3><span class="fee">${esc(o.doses)} dose${o.doses>1?"s":""}</span></div>
       <div class="muted" style="font-size:13px;margin-top:-6px">${esc(o.type)} · for ${esc(m?m.name:"—")} · needed ${o.neededBy?short(o.neededBy):"—"} · ${esc(o.carrier)}</div>
@@ -1042,13 +1068,14 @@ function viewOrders(){
 function viewTeam(){
   const ids = new Set(); for (const c of ["mares","tasks","studs","orders","expenses"]) for (const v of Object.values(S[c])) ["createdBy","assignee","doneBy","requestedBy","paidBy"].forEach(f=>v[f]&&ids.add(v[f]));
   if (me.id) ids.add(me.id);
+  if (cloud) for (const x of barnMembers) ids.add(x.user_id);
   const open = openTasks();
   const people = [...ids].map(id => ({id, n: open.filter(t=>t.assignee===id).length, over: open.filter(t=>t.assignee===id && t.due<TODAY).length}));
   const unassigned = open.filter(t=>!t.assignee && diff(t.due,TODAY)<=14);
   return `${pageBar("Team", crumb("account","Account"))}
   <section class="sec"><div class="sec-h"><h2>On this barn</h2></div>
     <div class="list">${people.length ? people.map(p=>`<div class="person"><img src="${esc(pav(p.id))}" alt=""><span class="n">${esc(pname(p.id))}${p.id===me.id?' <span class="muted">(you)</span>':""}</span><span class="muted" style="font-size:13px">${p.n} open${p.over?` · <span style="color:var(--warn)">${p.over} late</span>`:""}</span><select class="datein" data-role="${esc(p.id)}" aria-label="Role" ${canWrite?"":"disabled"}>${ROLES.map(r => `<option ${roleOf(p.id)===r?"selected":""}>${r}</option>`).join("")}</select></div>`).join("") : `<div class="empty-row">${local?"Team members appear once the barn is saved.":"Just you so far."}</div>`}</div></section>
-  <section class="sec"><div class="howto"><b>Add hands, vets and trainers</b><ol><li>Tap Share on this page.</li><li>Add each person and give them Contributor access so they can tick off tasks.</li><li>Assign any checklist item by tapping it.</li></ol></div></section>
+  ${cloud ? barnSection() : ""}<section class="sec" ${cloud?"hidden":""}><div class="howto"><b>Add hands, vets and trainers</b><ol><li>Tap Share on this page.</li><li>Add each person and give them Contributor access so they can tick off tasks.</li><li>Assign any checklist item by tapping it.</li></ol></div></section>
   ${owedSection()}
   <section class="sec"><div class="sec-h"><h2>Unassigned · next 14 days</h2></div>
     <div class="list">${unassigned.length ? unassigned.map(t=>taskRow(t)).join("") : `<div class="empty-row">Everything coming up has an owner.</div>`}</div></section>
@@ -1849,7 +1876,7 @@ document.addEventListener("click", async ev => {
   else if (a === "undo-sale"){ const fo = S.foals[fid]; for (const s of ["_sale","_comm","_fees","_mkt"]) if (S.expenses[fid+s]) await del("expenses", fid+s); await put("foals", fid, {...fo, status: fo.asking ? "listed" : "raising", soldOn:"", soldPrice:0, buyer:"", saleType:""}); toast("Sale undone"); }
 });
 
-const photoUrl = p => LURL[p.id] || "/_blob/" + p.id;
+const photoUrl = p => LURL[p.id] || (CLOUD_MEDIA && String(p.id).includes("/") ? CLOUD_MEDIA + p.id : "/_blob/" + p.id);
 function thumbs(kind, id, photos, big, canAdd = true){
   const ps = photos || [];
   const add = canAdd && canWrite && assets ? `<label class="thumb add" title="Add photo">+<span>Photo</span><input type="file" accept="image/*" data-photo-add="${kind}:${id}" hidden></label>` : "";
@@ -1863,11 +1890,12 @@ function chipsFor(m){
   if (m.carry === "no") c.push("Donor only"); else if (m.carry === "yes") c.push("Carry");
   if (isET(m)) c.push("Embryo transfer");
   if (m.lte) c.push("LTE " + m.lte);
-  const sc = seasonChip(m);
+  let sc = seasonChip(m);
+  if (notPregnant(m)){ const ci = cycleInfo(m, m.id); if (ci && (ci.inHeatNow || (ci.fol && ci.fol.k === "hot"))) sc += `<span class="chip sw-ideal">${ci.fol && ci.fol.k === "hot" ? "Ovulation close" : "In heat window"}</span>`; }
   return c.length || sc ? `<div class="chips">${c.map(x => `<span class="chip">${esc(x)}</span>`).join("")}${sc}</div>` : "";
 }
 function jumpSelect(){
-  const ms = arr("mares").sort((a,b)=>a.name.localeCompare(b.name)), fs = arr("foals").filter(f => f.status !== "sold").sort((a,b)=>(b.foaledOn||"").localeCompare(a.foaledOn||"")), ss = arr("studs").filter(s => s.createdBy === me.id || local).sort((a,b)=>a.name.localeCompare(b.name));
+  const ms = arr("mares").sort((a,b)=>a.name.localeCompare(b.name)), fs = arr("foals").filter(f => f.status !== "sold").sort((a,b)=>(b.foaledOn||"").localeCompare(a.foaledOn||"")), ss = arr("studs").filter(s => ownsStud(s)).sort((a,b)=>a.name.localeCompare(b.name));
   return `<select class="search" id="jump" aria-label="Open a horse"><option value="">Find a horse…</option>
     ${ms.length?`<optgroup label="My mares">${ms.map(m=>`<option value="mare:${m.id}">${esc(m.name)}</option>`).join("")}</optgroup>`:""}
     ${fs.length?`<optgroup label="Foals">${fs.map(f=>`<option value="foal:${f.id}">${esc(foalName(f))}</option>`).join("")}</optgroup>`:""}
@@ -1898,7 +1926,7 @@ function calItems(){
   return byDay;
 }
 function viewStud(sid){
-  const s = S.studs[sid], mine = s.createdBy === me.id || local;
+  const s = S.studs[sid], mine = ownsStud(s);
   const nc = nextCollections(s, 6), ts = studTasks(sid).filter(t => !t.done), bredTo = arr("mares").filter(m => m.stallionId === sid);
   return `${pageBar(esc(s.name) + (s.sample?'<span class="tag">Sample</span>':""), `${mine ? crumb("stallions","My stallions") : crumb("search","Stallion search")}<span>›</span><span>Stallion profile</span>`, `<span class="fee">${money(s.fee||0,false)} stud fee</span>`)}
   ${studHeader(sid, mine)}
@@ -1922,20 +1950,42 @@ function examForm(tid, mareId){
     <div class="two"><div class="field"><label for="x-lo">Left ovary</label><input id="x-lo" name="lo" value="${esc(t.lo)}" placeholder="35 mm follicle, CL…"></div>
     <div class="field"><label for="x-ro">Right ovary</label><input id="x-ro" name="ro" value="${esc(t.ro)}" placeholder="Small follicles"></div></div>
     <div class="field"><label for="x-tone">Uterine tone</label><select id="x-tone" name="tone">${TONES.map(x=>`<option ${t.tone===x?"selected":""}>${x}</option>`).join("")}</select></div>
+    ${tid && isPregCheck(tid) ? `<div class="field"><label for="x-res">Pregnancy check result</label><select id="x-res" name="result"><option value="">Not recorded</option>${["Pregnant","Open","Twins"].map(x => `<option ${t.result===x?"selected":""}>${x}</option>`).join("")}</select><div class="hint">Open puts her back on heat watch and clears her pregnancy schedule.</div></div>` : ""}
     <div class="checks"><label><input type="checkbox" name="ovulated" ${t.ovulated?"checked":""}> Ovulated</label><label><input type="checkbox" name="done" ${t.done||!tid?"checked":""}> Completed</label></div>
+    ${m && notPregnant(m) && !t.ovulated ? (() => { const bd = !!m.stallionId || mareTasks(t.mareId).some(x => /breed|insem/i.test(x.title) && diff(TODAY, x.due) <= 4 && diff(TODAY, x.due) >= 0); return `<div class="field" id="xBredF" ${t.ovulated?"":"hidden"}><label>Bred this cycle?</label><div class="seg" style="margin:0"><button type="button" data-xb="yes" aria-pressed="${bd}">Yes · start pregnancy checks</button><button type="button" data-xb="no" aria-pressed="${!bd}">No · just track her cycle</button></div></div>`; })() : ""}
     <div class="field"><label for="x-notes">Notes</label><textarea id="x-notes" name="notes" placeholder="Fluid, cysts, treatment given, vet">${esc(t.notes)}</textarea></div>
     ${m && !m.ovulationDate ? `<p class="hint">Checking Ovulated sets ${esc(m.name)}'s ovulation date to this exam's date and schedules ${carries(m)?"her 14, 25, 35, 45 and 60-day ultrasounds":""}${carries(m)&&isET(m)?" and ":""}${isET(m)?"a day-8 flush":""}${!carries(m)&&!isET(m)?"her pregnancy checks":""}.</p>` : ""}
     <div class="row-btns"><button class="btn primary" type="submit" ${canWrite?"":"disabled"}>Save</button>${tid && canWrite ? `<button class="btn" type="button" id="xCost">Log cost</button>` : ""}<button class="btn" type="button" data-close>Cancel</button>${tid && !auto && canWrite ? `<button class="btn danger" type="button" id="xDel">Delete</button>` : ""}</div>
   </form>`, root => {
     const f = root.querySelector("#xf"); attachDictation(root);
+    const bf = root.querySelector("#xBredF"), ovBox = f.querySelector('[name="ovulated"]');
+    if (bf){ ovBox.addEventListener("change", () => { bf.hidden = !ovBox.checked; }); bf.querySelectorAll("[data-xb]").forEach(b => b.addEventListener("click", () => bf.querySelectorAll("[data-xb]").forEach(x => x.setAttribute("aria-pressed", String(x === b))))); }
     f.addEventListener("submit", async ev => { ev.preventDefault();
       const done = f.querySelector('[name="done"]').checked, ovul = f.querySelector('[name="ovulated"]').checked;
       const d = {...t, due:val(f,"due"), lo:val(f,"lo"), ro:val(f,"ro"), tone:val(f,"tone"), notes:val(f,"notes"), ovulated:ovul, exam:true, done, doneBy: done ? (t.doneBy || me.id) : null, doneAt: done ? (t.doneAt || val(f,"due")) : null};
+      const res = f.querySelector('[name="result"]') ? val(f,"result") : (t.result || ""); if (res) d.result = res;
+      const xb = root.querySelector('[data-xb][aria-pressed="true"]'), bredCycle = xb ? xb.dataset.xb === "yes" : true;
       if (!auto) d.title = val(f,"title") || "Ultrasound";
       if (!tid){ d.createdBy = me.id; d.auto = false; }
       const nid = tid || uid(); close(); await put("tasks", nid, d);
+      if (res && res !== t.result && m && tid){
+        if (res === "Open"){
+          for (const x of mareTasks(t.mareId)) if (!x.done && x.auto && (x.id.includes("_p_") || x.id.includes("_e_"))) await del("tasks", x.id);
+          const md = {...m, status:"open", lastBred: m.ovulationDate || m.coverDate || "", cycles:[...new Set([...(m.cycles||[]), ...(m.ovulationDate ? [m.ovulationDate] : [])])].sort(), ovulationDate:"", coverDate:""};
+          await put("mares", t.mareId, md); await genHeatTasks(t.mareId, md); const ci = cycleInfo(md);
+          toast(`${m.name} is open · back in heat ~${ci ? short(ci.heatFrom) : "soon"}`); return;
+        }
+        if (res === "Twins"){ await put("tasks", t.mareId + "_x_twins", {mareId:t.mareId, title:"Twins found · decide on pinching / reduction with your vet today", due:TODAY, cat:"vet", auto:true, done:false, sample:!!m.sample}); toast("Twins recorded · vet decision added for today"); return; }
+        if (res === "Pregnant" && m.status === "bred" && taskKey(tid) !== "d14"){ await put("mares", t.mareId, {...m, status:"in-foal"}); toast(`${m.name} confirmed in foal`); return; }
+      }
+      if (ovul && !t.ovulated && m && notPregnant(m) && !bredCycle){
+        const md = {...m, cycles:[...new Set([...(m.cycles||[]), d.due])].sort()};
+        await put("mares", t.mareId, md); await genHeatTasks(t.mareId, md); const ci = cycleInfo(md);
+        toast(`Ovulation logged · next heat ~${ci ? short(ci.heatFrom) : ""}`); return;
+      }
       if (ovul && !t.ovulated && m){
-        const md = {...m, ovulationDate: d.due, status: m.status === "open" || m.status === "foaled" ? "bred" : m.status};
+        for (const x of mareTasks(t.mareId)) if (!x.done && /_x_(heat|fcheck)\d+$/.test(x.id)) await del("tasks", x.id);
+        const md = {...m, ovulationDate: d.due, cycles:[...new Set([...(m.cycles||[]), d.due])].sort(), status: m.status === "open" || m.status === "foaled" ? "bred" : m.status};
         await put("mares", t.mareId, md); await genTasks(t.mareId, md);
         const bits = []; if (carries(md)) bits.push("14/25/35/45/60-day ultrasounds"); if (isET(md)) bits.push("flush " + short(addDays(d.due, 8)));
         toast(`Ovulation ${short(d.due)} · ${bits.join(" + ") || "recorded"}`);
@@ -1946,7 +1996,7 @@ function examForm(tid, mareId){
   });
 }
 function horseOptions(sel){
-  const ms = arr("mares").sort((a,b)=>a.name.localeCompare(b.name)), fs = arr("foals").filter(f=>f.status!=="sold").sort((a,b)=>(b.foaledOn||"").localeCompare(a.foaledOn||"")), ss = arr("studs").filter(s => s.createdBy === me.id || local).sort((a,b)=>a.name.localeCompare(b.name));
+  const ms = arr("mares").sort((a,b)=>a.name.localeCompare(b.name)), fs = arr("foals").filter(f=>f.status!=="sold").sort((a,b)=>(b.foaledOn||"").localeCompare(a.foaledOn||"")), ss = arr("studs").filter(s => ownsStud(s)).sort((a,b)=>a.name.localeCompare(b.name));
   return `${ms.length?`<optgroup label="Mares">${ms.map(m=>`<option value="mare:${m.id}" ${sel==="mare:"+m.id?"selected":""}>${esc(m.name)}</option>`).join("")}</optgroup>`:""}
     ${fs.length?`<optgroup label="Foals">${fs.map(f=>`<option value="foal:${f.id}" ${sel==="foal:"+f.id?"selected":""}>${esc(foalName(f))}</option>`).join("")}</optgroup>`:""}
     ${ss.length?`<optgroup label="My stallions">${ss.map(s=>`<option value="stallion:${s.id}" ${sel==="stallion:"+s.id?"selected":""}>${esc(s.name)}</option>`).join("")}</optgroup>`:""}`;
@@ -1999,7 +2049,7 @@ function openHorse(ref){
 }
 function photoSheet(ref){
   const [kind, id, i] = ref.split(":"), c = COLL_OF[kind], o = S[c][id], p = (o.photos||[])[+i]; if (!p) return;
-  const mine = kind !== "stallion" || o.createdBy === me.id || local;
+  const mine = kind !== "stallion" || ownsStud(o);
   sheet(`<img src="${esc(photoUrl(p))}" alt="" style="width:100%;border-radius:12px;max-height:70vh;object-fit:contain;background:var(--sunk)">
     <div class="row-btns" style="margin-top:12px">${canWrite && mine && +i>0?`<button class="btn" id="phCover">Make main photo</button>`:""}${canWrite && mine?`<button class="btn danger" id="phDel">Remove photo</button>`:""}<button class="btn" data-close>Close</button></div>`, root => {
     const cv = root.querySelector("#phCover"); cv && cv.addEventListener("click", async () => { const ps = [...o.photos]; const [x] = ps.splice(+i,1); ps.unshift(x); close(); await put(c, id, {...o, photos:ps}); });
@@ -2020,7 +2070,7 @@ ${sections.map(s => `<h2>${e(s.h)} (${s.rows.length})</h2>${s.rows.length ? `<ta
 <footer>Marebook · ${e(LEGAL)} · printed ${e(long(TODAY))}</footer></body></html>`;
 }
 async function saveDoc(filename, html){
-  if (local){ try { const w = window.open("", "_blank"); if (w){ w.document.open(); w.document.write(html.replace("</body>", "<script>setTimeout(function(){print()},350)<\/script></body>")); w.document.close(); return; } } catch(_){} }
+  if (local || cloud){ try { const w = window.open("", "_blank"); if (w){ w.document.open(); w.document.write(html.replace("</body>", "<script>setTimeout(function(){print()},350)<\/script></body>")); w.document.close(); return; } } catch(_){} }
   await saveFile(filename, html, "text/html");
 }
 async function printTodo(){
@@ -2050,7 +2100,7 @@ document.addEventListener("click", ev => {
 
 function navKey(){
   if (ui.mare) return "mares"; if (ui.foal) return "foals";
-  if (ui.stud) return (S.studs[ui.stud] && (S.studs[ui.stud].createdBy === me.id || local)) ? "stallions" : "search";
+  if (ui.stud) return (S.studs[ui.stud] && (ownsStud(S.studs[ui.stud]))) ? "stallions" : "search";
   if (ui.view === "barn") return ui.barnSeg === "foals" ? "foals" : "mares";
   if (ui.view === "studs") return ui.studSeg === "browse" ? "search" : ui.studSeg === "mine" ? "stallions" : "account";
   if (PUBLIC_VIEWS.includes(ui.view)) return ui.view;
@@ -2058,7 +2108,8 @@ function navKey(){
   return ui.view;
 }
 function nav(k){
-  const map = {today:["today"], mares:["barn",{barnSeg:"mares"}], foals:["barn",{barnSeg:"foals"}], stallions:["studs",{studSeg:"mine"}], search:["studs",{studSeg:"browse"}], orders:["studs",{studSeg:"orders"}], calendar:["calendar"], todo:["todo"], account:["account"], costs:["costs"], team:["team"], plans:["plans"], landing:["landing"], integrations:["integrations"], about:["about"], contact:["contact",{contactSent:null}], "mare-owners":["mare-owners"], "stallion-owners":["stallion-owners"], join:["join"], members:["members"], pricing:["landing"]};
+  const map = {today:["today"], mares:["barn",{barnSeg:"mares"}], foals:["barn",{barnSeg:"foals"}], stallions:["studs",{studSeg:"mine"}], search:["studs",{studSeg:"browse"}], orders:["studs",{studSeg:"orders"}], calendar:["calendar"], todo:["todo"], account:["account"], costs:["costs"], team:["team"], plans:["plans"], landing:["landing"], integrations:["integrations"], about:["about"], contact:["contact",{contactSent:null}], "mare-owners":["mare-owners"], "stallion-owners":["stallion-owners"], join:["join"], members:["members",{}], pricing:["landing"]};
+  if (k === "members" && cloud) adminRows = null;
   const [v, extra] = map[k] || ["today"]; Object.assign(ui, extra || {}); go(v);
   if (k === "pricing") setTimeout(() => { const t = document.getElementById("pricing"); t && t.scrollIntoView({behavior:"smooth"}); }, 60);
 }
@@ -2112,6 +2163,7 @@ async function applyMare(id, patch){
   if (patch.carry === "no") for (const t of mareTasks(id)) if (!t.done && t.auto && t.id.includes("_p_")) await del("tasks", t.id);
   if (patch.et === "no") for (const t of mareTasks(id)) if (!t.done && t.auto && t.id.includes("_e_")) await del("tasks", t.id);
   await put("mares", id, d); await genTasks(id, d);
+  if ("foalDate" in patch || "status" in patch) await genHeatTasks(id, S.mares[id] || d);
   const c = "stallionId" in patch ? await scheduleCollection(id, d) : null;
   if (newFoaling && !arr("foals").some(x => x.damId === id && x.foaledOn === d.foalDate)) toast("Foaling date saved", "Add New Foal", () => foalEdit(null, id, d.foalDate));
   else if (c) toast(`Saved · pre-breeding ultrasound ${short(addDays(c,-1))}`);
@@ -2217,7 +2269,9 @@ function viewPlans(){
 function viewAccount(){
   const cur = curPlan(), n = horseCount();
   const tile = (k, t, s) => `<button class="tile" data-nav="${k}"><b>${t}</b><span>${s}</span></button>`;
-  return `${pageBar("Account", "Membership, money, team and settings")}
+  return `${pageBar("Account", cloud ? esc(me.email || "") : "Membership, money, team and settings")}
+  ${barnSection()}
+  ${installCard()}
   <section class="sec"><div class="tiles">
     ${tile("plans","Membership", `${cur.name} · ${n} of ${cur.horses===Infinity?"unlimited":cur.horses} horses`)}
     ${tile("costs","Costs & profit","Ledger, bills, foal profit, budgets")}
@@ -2380,8 +2434,8 @@ function smsPreview(){
   for (const [k, ts] of Object.entries(g)) if (ts.length) bits.push(ts.slice(0,4).map(t => `${horseOf(t).name}: ${t.title}${t.due < TODAY ? " (late)" : t.due === tomorrow ? " (tomorrow)" : ""}`).join("\n"));
   return `Marebook · ${short(TODAY)}\n${bits.join("\n")}${list.length > 8 ? `\n+${list.length-8} more in the app` : ""}`;
 }
-const ROLES = ["Owner","Barn manager","Staff","Vet","Trainer"];
-function roleOf(id){ return ((S.settings.roles||{}).map||{})[id] || (id === me.id ? "Owner" : "Staff"); }
+const ROLES = ["Owner","Barn manager","Staff","Vet","Trainer","Viewer"];
+function roleOf(id){ if (cloud){ const x = barnMembers.find(m => m.user_id === id); if (x) return x.role; } return ((S.settings.roles||{}).map||{})[id] || (id === me.id ? "Owner" : "Staff"); }
 
 function viewIntegrations(){
   const sms = (S.settings.sms || {}), years = [...new Set(arr("expenses").map(e => e.date.slice(0,4)))].sort().reverse();
@@ -2435,7 +2489,7 @@ const acct = () => S.settings.account || {};
 const firstName = n => String(n || "").trim().split(/\s+/)[0] || "";
 const initials = n => String(n || "").split(/\s+/).filter(w => /^[A-Za-z]/.test(w)).slice(0,2).map(w => w[0].toUpperCase()).join("");
 const discOf = () => [...new Set([...DISCIPLINES, ...arr("studs").map(s => s.discipline).filter(Boolean)])].sort();
-const PRINT_L = () => local ? "Print" : "Download to print";
+const PRINT_L = () => (local || cloud) ? "Print" : "Download to print";
 const breedOptions = () => BREEDS.map(b => `<option value="${esc(b)}" label="${esc(breedLabel(b))}">`).join("");
 const LOGO_SRC = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwMDAwYEBAMFBwYHBwcGBwcICQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAFMAZwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD+f+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAFCFlJA4FCjJp8RYI2Bkd6EhYjdjAoAb5fvSpDv6H9KfHE0rhVVmZugUZJrtPAPw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NP8Agw+93NIZbmGJV8fWsv5YWX46v8T3/wCKH7d+qarbmw8L20ejWSfKJETBIrwnxB4rv/E2pPdahcy3U0nJLtkflVESgZ5/IUsjoVBB59K46tepU96TPYwWV4bCxtRjZ9+vzYksuT04qNn3HmhzmkrE7wooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigApyNtzwD9abRQBIj5OcBR7VaineL/VTzA+zkVRBwakzimm1qh2TRcOrXaH/AI/LoH/rsaV9avAP+Py8P/bc1RKgmjYKfMzN049i5/adw2c3V1n3lNMNwzj55JD/ALzk1WCgGlqW21YuEbaoV3HJwp/Co24NPpj/AHjQAlFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABS7zSUUABOTRRRQAA4NLvNJRQAu80hOTRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAH//Z";
 function logoSvg(){ return `<img class="logo" src="${LOGO_SRC}" alt="Marebook" width="412" height="332">`; }
@@ -2564,7 +2618,7 @@ function viewToday(){
     ...open.filter(t => t.due === addDays(TODAY,1)).map(t => ({t, txt:"tomorrow"})),
     ...mares.filter(m => { const g = gestDay(m); return g != null && g >= 320; }).map(m => ({m, txt: gestDay(m) >= GEST ? `past due · day ${gestDay(m)}` : `foaling window · day ${gestDay(m)}`})),
   ];
-  const mine = arr("studs").filter(s => s.createdBy === me.id || local);
+  const mine = arr("studs").filter(s => ownsStud(s));
   const mareItems = mares.map(m => ({ref:"mare:"+m.id, label:m.name, sub:[STATUS[m.status], abbr(m.breed) || m.breed, ageOf(m) != null ? ageOf(m)+" yrs" : ""].filter(Boolean).join(" · ")}));
   const foalItems = arr("foals").map(f => ({ref:"foal:"+f.id, label:foalName(f), sub:[f.sex, ageLabel(f.foaledOn), "out of " + damName(f), f.status === "sold" ? "sold" : ""].filter(Boolean).join(" · ")}));
   const studItems = mine.map(s => ({ref:"stallion:"+s.id, label:s.name, sub:[abbr(s.breed) || s.breed, s.ranch].filter(Boolean).join(" · ")}));
@@ -2590,6 +2644,7 @@ function viewToday(){
         ${hrow("My stallions", mine.length, combo("cStuds", "Start typing a stallion's name…", studItems) + add('data-act="add-stud"', "Add new stallion"))}
         ${hrow("Stallion search", arr("studs").length, `<div class="ss"><select class="search" id="dashBreed" aria-label="Breed"><option value="">All breeds</option>${breeds.map(b => `<option value="${esc(b)}" ${b===ui.studBreed?"selected":""}>${esc(breedLabel(b))}</option>`).join("")}</select><select class="search" id="dashDisc" aria-label="Discipline"><option value="">All disciplines</option>${discOf().map(x => `<option ${x===ui.studDisc?"selected":""}>${esc(x)}</option>`).join("")}</select></div>${combo("cSearch", "Stallion name…", searchItems)}<button class="btn sm primary" data-nav="search">Search</button>`)}
       </section>
+      ${heatWatch()}
       <section class="card"><div class="card-h"><h2>Today's alerts</h2><span class="sp" style="flex:1"></span><span class="eyebrow">${alerts.length}</span></div>${alertsList(alerts)}</section>
     </div>
     <div class="home-col">
@@ -2601,6 +2656,7 @@ function viewToday(){
         <div class="card-f"><button class="btn link" data-nav="todo">Open to-do list</button><button class="btn sm" data-act="print-todo">${PRINT_L()}</button></div></section>
     </div>
   </div>
+  ${(() => { let dis = false; try { dis = localStorage.getItem("marebook-install-dismissed") === "1"; } catch(_){} return dis ? "" : installCard().replace('data-act="install">', 'data-act="install">').replace('</div></section>', `<button class="btn link sm" data-act="install-dismiss" aria-label="Dismiss">Not now</button></div></section>`); })()}
   <section class="sec">${seasonCard(false)}</section>
   <section class="sec"><div class="sec-h"><h2>Foaling watch</h2><span class="eyebrow">Day 300+</span></div>
     ${watch.length ? `<div class="mares">${watch.map(m => mareCard(m.id)).join("")}</div>` : `<div class="list"><div class="empty-row">No mares past day 300.</div></div>`}</section>
@@ -2641,7 +2697,7 @@ function studCard(s){
     <div class="stud2-f"><span><b>${money(s.fee||0,false)}</b> stud fee</span>${s.chuteFee ? `<span>${money(s.chuteFee,false)} chute</span>` : ""}${s.shipFee ? `<span>${money(s.shipFee,false)}/dose shipping</span>` : ""}</div></div></button>`;
 }
 function viewStuds(){
-  const mineList = arr("studs").filter(x => x.createdBy === me.id || local);
+  const mineList = arr("studs").filter(x => ownsStud(x));
   const seg = `<div class="seg"><button data-seg="browse" aria-pressed="${ui.studSeg==="browse"}">Stallion search</button><button data-seg="mine" aria-pressed="${ui.studSeg==="mine"}">My stallions</button><button data-seg="orders" aria-pressed="${ui.studSeg==="orders"}">Orders ${arr("orders").filter(o => o.status !== "Delivered").length || ""}</button></div>`;
   if (ui.studSeg === "orders") return `${pageBar("Semen orders", crumb("account","Account"))}${seg}${viewOrders()}`;
   if (ui.studSeg === "mine") return `${pageBar("My stallions", "Horses", canWrite ? `<button class="btn sm primary" data-act="add-stud">+ Add new stallion</button>` : "")}${seg}<div class="sec">${mineList.length ? `<div class="studs-grid">${mineList.map(studCard).join("")}</div>` : `<div class="list"><div class="empty-row">Stand a stallion? Add him with collection days, chute fee and shipment cost so mare owners can book him.</div></div>`}</div>${canWrite ? `<button class="btn primary fab" data-act="add-stud">+ Add stallion</button>` : ""}`;
@@ -2777,6 +2833,7 @@ function viewContact(){
       <button class="btn primary block" type="submit">Send message</button></form></section></div>`;
 }
 function viewJoin(){
+  if (ui.joinSent) return `<div class="pub"><section class="card thanks" style="margin-top:28px;display:grid;gap:10px"><div class="eyebrow">One more step</div><h1 style="font-size:40px">Check your email.</h1><p class="muted" style="margin:0;max-width:50ch">We sent a confirmation link to <b>${esc(ui.joinSent)}</b>. Tap it on this device and your barn opens.</p><div class="row-btns"><button class="btn" data-auth="login">I've confirmed, log in</button></div></section></div>`;
   const t = ui.joinType === "stallion" ? "stallion" : "mare";
   const fl = (id, label, input) => `<div class="field"><label for="${id}">${label}</label>${input}</div>`;
   const fields = t === "stallion"
@@ -2797,19 +2854,20 @@ function viewJoin(){
         ${fl("j-pw","Password",`<input id="j-pw" name="pw" type="password" minlength="8" required autocomplete="new-password"><div class="hint">8 or more characters.</div>`)}
         <label class="chkl"><input type="checkbox" name="agree" required> I agree to the Marebook membership terms</label>
         <button class="btn primary block" type="submit">${t === "stallion" ? "Create station account" : "Start membership"}</button>
-        <p class="hint">Preview: this sets up your barn profile here and your password isn't saved. Secure sign-in and billing arrive with launch.</p></form></div></section></div>`;
+        <p class="hint">${CLOUD_ON ? "Your barn is private to you and the people you invite. Billing starts at launch; until then every plan is free." : "Preview: this sets up your barn profile here and your password isn't saved. Secure sign-in and billing arrive with launch."}</p></form></div></section></div>`;
 }
 function authSheet(mode){
   let rem = ""; try { rem = localStorage.getItem("marebook-remember") || ""; } catch(_){}
   if (mode === "forgot"){
     sheet(`<div class="auth"><h2>Reset your password</h2><p class="muted" style="margin:0">We'll send a reset link by email or a 6-digit PIN by text.</p>
-      <form class="form" id="fpF"><div class="seg" style="margin:0"><button type="button" data-fpm="email" aria-pressed="true">Email link</button><button type="button" data-fpm="sms" aria-pressed="false">Text a PIN</button></div>
+      <form class="form" id="fpF"><div class="seg" style="margin:0" ${CLOUD_ON?"hidden":""}><button type="button" data-fpm="email" aria-pressed="true">Email link</button><button type="button" data-fpm="sms" aria-pressed="false">Text a PIN</button></div>
         <div class="field"><label for="fp-to" id="fpL">Email</label><input id="fp-to" name="to" type="email" required autocomplete="email" value="${esc(rem)}"></div>
         <button class="btn primary block" type="submit">Send</button><button class="btn link" type="button" data-auth="login">Back to log in</button></form></div>`, root => {
       const f = root.querySelector("#fpF"), to = root.querySelector("#fp-to");
       root.querySelectorAll("[data-fpm]").forEach(b => b.addEventListener("click", () => { const sms = b.dataset.fpm === "sms"; root.querySelectorAll("[data-fpm]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); to.type = sms ? "tel" : "email"; to.autocomplete = sms ? "tel" : "email"; to.value = ""; root.querySelector("#fpL").textContent = sms ? "Mobile number" : "Email"; to.focus(); }));
-      f.addEventListener("submit", ev => { ev.preventDefault(); const sms = to.type === "tel";
-        root.querySelector(".auth").innerHTML = `<h2>${sms ? "Check your phone" : "Check your email"}</h2><p class="muted" style="margin:0">${sms ? "Enter the 6-digit PIN we texted to reset your password." : "Follow the link we emailed to choose a new password."}</p><p class="hint">Preview: reset messages start sending at launch.</p><button class="btn primary block" data-auth="login">Back to log in</button>`; });
+      f.addEventListener("submit", async ev => { ev.preventDefault(); const sms = to.type === "tel";
+        if (CLOUD_ON){ const {error} = await sb.auth.resetPasswordForEmail(to.value.trim(), {redirectTo: location.origin + location.pathname}); if (error){ toast(error.message); return; } }
+        root.querySelector(".auth").innerHTML = `<h2>${sms ? "Check your phone" : "Check your email"}</h2><p class="muted" style="margin:0">${sms ? "Enter the 6-digit PIN we texted to reset your password." : "Follow the link we emailed to choose a new password."}</p>${CLOUD_ON ? "" : `<p class="hint">Preview: reset messages start sending at launch.</p>`}<button class="btn primary block" data-auth="login">Back to log in</button>`; });
     }, "modal");
     return;
   }
@@ -2817,11 +2875,11 @@ function authSheet(mode){
     <form class="form" id="lgF"><div class="field"><label for="l-email">Email</label><input id="l-email" name="email" type="email" autocomplete="username" required value="${esc(rem)}"></div>
       <div class="field"><label for="l-pw">Password</label><input id="l-pw" name="pw" type="password" autocomplete="current-password" required></div>
       <div class="auth-row"><label class="chkl"><input type="checkbox" name="remember" ${rem ? "checked" : ""}> Remember me</label><button type="button" class="btn link" data-auth="forgot">Forgot password?</button></div>
-      <button class="btn primary block" type="submit">Log in</button></form>
+      <button class="btn primary block" type="submit">Log in</button><p class="hint" id="authMsg" role="alert" style="margin:0;color:var(--warn)"></p></form>
     <div class="notmember">Not a member? <button type="button" class="btn link" data-nav="join">Join Marebook</button></div>
-    <p class="hint" style="margin:0">Preview: logging in opens the demo barn. Nothing you type is sent anywhere; secure accounts arrive with launch.</p></div>`, root => {
+    ${CLOUD_ON ? "" : `<p class="hint" style="margin:0">Preview: logging in opens the demo barn. Nothing you type is sent anywhere; secure accounts arrive with launch.</p>`}</div>`, root => {
     const f = root.querySelector("#lgF");
-    f.addEventListener("submit", ev => { ev.preventDefault();
+    f.addEventListener("submit", ev => { ev.preventDefault(); if (CLOUD_ON){ cloudLogin(f, root); return; }
       const email = val(f, "email"); f.querySelector('[name="pw"]').value = "";
       try { if (f.querySelector('[name="remember"]').checked) localStorage.setItem("marebook-remember", email); else localStorage.removeItem("marebook-remember"); } catch(_){}
       ui.authed = true; close(); nav("today"); toast("Welcome back"); });
@@ -2833,15 +2891,17 @@ function pubMenu(){
 }
 
 // ----- members & inquiries (admin) -----
+const memberRows = () => cloud ? (adminRows || []) : arr("members");
 function viewMembers(){
-  const ms = arr("members").sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  if (cloud && adminRows === null){ loadAdminRows(); return pageBar("Members & inquiries", crumb("account","Account")) + `<div class="welcome"><p>Loading sign-ups…</p></div>`; }
+  const ms = memberRows().slice().sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
   const mem = ms.filter(m => m.kind === "member"), inq = ms.filter(m => m.kind === "inquiry");
   const d = s => s ? short(s.slice(0,10)) + " " + s.slice(0,4) : "";
   return `${pageBar("Members & inquiries", crumb("account","Account"), `<button class="btn sm" data-act="members-csv">Export CSV</button><button class="btn sm" data-act="copy-emails">Copy emails</button>`)}
   <section class="sec"><div class="kpis">${kpi("Members", mem.length, "all sign-ups")}${kpi("Mare owners", mem.filter(m => m.type === "mare").length)}${kpi("Stallion owners", mem.filter(m => m.type === "stallion").length)}${kpi("Messages", inq.length, "from Contact us")}</div></section>
   <section class="sec"><div class="sec-h"><h2>Members</h2></div>${mem.length ? `<div class="tbl-wrap"><table class="tbl act"><thead><tr><th>Joined</th><th>Name</th><th>Ranch / farm</th><th>Type</th><th>Position</th><th>Email</th><th>Phone</th><th>Plan</th></tr></thead><tbody>${mem.map(m => `<tr><td>${d(m.createdAt)}</td><td>${esc(m.contact)}</td><td>${esc(m.ranch)}</td><td>${m.type === "stallion" ? "Stallion owner" : "Mare owner"}</td><td>${esc(m.position)}</td><td>${esc(m.email)}</td><td>${esc(m.phone)}</td><td>${esc((PLANS.find(p => p.k === m.plan) || {name: m.plan === "listing" ? "Listing" : m.plan || ""}).name)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="list"><div class="empty-row">No sign-ups yet. Everyone who joins from the public site lands here.</div></div>`}</section>
   <section class="sec"><div class="sec-h"><h2>Messages</h2></div><div class="list">${inq.length ? inq.map(m => `<div class="ent" style="grid-template-columns:minmax(0,1fr) auto;cursor:default"><div><div class="t">${esc(m.name)} · ${esc(m.topic)}</div><div class="m"><span>${esc(m.email)}</span>${m.phone ? `<span>${esc(m.phone)}</span>` : ""}</div><div style="font-size:14px;margin-top:4px;white-space:pre-wrap">${esc(m.message)}</div></div><span class="due">${d(m.createdAt)}</span></div>`).join("") : `<div class="empty-row">No messages yet.</div>`}</div></section>
-  <p class="hint">Every sign-up and Contact us message is stored here so reminders and updates can go to the whole list. Bulk email arrives with launch; for now, Copy emails pastes into the BCC line of any email.</p>`;
+  ${cloud && !(adminRows||[]).length ? `<p class="hint">Only Marebook site admins see sign-ups. Ask Joshua to add you.</p>` : ""}<p class="hint">Every sign-up and Contact us message is stored here so reminders and updates can go to the whole list. Bulk email arrives with launch; for now, Copy emails pastes into the BCC line of any email.</p>`;
 }
 
 // ----- v7 events -----
@@ -2863,16 +2923,17 @@ document.addEventListener("click", async ev => {
 document.addEventListener("click", async ev => {
   const el = ev.target.closest("[data-act]"); if (!el) return;
   const a = el.dataset.act;
-  if (a === "logout"){ ui.authed = false; nav("landing"); toast("Logged out"); }
+  if (a === "install-dismiss"){ try { localStorage.setItem("marebook-install-dismissed","1"); } catch(_){} render(); return; }
+  if (a === "logout"){ ui.authed = false; if (cloud){ try { await sb.auth.signOut(); } catch(_){} await leaveCloud(); } nav("landing"); toast("Logged out"); }
   else if (a === "portal-setup") toast("Stripe payouts connect at launch. Requests keep arriving under Orders until then.");
   else if (a === "contact-again"){ ui.contactSent = null; render(); }
   else if (a === "print-cal-month"){ ui.calMode = "month"; ui.calMonth = ui.dashMonth || TODAY.slice(0,7); await printCal(); }
   else if (a === "members-csv"){
-    const ms = arr("members"), cols = ["kind","createdAt","type","contact","name","ranch","position","address","email","phone","plan","topic","message"];
+    const ms = memberRows(), cols = ["kind","createdAt","type","contact","name","ranch","position","address","email","phone","plan","topic","message"];
     await saveFile(`marebook-members-${TODAY}.csv`, [cols.join(",")].concat(ms.map(m => cols.map(c => csvQ(m[c])).join(","))).join("\n"), "text/csv");
   }
   else if (a === "copy-emails"){
-    const em = [...new Set(arr("members").map(m => m.email).filter(Boolean))].join(", ");
+    const em = [...new Set(memberRows().map(m => m.email).filter(Boolean))].join(", ");
     if (!em){ toast("No emails yet"); return; }
     try { await navigator.clipboard.writeText(em); toast("Emails copied"); }
     catch(_){ sheet(`<h2>Member emails</h2><div class="field"><textarea rows="5" readonly onfocus="this.select()">${esc(em)}</textarea></div><div class="row-btns"><button class="btn" data-close>Done</button></div>`); }
@@ -2884,7 +2945,8 @@ document.addEventListener("submit", async ev => {
     ev.preventDefault(); const g = n => val(f, n), type = ui.joinType === "stallion" ? "stallion" : "mare";
     const addr = g("address"), parts = addr.split(",").map(x => x.trim()).filter(Boolean);
     const rec = {kind:"member", type, ranch:g("ranch"), address:addr, contact:g("contact"), position: type === "stallion" ? g("position") : "Owner", email:g("email"), phone:g("phone"), plan: type === "mare" ? g("plan") : "listing", createdAt:new Date().toISOString(), createdBy:me.id};
-    f.querySelector('[name="pw"]').value = "";
+    const pw = f.querySelector('[name="pw"]').value; f.querySelector('[name="pw"]').value = "";
+    if (CLOUD_ON){ const btn = f.querySelector('[type="submit"]'); btn.disabled = true; rec.city = parts.slice(-2).join(", "); await cloudJoin(f, rec, pw); btn.disabled = false; return; }
     await put("members", uid(), rec);
     await put("settings", "account", {...rec, city: parts.slice(-2).join(", ")});
     if (type === "mare" && rec.plan) await put("settings", "plan", {tier:rec.plan, updatedBy:me.id});
@@ -2894,7 +2956,9 @@ document.addEventListener("submit", async ev => {
   }
   if (f.id === "contactF"){
     ev.preventDefault(); const g = n => val(f, n);
-    await put("members", uid(), {kind:"inquiry", name:g("name"), email:g("email"), phone:g("phone"), topic:g("topic"), message:g("message"), createdAt:new Date().toISOString(), createdBy:me.id});
+    const inq = {kind:"inquiry", name:g("name"), email:g("email"), phone:g("phone"), topic:g("topic"), message:g("message"), createdAt:new Date().toISOString(), createdBy:me.id};
+    if (CLOUD_ON){ const {error} = await sb.from("signups").insert({kind:"inquiry", data:inq}); if (error){ toast("Couldn't send. Check your connection and try again."); return; } }
+    else await put("members", uid(), inq);
     ui.contactSent = g("name") || "friend"; render(); window.scrollTo(0,0);
   }
 });
@@ -2902,6 +2966,313 @@ document.addEventListener("change", ev => {
   const t = ev.target;
   if (t.id === "dashBreed"){ ui.studBreed = t.value; render(); }
   if (t.id === "dashDisc" || t.id === "studDisc"){ ui.studDisc = t.value; render(); }
+});
+
+// ---------- v9: real accounts & shared barns (Supabase) ----------
+// Netlify build: index.html loads supabase-js + config.js (MAREBOOK_CONFIG). Without config the
+// app stays in on-device preview mode; inside Claude it uses Claude's own storage.
+const CFG = window.MAREBOOK_CONFIG || {};
+const CLOUD_ON = !window.claude && !!(CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase);
+let sb = null, cloud = false, barnId = null, myBarns = [], barnMembers = [], adminRows = null, cloudErr = "";
+let CLOUD_MEDIA = "";
+const REM_KEY = "marebook-remember-session";
+const remember = () => { try { return localStorage.getItem(REM_KEY) !== "0"; } catch(_){ return true; } };
+const authStore = { getItem: k => { try { return (remember() ? localStorage : sessionStorage).getItem(k); } catch(_){ return null; } },
+  setItem: (k, v) => { try { (remember() ? localStorage : sessionStorage).setItem(k, v); } catch(_){} },
+  removeItem: k => { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch(_){} } };
+const cacheKey = () => "marebook-cloud-" + barnId, outKey = () => "marebook-outbox-" + barnId;
+let cacheT;
+function cacheSave(){ clearTimeout(cacheT); cacheT = setTimeout(() => { try { const o = {}; for (const c of COLLS) o[c] = Object.fromEntries(Object.entries(S[c]).filter(([,v]) => !v._ext)); localStorage.setItem(cacheKey(), JSON.stringify(o)); } catch(_){} }, 400); }
+function cacheLoad(){ try { const o = JSON.parse(localStorage.getItem(cacheKey()) || "null"); if (!o) return false; for (const c of COLLS) S[c] = o[c] || {}; return true; } catch(_){ return false; } }
+const isNetErr = e => !navigator.onLine || (e && (e.name === "TypeError" || /fetch|network|Failed to/i.test(e.message || "")));
+
+// Write queue: changes apply on screen immediately, then sync in batches. Offline changes wait in an outbox.
+let queue = [], flushing = false, offlineWarned = false;
+function qSave(){ try { localStorage.setItem(outKey(), JSON.stringify(queue)); } catch(_){} }
+function qLoad(){ try { queue = JSON.parse(localStorage.getItem(outKey()) || "[]"); } catch(_){ queue = []; } }
+async function flushQueue(){
+  if (flushing || !queue.length || !sb || !barnId) return; flushing = true;
+  try {
+    while (queue.length){
+      const op = queue[0].op, batch = []; while (queue.length && queue[0].op === op && batch.length < 300) batch.push(queue.shift());
+      let res;
+      if (op === "up"){ const m = new Map(); for (const x of batch) m.set(x.c + "\u0000" + x.id, {barn_id:barnId, coll:x.c, id:x.id, data:x.data, updated_at:new Date().toISOString(), updated_by:me.id}); res = await sb.from("docs").upsert([...m.values()]); }
+      else { res = {error:null}; for (const x of batch){ const r = await sb.from("docs").delete().match({barn_id:barnId, coll:x.c, id:x.id}); if (r.error){ res = r; break; } } }
+      if (res.error){
+        if (isNetErr(res.error)){ queue = batch.concat(queue); qSave(); if (!offlineWarned){ offlineWarned = true; toast("Saved on this phone. It'll sync when you're back online."); } break; }
+        if (res.error.code === "42501"){ canWrite = false; toast("You have view-only access to this barn"); render(); }
+        else toast("Couldn't save a change: " + (res.error.message || "try again"));
+      }
+      qSave();
+    }
+    if (!queue.length) offlineWarned = false;
+  } catch(e){ qSave(); } finally { flushing = false; }
+}
+function cloudWrite(op, c, id, data){
+  if (op === "up") S[c][id] = data; else delete S[c][id];
+  queue.push({op, c, id, data}); qSave(); cacheSave(); render(); flushQueue();
+}
+window.addEventListener("online", () => flushQueue());
+setInterval(() => flushQueue(), 15000);
+
+async function fetchAll(q){ const out = []; for (let from = 0; ; from += 1000){ const {data, error} = await q().range(from, from + 999); if (error) throw error; out.push(...data); if (data.length < 1000) break; } return out; }
+async function loadBarnData(){
+  const rows = await fetchAll(() => sb.from("docs").select("coll,id,data").eq("barn_id", barnId));
+  const next = {}; for (const c of COLLS) next[c] = {};
+  for (const r of rows) if (next[r.coll]) next[r.coll][r.id] = r.data;
+  for (const x of queue) if (next[x.c]){ if (x.op === "up") next[x.c][x.id] = x.data; else delete next[x.c][x.id]; }
+  for (const c of COLLS) S[c] = next[c];
+  await loadListings(); cacheSave();
+}
+async function loadListings(){
+  if (!sb) return;
+  try { const rows = await fetchAll(() => sb.from("docs").select("barn_id,id,data").eq("coll", "studs").neq("barn_id", barnId || "00000000-0000-0000-0000-000000000000"));
+    for (const r of rows) S.studs["x_" + r.id] = {...r.data, _ext:true, _barn:r.barn_id, createdBy:null};
+  } catch(_){}
+}
+let rtChan = null;
+function subscribeBarn(){
+  if (rtChan){ try { sb.removeChannel(rtChan); } catch(_){} }
+  rtChan = sb.channel("docs-" + barnId).on("postgres_changes", {event:"*", schema:"public", table:"docs", filter:"barn_id=eq." + barnId}, p => {
+    const row = p.new && p.new.coll ? p.new : p.old; if (!row || !S[row.coll]) return;
+    if (queue.some(x => x.c === row.coll && x.id === row.id)) return;
+    if (p.eventType === "DELETE") delete S[row.coll][row.id]; else S[row.coll][row.id] = p.new.data;
+    cacheSave(); clearTimeout(rtChan._t); rtChan._t = setTimeout(() => { render(); refreshProfiles(); }, 120);
+  }).subscribe();
+}
+async function loadMembers(){
+  const {data} = await sb.from("barn_members").select("user_id,role,display_name,email").eq("barn_id", barnId);
+  barnMembers = data || [];
+  const mine = barnMembers.find(x => x.user_id === me.id);
+  canWrite = !mine || mine.role !== "Viewer";
+  profiles = Object.fromEntries(barnMembers.map(x => [x.user_id, {name:x.display_name || x.email || "Team member"}]));
+}
+const cloudUser = { async profiles(){ return profiles; } };
+const cloudAssets = {
+  async upload(blob, opt){
+    if (blob.size > 20 * 1024 * 1024) throw {code:"too_large"};
+    const b = await shrinkImage(blob), type = (opt && opt.type) || b.type || "image/jpeg";
+    const ext = (/\/(\w+)/.exec(type) || [,"bin"])[1].replace("jpeg","jpg").replace("quicktime","mov");
+    const path = `${barnId}/${uid()}.${ext}`;
+    const {error} = await sb.storage.from("media").upload(path, b, {contentType:type, upsert:false});
+    if (error) throw {code: /size/i.test(error.message || "") ? "too_large" : /mime|type/i.test(error.message || "") ? "unsupported_type" : "upstream_error"};
+    return {id:path, url:CLOUD_MEDIA + path, sizeBytes:b.size, contentType:type};
+  },
+  async delete(id){ try { await sb.storage.from("media").remove([id]); } catch(_){} return {deleted:true}; }
+};
+async function enterCloud(u){
+  const meta = u.user_metadata || {};
+  me = {id:u.id, name: meta.contact || (u.email || "").split("@")[0], email:u.email};
+  const {data: mem, error} = await sb.from("barn_members").select("barn_id,role,barns(name,join_code)").eq("user_id", u.id);
+  if (error) throw error;
+  myBarns = (mem || []).map(x => ({id:x.barn_id, role:x.role, name:x.barns ? x.barns.name : "Barn", code:x.barns ? x.barns.join_code : ""}));
+  let fresh = false;
+  if (!myBarns.length){
+    const {data: bid, error: e2} = await sb.rpc("create_barn", {barn_name: meta.ranch || ((meta.contact || "My") + "'s barn")}); if (e2) throw e2;
+    myBarns = [{id:bid, role:"Owner", name: meta.ranch || "My barn", code:""}]; fresh = true;
+    const {data: b2} = await sb.from("barns").select("join_code").eq("id", bid).single(); if (b2) myBarns[0].code = b2.join_code;
+  }
+  let pref = null; try { pref = localStorage.getItem("marebook-barn"); } catch(_){}
+  barnId = (myBarns.find(b => b.id === pref) || myBarns[0]).id;
+  cloud = true; db = null; local = false; user = cloudUser; assets = cloudAssets; downloads = null;
+  CLOUD_MEDIA = CFG.supabaseUrl.replace(/\/$/, "") + "/storage/v1/object/public/media/";
+  for (const c of COLLS) S[c] = {};
+  qLoad(); const cached = cacheLoad(); if (cached){ ready = true; render(); }
+  await loadMembers(); await loadBarnData();
+  if (fresh){ const acc = {kind:"member", type: meta.type || "mare", ranch: meta.ranch || "", contact: meta.contact || "", position: meta.position || "Owner", email:u.email, phone: meta.phone || "", address: meta.address || "", plan: meta.plan || "bronze", city: meta.city || ""};
+    cloudWrite("up", "settings", "account", acc); if (acc.type === "mare" && acc.plan) cloudWrite("up", "settings", "plan", {tier:acc.plan, updatedBy:me.id}); }
+  ready = true; ui.authed = true; subscribeBarn(); flushQueue();
+  $("#banner").hidden = true; $("#banner").textContent = "";
+  render(); refreshHeat();
+  if (fresh && meta.type === "stallion"){ nav("stallions"); setTimeout(() => studForm(), 80); }
+}
+async function leaveCloud(){
+  try { if (rtChan) sb.removeChannel(rtChan); } catch(_){}
+  cloud = false; barnId = null; myBarns = []; barnMembers = []; adminRows = null; queue = [];
+  for (const c of COLLS) S[c] = {}; ready = true; canWrite = true; me = {id:null};
+  try { await loadListingsAnon(); } catch(_){}
+}
+async function loadListingsAnon(){ barnId = null; await loadListings(); }
+function authGate(){
+  return `<div class="pub"><section class="hero-x lite" style="justify-items:center;text-align:center"><span class="ring-deco" aria-hidden="true"></span>${logoSvg()}<h1 style="max-width:16ch">Log in to open your barn.</h1><p>Your mares, foals, stallions and calendar are waiting, shared with your team.</p><div class="row-btns" style="justify-content:center"><button class="btn teal" data-auth="login">Log in</button><button class="btn on-dark" data-nav="join">Create an account</button></div></section></div>`;
+}
+function newPasswordSheet(){
+  sheet(`<div class="auth"><h2>Choose a new password</h2><form class="form" id="npF"><div class="field"><label for="np-pw">New password</label><input id="np-pw" name="pw" type="password" minlength="8" required autocomplete="new-password"><div class="hint">8 or more characters.</div></div><button class="btn primary block" type="submit">Save password</button><p class="hint" id="npMsg"></p></form></div>`, root => {
+    root.querySelector("#npF").addEventListener("submit", async ev => { ev.preventDefault(); const f = ev.target, pw = val(f, "pw");
+      const {error} = await sb.auth.updateUser({password:pw}); f.querySelector('[name="pw"]').value = "";
+      if (error){ root.querySelector("#npMsg").textContent = error.message; return; } close(); toast("Password updated"); });
+  }, "modal");
+}
+// Cloud versions of log in, join, reset, contact, members
+async function cloudLogin(f, root){
+  const email = val(f, "email"), pw = f.querySelector('[name="pw"]').value, rem = f.querySelector('[name="remember"]').checked;
+  try { localStorage.setItem(REM_KEY, rem ? "1" : "0"); if (rem) localStorage.setItem("marebook-remember", email); else localStorage.removeItem("marebook-remember"); } catch(_){}
+  const btn = f.querySelector('[type="submit"]'); btn.disabled = true; btn.textContent = "Logging in…";
+  const {data, error} = await sb.auth.signInWithPassword({email, password:pw});
+  f.querySelector('[name="pw"]').value = "";
+  if (error){ btn.disabled = false; btn.textContent = "Log in"; const m = root.querySelector("#authMsg"); m.textContent = /confirm/i.test(error.message) ? "Confirm your email first: check your inbox for the link." : "That email and password don't match."; return; }
+  close(); try { await enterCloud(data.user); nav("today"); toast("Welcome back"); } catch(e){ toast("Couldn't open your barn: " + (e.message || "try again")); }
+}
+async function cloudJoin(f, rec, pw){
+  const {data, error} = await sb.auth.signUp({email:rec.email, password:pw, options:{data:{contact:rec.contact, ranch:rec.ranch, type:rec.type, position:rec.position, phone:rec.phone, address:rec.address, city:rec.city, plan:rec.plan}, emailRedirectTo: location.origin + location.pathname}});
+  if (error){ toast(/registered/i.test(error.message) ? "That email already has an account. Log in instead." : error.message); return; }
+  try { await sb.from("signups").insert({kind:"member", data:rec}); } catch(_){}
+  if (data.session){ await enterCloud(data.user); if (rec.type !== "stallion") nav("today"); toast(`Welcome to Marebook, ${firstName(rec.contact)}`); }
+  else { ui.joinSent = rec.email; render(); window.scrollTo(0,0); }
+}
+async function loadAdminRows(){
+  const {data, error} = await sb.from("signups").select("kind,data,created_at").order("created_at", {ascending:false}).limit(1000);
+  adminRows = error ? [] : (data || []).map(r => ({...r.data, kind:r.kind, createdAt:r.created_at}));
+  render();
+}
+async function switchBarn(id){
+  if (id === barnId) return; try { localStorage.setItem("marebook-barn", id); } catch(_){}
+  barnId = id; for (const c of COLLS) S[c] = {}; qLoad(); cacheLoad(); render();
+  await loadMembers(); await loadBarnData(); subscribeBarn(); flushQueue(); render(); toast("Switched to " + (myBarns.find(b => b.id === id) || {}).name);
+}
+function barnSection(){
+  if (!cloud) return "";
+  const b = myBarns.find(x => x.id === barnId) || {}, owner = b.role === "Owner";
+  return `<section class="sec"><div class="card"><div class="card-h"><h2>Your barn</h2><span class="sp" style="flex:1"></span><span class="pill in-foal">${esc(b.role || "")}</span></div>
+    <div class="pf-fields" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))">
+      ${fld("Barn name", owner ? `<input id="barnName" value="${esc(b.name || "")}">` : `<div class="ro">${esc(b.name || "")}</div>`)}
+      ${fld("Team join code", `<div class="ro big mono" style="letter-spacing:.12em;user-select:all">${esc(b.code || "—")}</div>`)}
+      ${myBarns.length > 1 ? fld("Switch barn", `<select id="barnSwitch">${myBarns.map(x => `<option value="${x.id}" ${x.id===barnId?"selected":""}>${esc(x.name)} · ${esc(x.role)}</option>`).join("")}</select>`) : ""}
+      ${fld("Join another barn", `<div class="row"><input id="joinCode" maxlength="6" placeholder="6-letter code" style="text-transform:uppercase"><button class="btn sm" data-act="join-barn">Join</button></div>`)}
+    </div>
+    <p class="hint" style="margin:10px 0 0">Share the join code with your barn manager, hands, vet or trainer. They create a Marebook account, enter the code here, and see this barn. Set what each person can do on the Team page; Viewers can look but not change anything.</p></div></section>`;
+}
+document.addEventListener("click", async ev => {
+  const el = ev.target.closest("[data-act]"); if (!el || !cloud) return;
+  if (el.dataset.act === "join-barn"){
+    const code = ($("#joinCode").value || "").trim(); if (code.length < 6){ toast("Enter the 6-letter code"); return; }
+    const {data, error} = await sb.rpc("join_barn", {code}); if (error){ toast(error.message || "Couldn't join"); return; }
+    const {data: mem} = await sb.from("barn_members").select("barn_id,role,barns(name,join_code)").eq("user_id", me.id);
+    myBarns = (mem || []).map(x => ({id:x.barn_id, role:x.role, name:x.barns ? x.barns.name : "Barn", code:x.barns ? x.barns.join_code : ""}));
+    await switchBarn(data);
+  }
+});
+document.addEventListener("change", async ev => {
+  const t = ev.target; if (!cloud) return;
+  if (t.id === "barnSwitch") await switchBarn(t.value);
+  if (t.id === "barnName" && t.value.trim()){ const {error} = await sb.from("barns").update({name:t.value.trim()}).eq("id", barnId); if (error) toast("Only the owner can rename the barn"); else { const b = myBarns.find(x => x.id === barnId); if (b) b.name = t.value.trim(); toast("Barn renamed"); } }
+  if (t.dataset && t.dataset.role){ const {error} = await sb.rpc("set_member_role", {b:barnId, member:t.dataset.role, new_role:t.value}); if (error){ toast(error.message); await loadMembers(); render(); } else await loadMembers(); }
+});
+
+const ownsStud = s => !!s && !s._ext && (s.createdBy === me.id || local || cloud);
+
+// ---------- v9: install as a phone app ----------
+let installEvt = null;
+const isStandalone = () => (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; render(); });
+window.addEventListener("appinstalled", () => { installEvt = null; toast("Marebook is on your home screen"); render(); });
+if (!window.claude && "serviceWorker" in navigator && location.protocol === "https:") window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+const canInstall = () => !window.claude && !isStandalone() && (installEvt || isIOS());
+function installCard(){
+  if (!canInstall()) return "";
+  return `<section class="sec"><div class="card install"><div class="install-ic">${logoSvg()}</div><div><b>Put Marebook on your phone</b><span>Opens full screen from your home screen, works in the barn with no signal, and catches up when you're back online.</span></div><button class="btn primary" data-act="install">${installEvt ? "Install app" : "How to install"}</button></div></section>`;
+}
+document.addEventListener("click", async ev => {
+  const el = ev.target.closest('[data-act="install"]'); if (!el) return;
+  if (installEvt){ installEvt.prompt(); try { await installEvt.userChoice; } catch(_){} installEvt = null; render(); return; }
+  sheet(`<h2>Add Marebook to your iPhone</h2><ol class="steps-ios"><li>Tap the <b>Share</b> button at the bottom of Safari (the square with an arrow).</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>. Marebook appears with your other apps.</li></ol><p class="hint">Use Safari for this step; other iPhone browsers can't add apps to the home screen.</p><div class="row-btns"><button class="btn primary" data-close>Got it</button></div>`);
+});
+
+// ---------- v9: heat-cycle prediction ----------
+// Mares cycle about every 21 days (ovulation to ovulation). Heat (estrus) lasts ~5–7 days and she
+// usually ovulates near the end of it, so the next heat opens ~5 days before the predicted ovulation.
+// Each mare's own cycle length is learned from her recorded ovulations.
+const CYCLE_DEF = 21;
+const PREG_KEYS = new Set(["d14","d25","d35","d45","d60"]);
+const isPregCheck = id => PREG_KEYS.has(taskKey(id || ""));
+const notPregnant = m => m.status === "open" || m.status === "foaled";
+function follicleSignal(mareId){
+  const ex = mareTasks(mareId).filter(t => isExam(t) && t.done && (t.lo || t.ro) && diff(TODAY, t.due) <= 3 && diff(TODAY, t.due) >= 0).sort((a,b) => b.due.localeCompare(a.due))[0];
+  if (!ex || ex.ovulated) return null;
+  const mm = [ex.lo, ex.ro].map(x => { const r = /(\d{2})\s*mm/i.exec(x || ""); return r ? +r[1] : 0; }), size = Math.max(...mm);
+  if (size >= 35) return {k:"hot", size, date:ex.due, t:`${size} mm follicle ${short(ex.due)}`, s:"Ovulation likely within 24–48 hrs. Breed or have semen on the way now."};
+  if (size >= 28) return {k:"warm", size, date:ex.due, t:`${size} mm follicle ${short(ex.due)}`, s:"Coming into heat. Recheck in 24–48 hrs."};
+  return null;
+}
+function cycleInfo(m, id){
+  const cyc = [...new Set([...(m.cycles || []), ...(m.ovulationDate ? [m.ovulationDate] : [])])].sort();
+  const iv = []; for (let i = 1; i < cyc.length; i++){ const d = diff(cyc[i], cyc[i-1]); if (d >= 15 && d <= 30) iv.push(d); }
+  const L = iv.length ? Math.round(iv.reduce((a,b) => a+b, 0) / iv.length) : CYCLE_DEF;
+  let last = cyc[cyc.length - 1] || null, basis = "ovulation";
+  // after foaling with no ovulation recorded since: foal heat ~day 9, then every cycle after
+  if (m.foalDate && (!last || last < m.foalDate)){ last = addDays(m.foalDate, 9 - L); basis = "foaling"; }
+  if (!last) return null;
+  const inHeat = (m.teases || []).filter(x => x.r === "in").map(x => x.d).sort();
+  let next = addDays(last, L); while (addDays(next, 3) < TODAY) next = addDays(next, L);
+  // observed heat this cycle beats the estimate: ovulation ~4 days into heat
+  const run = inHeat.filter(d => d > last && diff(TODAY, d) <= 8);
+  if (run.length){ next = addDays(run[0], 4); if (next < TODAY) next = TODAY; basis = "teasing"; }
+  return {cyc, L, learned: iv.length, last, basis, nextOv: next, heatFrom: addDays(next, -5), heatTo: addDays(next, 1), inHeatNow: TODAY >= addDays(next, -5) && TODAY <= addDays(next, 1), fol: id ? follicleSignal(id) : null};
+}
+// Best collection day: the latest one that still lands semen the day before predicted ovulation.
+function alignedCollection(s, nextOv){
+  const cands = nextCollections(s, 12, addDays(TODAY, 1)); if (!cands.length) return null;
+  const ok = cands.filter(c => addDays(c, 1) <= nextOv);
+  return ok.length ? ok[ok.length - 1] : cands[0];
+}
+async function genHeatTasks(mareId, m){
+  if (!canWrite || !notPregnant(m)) return;
+  const ci = cycleInfo(m); if (!ci) return;
+  const tag = ci.nextOv.replace(/-/g, "");
+  for (const t of mareTasks(mareId)) if (!t.done && /_x_(heat|fcheck)\d+$/.test(t.id) && !t.id.endsWith(tag)) await del("tasks", t.id);
+  const pb = S.tasks[mareId + "_x_prebreed"];
+  const jobs = [[`${mareId}_x_heat${tag}`, {title:`Heat check · tease (expected in heat ${short(ci.heatFrom)}–${short(ci.heatTo)})`, due: ci.heatFrom < TODAY ? TODAY : ci.heatFrom, cat:"breeding"}]];
+  if (!(pb && !pb.done)) jobs.push([`${mareId}_x_fcheck${tag}`, {title:`Follicle ultrasound · time breeding (ovulation expected ~${short(ci.nextOv)})`, due: addDays(ci.nextOv, -2) < TODAY ? TODAY : addDays(ci.nextOv, -2), cat:"vet", exam:true}]);
+  for (const [id, d] of jobs){ const ex = S.tasks[id]; if (ex && (ex.done || (ex.due === d.due && ex.title === d.title))) continue;
+    await put("tasks", id, {...(ex || {}), mareId, ...d, auto:true, done:false, sample:!!m.sample, createdBy: ex ? ex.createdBy : me.id}); }
+}
+let heatT;
+function refreshHeat(){ clearTimeout(heatT); heatT = setTimeout(async () => { if (!ready || !canWrite) return; for (const m of arr("mares")) if (notPregnant(m) && ((m.cycles||[]).length || m.ovulationDate || m.foalDate)) await genHeatTasks(m.id, S.mares[m.id]); }, 600); }
+
+function cycleStrip(ci){
+  const days = ci.L + 4, start = addDays(ci.nextOv, -ci.L + 1);
+  const cells = [];
+  for (let i = 0; i < days; i++){ const d = addDays(start, i), k = d === ci.nextOv ? "ov" : (d >= ci.heatFrom && d <= ci.heatTo) ? "heat" : "di";
+    cells.push(`<span class="cs ${k} ${d===TODAY?"now":""}" title="${esc(short(d))}${k==="ov"?" · expected ovulation":k==="heat"?" · heat window":""}"></span>`); }
+  return `<div class="cstrip" role="img" aria-label="Cycle: heat ${short(ci.heatFrom)} to ${short(ci.heatTo)}, ovulation about ${short(ci.nextOv)}">${cells.join("")}</div><div class="cstrip-l"><span>${short(start)}</span><span>Heat ${short(ci.heatFrom)}–${short(ci.heatTo)}</span><span>${short(addDays(start, days-1))}</span></div>`;
+}
+function cycleCard(id){
+  const m = S.mares[id];
+  if (!notPregnant(m)){
+    if (m.status === "bred" && m.ovulationDate && diff(TODAY, m.ovulationDate) < 16){ const back = addDays(m.ovulationDate, 16);
+      return `<section class="sec"><div class="howto"><b>Waiting on the 14-day check</b><span>If she's open, expect her back in heat about ${short(back)}–${short(addDays(m.ovulationDate, 22))}. Mark the 14-day result Open and Marebook reschedules her heat checks.</span></div></section>`; }
+    return "";
+  }
+  const ci = cycleInfo(m, id);
+  const tease = canWrite ? `<div class="row-btns"><button class="btn sm primary" data-tease="${id}:in">In heat today</button><button class="btn sm" data-tease="${id}:out">Not in heat</button><button class="btn sm" data-act="add-exam" data-id="${id}">+ Exam</button></div>` : "";
+  if (!ci) return `<section class="sec"><div class="card cycle"><div class="card-h"><h2>Heat cycle</h2></div><p class="muted" style="margin:0 0 10px">Record an ovulation (check Ovulated on an exam) or her foaling date and Marebook predicts her next heat. Tease results sharpen it.</p>${tease}</div></section>`;
+  const st = ci.fol && ci.fol.k === "hot" ? {cls:"foaled", t:"Ovulation close"} : ci.inHeatNow ? {cls:"bred", t:"In heat window"} : {cls:"in-foal", t:`Heat in ${diff(ci.heatFrom, TODAY)} days`};
+  const stud = S.studs[m.stallionId], col = stud ? alignedCollection(stud, ci.nextOv) : null;
+  const teases = (m.teases || []).slice(-6).reverse();
+  return `<section class="sec"><div class="card cycle"><div class="card-h"><h2>Heat cycle</h2><span class="sp" style="flex:1"></span><span class="pill ${st.cls}">${esc(st.t)}</span></div>
+    <div class="kpis">${kpi("Next heat", `${short(ci.heatFrom)}–${parse(ci.heatTo).getDate()}`, ci.basis === "teasing" ? "from teasing" : ci.basis === "foaling" ? "from foaling date" : "from last ovulation")}${kpi("Ovulation", "~" + short(ci.nextOv), ci.inHeatNow ? "this heat" : "next cycle")}${kpi("Her cycle", ci.L + " days", ci.learned ? `learned from ${ci.learned} cycle${ci.learned>1?"s":""}` : "standard until she has 2 ovulations")}</div>
+    ${cycleStrip(ci)}
+    ${ci.fol ? `<div class="fol ${ci.fol.k}"><b>${esc(ci.fol.t)}</b><span>${esc(ci.fol.s)}</span></div>` : ""}
+    ${stud ? `<p class="hint" style="margin:10px 0 0">${col ? `${esc(stud.name)} collects ${esc(collLabel(stud))}. Order for the <b>${esc(wdShort(col))}</b> collection so semen arrives ${esc(wdShort(addDays(col,1)))}, ahead of ovulation ~${esc(short(ci.nextOv))}.` : `${esc(stud.name)} has no collection days listed. Call the station ahead of ${esc(short(ci.heatFrom))}.`}</p>` : ""}
+    ${teases.length ? `<div class="chips" style="margin-top:10px">${teases.map(x => `<span class="chip ${x.r==="in"?"sw-ideal":""}">${short(x.d)} · ${x.r==="in"?"in heat":"not in heat"}</span>`).join("")}</div>` : ""}
+    ${ci.cyc.length ? `<p class="hint" style="margin:8px 0 10px">Ovulations on record: ${ci.cyc.slice(-5).map(short).join(", ")}</p>` : ""}
+    ${tease}</div></section>`;
+}
+function heatWatch(){
+  const list = arr("mares").filter(notPregnant).map(m => ({m, ci:cycleInfo(m, m.id)})).filter(x => x.ci && (x.ci.inHeatNow || (x.ci.fol && x.ci.fol.k) || diff(x.ci.heatFrom, TODAY) <= 5))
+    .sort((a,b) => (b.ci.fol && b.ci.fol.k === "hot" ? 1 : 0) - (a.ci.fol && a.ci.fol.k === "hot" ? 1 : 0) || a.ci.nextOv.localeCompare(b.ci.nextOv));
+  return `<section class="card"><div class="card-h"><h2>Heat watch</h2><span class="sp" style="flex:1"></span><span class="eyebrow">Next 5 days</span></div>
+    <div class="list">${list.length ? list.map(({m, ci}) => { const s = S.studs[m.stallionId], col = s ? alignedCollection(s, ci.nextOv) : null;
+      return `<div class="alert-row" data-mare="${m.id}"><span class="dotx ${ci.fol && ci.fol.k==="hot" ? "warn" : ""}"></span><span><b>${esc(m.name)}</b> · ${ci.fol ? esc(ci.fol.t) + " · " : ""}${ci.inHeatNow ? "in heat window" : "heat " + short(ci.heatFrom)}, ovulation ~${short(ci.nextOv)}${col ? ` · order ${esc(s.name)} for ${esc(wdShort(col))}` : ""}</span><span class="due ${ci.fol && ci.fol.k==="hot" ? "over" : ""}">${ci.fol && ci.fol.k==="hot" ? "Now" : ci.inHeatNow ? "In heat" : diff(ci.heatFrom, TODAY) + "d"}</span></div>`; }).join("")
+      : `<div class="empty-row">No open mares due in heat in the next 5 days.</div>`}</div></section>`;
+}
+document.addEventListener("click", async ev => {
+  const el = ev.target.closest("[data-tease]"); if (!el || !canWrite) return;
+  const [id, r] = el.dataset.tease.split(":"), m = S.mares[id]; if (!m) return;
+  const teases = [...(m.teases || []).filter(x => x.d !== TODAY), {d:TODAY, r}].sort((a,b) => a.d.localeCompare(b.d)).slice(-40);
+  const nm = {...m, teases}; await put("mares", id, nm); await genHeatTasks(id, nm);
+  const ci = cycleInfo(nm, id); toast(r === "in" ? `${m.name} in heat · ovulation ~${short(ci ? ci.nextOv : addDays(TODAY,4))}` : `${m.name} not in heat today`);
 });
 
 // ---------- v8: foaling-season planner (Charles & Kelly) ----------
@@ -2992,7 +3363,7 @@ async function loadSample(quiet){
     smp_juniper: mk("Juniper Red Moon", {breed:"American Quarter Horse", registry:"AQHA", color:"Sorrel", born:"2015", maiden:"no", carry:"yes", et:"no", lte:"$18,400", stallionId:"smp_ace", status:"in-foal", ovulationDate:addDays(TODAY,-216), foalDate:addDays(TODAY,-395), coverDate:addDays(TODAY,-216), coverType:"Cooled shipped AI", sire:"Hickory Creek Ace", budget:6500, notes:"Foals easy, usually 4–5 days past due. Watch for waxing."}),
     smp_cassidy: mk("Cassidy Blue Jazz", {breed:"American Quarter Horse", registry:"AQHA", color:"Grullo", born:"2013", maiden:"no", carry:"yes", et:"no", stallionId:"smp_cat", status:"in-foal", ovulationDate:addDays(TODAY,-326), coverDate:addDays(TODAY,-326), coverType:"Live cover", sire:"Brazos Midnight Cat", budget:6000, notes:"Maiden in 2024. Caslick's in place."}),
     smp_willow: mk("Little Willow Pep", {breed:"American Paint Horse", registry:"APHA", color:"Bay overo", born:"2018", maiden:"yes", carry:"yes", et:"no", stallionId:"smp_rio", status:"bred", ovulationDate:addDays(TODAY,-13), coverDate:addDays(TODAY,-14), coverType:"Frozen AI", sire:"Red Desert Rio"}),
-    smp_dolly: mk("Tuff Dolly Gal", {breed:"American Quarter Horse", registry:"AQHA", color:"Buckskin", born:"2016", maiden:"no", carry:"no", et:"yes", lte:"$41,200", stallionId:"smp_ace", status:"open", notes:"Donor mare: performance career, embryos go to recipients. Her 2026 filly was carried by Recip #214."}),
+    smp_dolly: mk("Tuff Dolly Gal", {breed:"American Quarter Horse", registry:"AQHA", color:"Buckskin", born:"2016", maiden:"no", carry:"no", et:"yes", lte:"$41,200", stallionId:"smp_ace", status:"open", cycles:[addDays(TODAY,-40), addDays(TODAY,-19)], teases:[{d:addDays(TODAY,-1), r:"in"}], notes:"Donor mare: performance career, embryos go to recipients. Her 2026 filly was carried by Recip #214."}),
   };
   const studs = {
     smp_ace: {sample:true, featured:true, name:"Hickory Creek Ace", breed:"American Quarter Horse", color:"Palomino", height:"15.1", discipline:"Cutting", sireLine:"Sample listing · NCHA open finalist", ranch:"Hickory Creek Ranch", city:"Stephenville, TX", fee:2500, chuteFee:250, shipFee:200, lte:"$186,000 · NCHA Open finalist", ship:["Cooled shipped","Frozen"], collDays:[1,3,5], contact:"bookings@hickorycreek.example", contactPref:"Email", createdBy:me.id},
@@ -3086,19 +3457,32 @@ render();
     if (me.avatarUrl){ $("#meAv").src = me.avatarUrl; $("#meAv").hidden = false; }
     const w = await user.can("data.write"); if (w === false) canWrite = false;
   }
+  if (!c && CLOUD_ON){
+    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, {auth:{storage:authStore, persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:"pkce"}});
+    CLOUD_MEDIA = CFG.supabaseUrl.replace(/\/$/, "") + "/storage/v1/object/public/media/";
+    local = false; downloads = null;
+    const fromLink = /[?&]code=/.test(location.search);
+    if (!location.hash && !fromLink) ui.view = "landing";
+    sb.auth.onAuthStateChange((evt) => { if (evt === "PASSWORD_RECOVERY") setTimeout(newPasswordSheet, 300); });
+    let session = null; try { session = (await sb.auth.getSession()).data.session; } catch(_){}
+    if (fromLink){ try { history.replaceState(null, "", location.pathname + (location.hash || "#today")); } catch(_){} if (session) ui.view = "today"; }
+    if (session){ try { await enterCloud(session.user); } catch(e){ ready = true; render(); toast("Couldn't reach Marebook. Check your connection."); } }
+    else { await loadListingsAnon(); ready = true; render(); }
+    return;
+  }
   if (!db){
     local = true; me = me.id ? me : {id:"local"};
     if (!location.hash) ui.view = "landing";
     try { await localAssets.loadAll(); assets = localAssets; } catch(_){}
     $("#banner").hidden = false; $("#banner").textContent = "Preview: changes, photos and videos save on this device only.";
-    ready = true; if (!loadLocal()) await loadSample(true); render(); return;
+    ready = true; if (!loadLocal()) await loadSample(true); render(); refreshHeat(); return;
   }
   let pending = COLLS.length;
   for (const coll of COLLS){
     db.collection(coll).onSnapshot(snap => {
       const o = {}; snap.docs.forEach(d => { o[d.id] = d.data(); });
       S[coll] = o;
-      if (pending > 0 && --pending === 0) ready = true;
+      if (pending > 0 && --pending === 0){ ready = true; refreshHeat(); }
       if (ready){ render(); refreshProfiles(); }
     }, err => { if (err.code === "revoked"){ canWrite = false; render(); } });
   }

@@ -1,5 +1,21 @@
 # Changelog
 
+## v9 · Real accounts, phone app, heat prediction
+- **Real accounts, ready to switch on:** Supabase backend (`supabase/schema.sql`).
+  - Email log-in, sign-up with email confirmation, and password reset by email.
+  - Shared barns with live sync across phones and team join codes.
+  - Roles enforced by the database; Viewer is read-only.
+  - Photo and video storage, and Stallion Search across all barns.
+  - Changes save instantly on the phone, sync in batches, and wait in an outbox when offline.
+- **Phone app:** installs to the home screen (manifest, icons, service worker). The app works with no signal. It shows an install prompt on Android and step-by-step instructions on iPhone.
+- **Heat prediction:**
+  - Predicts each open mare's next heat and ovulation from her last ovulation, learning her own cycle length. Teasing ("In heat today") updates the prediction.
+  - A 35 mm or larger follicle on a recent exam flags "ovulation likely within 24–48 hrs".
+  - Heat checks and follicle ultrasounds land on the calendar automatically.
+  - The stallion order is lined up with his collection days so semen arrives the day before ovulation.
+  - Pregnancy checks record Pregnant, Open or Twins. Open clears her pregnancy schedule and puts her back on heat watch. An ovulation logged without breeding just tracks the cycle.
+  - Heat watch card on the member home.
+
 ## v8 · Foaling season & real logo
 - Uses the original Marebook logo artwork in the header, footer, hero and log-in box.
 - Foaling-season planner, per Charles & Kelly:
