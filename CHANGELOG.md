@@ -1,5 +1,34 @@
 # Changelog
 
+## v11 · Vet portal, audit trail, documents, ICSI donors & recipients, FedEx shipping
+- **Vet portal** (Vet in the top menu, and Account → Vet portal):
+  - Lists every facility (barn) the vet works with and today's, 7-day or 30-day rounds grouped by facility. "Print rounds" prints the list.
+  - A searchable mare directory across all facilities shows status, gestation, last exam findings, next vet item and document alerts.
+  - Coggins and health papers expiring within 60 days are flagged.
+  - Tapping a mare opens her record, switching barns if needed.
+  - Vets join a barn with its code and pick **Join as Vet**. Vets see records, exams and documents but not costs; the database enforces this.
+- **Shared info:** each mare has a **Vet sheet**, a printable one-pager with exams, vaccines, documents and what's next. **Copy summary** puts the same information in a text to send. The profile shows which vets have access.
+- **Audit trail:**
+  - The database records every add, change and delete with who, when, and each field's before and after. Nobody can edit it from the app.
+  - Each mare has a History section, and Account → Audit log has filters and CSV export. The action chart shows who did each exam.
+  - The preview keeps the log on the device.
+- **Mare documents:**
+  - Registration papers/birth certificate, Coggins, health certificates (CVI), vaccination records, brand inspection, DNA, breeding contracts, insurance and bill of sale.
+  - Each one stores the file, its number, issue and expiry dates, the vet or lab, and a link to the digital record (eCoggins/e-CVI from GlobalVetLink or a state lab).
+  - Coggins defaults to 12 months and CVIs to 30 days, with a renewal reminder 30 days before Coggins expires.
+- **ICSI donor mares:** OPU sessions record follicles, oocytes, lab, stallion and embryos.
+  - Entering the lab's embryo count adds that many frozen embryos to her list, with grade, stage and storage location.
+  - Her profile tracks oocytes per OPU, embryo rate, frozen inventory and pregnancies, and the next OPU and lab-results reminders are scheduled.
+- **Recipients tied to donors:**
+  - Transferring an embryo creates or updates the recipient's profile, linked to the donor and embryo. Her pregnancy checks and foaling date are worked out from the embryo's age.
+  - Pregnancy results on the recipient update the donor's embryo. The foal is recorded as the donor's, carried by the recipient.
+- **FedEx shipping:**
+  - The stallion page has a shipping calendar (35 days) and a list of FedEx holidays for the next 12 months.
+  - FedEx doesn't pick up or deliver overnight on Sundays. Holidays block pickup and delivery; observed and reduced-service days are flagged.
+  - The semen order form checks the chosen carrier (FedEx, counter-to-counter, courier), the stallion's collection days and order cutoffs. When a date won't work, it suggests the nearest one that does.
+- **Foaling window** now runs through July: January–April target, April ideal, May–July late. Saved seasons still on the old June default are moved to July.
+- **Database:** re-run `supabase/schema.sql` to add the audit table, vet cost privacy and join-as-vet.
+
 ## v10 · Pre-foaling vaccines, exam read-back, management cards, collection & shipping rules
 - **Pre-foaling vaccines:** scheduled 30 days before each mare's due date (EWT, WNV, rabies, flu/rhino). The due date shows a "Pre-foaling vaccines" chip on her profile. Existing reminders are retitled and re-dated automatically.
 - **Read the last exam back:** every exam form shows her last exam (left, right, tone, ovulation, result, notes) with follicle growth since the one before, plus earlier exams. "Read it back" speaks it aloud. While dictating, say "last exam" to hear it hands-free.
