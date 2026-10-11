@@ -4,6 +4,7 @@ Mare, foal and stallion records with a breeding calendar that runs itself.
 
 - `index.html` — the whole app (single file).
 - `netlify.toml` — Netlify publishes this folder as-is; no build step.
+- `netlify/functions/read-card.mjs` — reads management-card photos and PDFs with Claude. Set `ANTHROPIC_API_KEY` in Netlify → Site configuration → Environment variables. Once Supabase is on, also set `SUPABASE_URL` and `SUPABASE_ANON_KEY` there so only signed-in members can use it.
 
 Outside the Claude artifact host, the app runs in demo mode: it loads a sample barn and changes are not saved. The Supabase backend in the build plan adds logins and saving.
 

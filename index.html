@@ -303,6 +303,20 @@ h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance
 .cdays{display:flex;flex-wrap:wrap;gap:4px}
 .cdays button{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:5px 8px;font-size:12.5px;font-weight:600;color:var(--muted)}
 .cdays button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.cdays .cdsep{width:1px;background:var(--line);margin:2px 4px}
+.lastx{border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:10px 12px;display:grid;gap:6px;font-size:14px}
+.lastx-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .lastx-h .sp{flex:1}
+.lastx-g{display:flex;flex-wrap:wrap;gap:6px 14px} .lastx-g i{font-style:normal;color:var(--muted);font-size:12px;margin-right:4px;text-transform:uppercase;letter-spacing:.04em}
+.lastx-n{color:var(--muted)} .lastx summary{cursor:pointer;color:var(--muted);font-size:13px}
+.cardups{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.cardup{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--surface)}
+.cardup img,.cardup .doc{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:none;display:grid;place-items:center;background:var(--sunk);font-weight:700;font-size:12px;color:var(--muted);text-decoration:none}
+.cardup>div{display:grid;gap:2px;font-size:14px;min-width:0} .cardup b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .cardup .muted{font-size:12.5px}
+.card-prev{width:100%;max-height:260px;object-fit:contain;border-radius:10px;background:var(--sunk);margin-bottom:8px}
+.cardrow{display:grid;grid-template-columns:28px 1fr;gap:6px 8px;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px}
+.cardrow .cr-ck{grid-row:span 3;padding-top:6px} .cardrow .cr-f{display:flex;flex-wrap:wrap;gap:6px} .cardrow .hint{grid-column:2}
+.cardrow input:not([type=checkbox]),.cardrow select{flex:1 1 120px;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit;font-size:14px}
+.cardrow .cr-ov{display:flex;align-items:center;gap:4px;font-size:13.5px;white-space:nowrap}
 .pf-foot{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:12px}
 .saved{font-size:12px;color:var(--ok);font-weight:600}
 .dash{display:grid;gap:18px}
@@ -729,7 +743,7 @@ const PREG = [
   {k:"d210",d:210, t:"EHV-1 vaccine · 7 months", c:"vaccine"},
   {k:"d270",d:270, t:"EHV-1 vaccine · 9 months", c:"vaccine"},
   {k:"fesc",d:270, t:"Pull off fescue pasture & hay", c:"care"},
-  {k:"d310",d:310, t:"Pre-foaling boosters (core vaccines)", c:"vaccine"},
+  {k:"d310",d:GEST-30, t:"Pre-foaling vaccines · 30 days before due date (EWT, WNV, rabies, flu/rhino)", c:"vaccine"},
   {k:"worm",d:310, t:"Deworm before foaling", c:"care"},
   {k:"stal",d:315, t:"Move to foaling stall · set up camera", c:"foaling"},
   {k:"casl",d:320, t:"Open Caslick's (if sutured)", c:"vet"},
@@ -840,13 +854,60 @@ function mareTasks(id){ return arr("tasks").filter(t => t.mareId === id && !t.fo
 function foalTasks(id){ return arr("tasks").filter(t => t.foalId === id).sort((a,b) => a.due < b.due ? -1 : a.due > b.due ? 1 : 0); }
 function studTasks(id){ return arr("tasks").filter(t => t.studId === id).sort((a,b) => a.due < b.due ? -1 : 1); }
 const collDays = s => Array.isArray(s.collDays) ? s.collDays : [];
-const collLabel = s => collDays(s).length ? collDays(s).map(i => WD[i]).join(" / ") : (s.days || "");
+// Collection schedule: weekdays, odd or even dates of the month, or both (odd dates that fall Mon–Sat).
+const collParity = s => s && (s.collParity === "odd" || s.collParity === "even") ? s.collParity : "";
+const hasColl = s => !!s && (collDays(s).length > 0 || !!collParity(s));
+function collOn(s, d){
+  const days = collDays(s), p = collParity(s), dt = parse(d);
+  if (!days.length && !p) return false;
+  if (days.length && !days.includes(dt.getDay())) return false;
+  if (p && (dt.getDate() % 2 === 1) !== (p === "odd")) return false;
+  return true;
+}
+const collLabel = s => { const p = collParity(s), w = collDays(s).map(i => WD[i]).join(" / "); if (!p && !w) return s.days || ""; return p ? (p === "odd" ? "odd dates" : "even dates") + (w ? " (" + w + ")" : "") : w; };
 function nextCollections(s, n, from){
-  const days = collDays(s); if (!days.length) return [];
+  if (!hasColl(s)) return [];
   const out = []; let d = from || addDays(TODAY, 1);
-  for (let i = 0; i < 28 && out.length < n; i++){ if (days.includes(parse(d).getDay())) out.push(d); d = addDays(d, 1); }
+  for (let i = 0; i < 70 && out.length < n; i++){ if (collOn(s, d)) out.push(d); d = addDays(d, 1); }
   return out;
 }
+// ---------- cooled-semen shipping: Sundays, carrier holidays, station blackout dates ----------
+const nthDow = (y, mo, dow, n) => { const d = new Date(y, mo, 1); d.setDate(1 + ((dow - d.getDay() + 7) % 7) + (n - 1) * 7); return iso(d); };
+const lastDow = (y, mo, dow) => { const d = new Date(y, mo + 1, 0); d.setDate(d.getDate() - ((d.getDay() - dow + 7) % 7)); return iso(d); };
+const HOL = {};
+function carrierHolidays(y){
+  if (HOL[y]) return HOL[y];
+  const block = {}, warn = {};
+  for (const [mo, dd, n] of [[0,1,"New Year's Day"],[6,4,"Independence Day"],[11,25,"Christmas"]]){
+    const dt = new Date(y, mo, dd), k = iso(dt); block[k] = n;
+    if (dt.getDay() === 6) block[addDays(k, -1)] = n + " (observed)";
+    if (dt.getDay() === 0) block[addDays(k, 1)] = n + " (observed)";
+  }
+  block[lastDow(y, 4, 1)] = "Memorial Day"; block[nthDow(y, 8, 1, 1)] = "Labor Day";
+  const tg = nthDow(y, 10, 4, 4); block[tg] = "Thanksgiving";
+  warn[addDays(tg, 1)] = "day after Thanksgiving (reduced carrier service)"; warn[iso(new Date(y, 11, 24))] = "Christmas Eve (early cutoffs)"; warn[iso(new Date(y, 11, 31))] = "New Year's Eve (early cutoffs)";
+  warn[nthDow(y, 0, 1, 3)] = "MLK Day (some stations closed)"; warn[nthDow(y, 1, 1, 3)] = "Presidents' Day (some stations closed)";
+  return HOL[y] = {block, warn};
+}
+const holidayOn = d => { const h = carrierHolidays(+d.slice(0, 4)); return h.block[d] ? {block:true, n:h.block[d]} : h.warn[d] ? {block:false, n:h.warn[d]} : null; };
+const shipsCooled = s => !(s.ship || []).length || (s.ship || []).includes("Cooled shipped");
+const blackouts = s => String(s.blackout || "").match(/\d{4}-\d{2}-\d{2}/g) || [];
+// Can a collection on date c ship cooled and arrive the next morning?
+function shipCheck(s, c){
+  if (!shipsCooled(s)) return {ok:true};
+  const a = addDays(c, 1), wd = parse(a).getDay();
+  if (blackouts(s).includes(c)) return {ok:false, why:"station not shipping that day"};
+  const hc = holidayOn(c), ha = holidayOn(a);
+  if (hc && hc.block) return {ok:false, why:`no carrier pickup · ${hc.n}`};
+  if (ha && ha.block) return {ok:false, why:`no delivery · ${ha.n}`};
+  if (wd === 0) return {ok:false, why:"no Sunday delivery"};
+  if (wd === 6 && s.satShip === "no") return {ok:false, why:"station doesn't ship for Saturday delivery"};
+  const warns = []; if (wd === 6) warns.push("Saturday delivery · extra carrier fee, confirm with the station"); if (hc) warns.push(hc.n); if (ha) warns.push(ha.n);
+  return {ok:true, warn:warns.join(" · ")};
+}
+const shippable = (s, n, from) => nextCollections(s, n * 3 + 6, from).filter(c => shipCheck(s, c).ok).slice(0, n);
+const shipChip = (s, c) => { const k = shipCheck(s, c); return `<span class="chip ${k.ok ? (k.warn ? "sw-ideal" : "ship") : "sw-late"}" title="${esc(k.why || k.warn || "Ships cooled, arrives next morning")}">${esc(wdShort(c))}${k.ok ? (k.warn ? " · " + esc(k.warn.split(" · ")[0]) : "") : " · " + esc(k.why)}</span>`; };
+function upcomingHolidays(days){ const out = []; for (let i = 0; i <= days; i++){ const d = addDays(TODAY, i), h = holidayOn(d); if (h) out.push({d, ...h}); } return out; }
 const wdShort = s => WD[parse(s).getDay()] + " " + short(s);
 
 async function genTasks(mareId, m, doneBefore){
@@ -874,7 +935,7 @@ async function genFoalTasks(foalId, fo, doneBefore){
 async function scheduleCollection(mareId, m, stud){
   const s = stud || S.studs[m.stallionId]; if (!s || m.ovulationDate) return null;
   if (!(m.status === "open" || m.status === "bred")) return null;
-  const ci = cycleInfo(m); const nxt = ci && notPregnant(m) ? alignedCollection(s, ci.nextOv) : nextCollections(s, 1, addDays(TODAY, 1))[0]; if (!nxt) return null;
+  const ci = cycleInfo(m); const nxt = ci && notPregnant(m) ? alignedCollection(s, ci.nextOv) : shippable(s, 1, addDays(TODAY, 1))[0]; if (!nxt) return null;
   const pb = S.tasks[mareId + "_x_prebreed"], br = S.tasks[mareId + "_x_breed"];
   if (!(pb && pb.done)) await put("tasks", mareId + "_x_prebreed", {...(pb||{}), mareId, title:`Ultrasound to time breeding · order for ${wdShort(nxt)} collection (${s.name})`, due:addDays(nxt, -1), cat:"vet", exam:true, auto:true, done:false, sample:!!m.sample});
   if (!(br && br.done)) await put("tasks", mareId + "_x_breed", {...(br||{}), mareId, title:`Semen arrives · breed (${s.name}, collected ${short(nxt)})`, due:addDays(nxt, 1), cat:"breeding", auto:true, done:false, sample:!!m.sample});
@@ -989,7 +1050,7 @@ function viewBarn(){
   const counts = s => arr("mares").filter(m => s==="all" || m.status===s).length;
   const seg = `<div class="seg bseg"><button data-bseg="mares" aria-pressed="${ui.barnSeg!=="foals"}">Mare roster ${arr("mares").length}</button><button data-bseg="foals" aria-pressed="${ui.barnSeg==="foals"}">Foals ${arr("foals").length}</button><button data-nav="stallions">My stallions</button></div>`;
   if (ui.barnSeg === "foals") return `${pageBar("Foals", "Horses")}${seg}${viewFoals()}`;
-  return `${pageBar("Mare roster", "Horses", canWrite ? `<button class="btn sm primary" data-act="add-mare">+ Add new mare</button>` : "")}${seg}
+  return `${pageBar("Mare roster", "Horses", canWrite ? `<label class="btn sm">Import mare cards<input type="file" accept="image/*,application/pdf,.csv,text/csv" data-card-up="" multiple hidden></label><button class="btn sm primary" data-act="add-mare">+ Add new mare</button>` : "")}${seg}
   <div class="sec">${seasonCard(true)}</div>
   <div class="sec">
     <input class="search" id="barnQ" type="search" placeholder="Search mares, breeds or stallions" value="${esc(ui.barnQ)}">
@@ -1000,14 +1061,15 @@ function viewBarn(){
 }
 function viewMare(id){
   const m = S.mares[id], ts = mareTasks(id), open = ts.filter(t=>!t.done && !isExam(t)), done = ts.filter(t=>t.done && !isExam(t));
-  const g = gestDay(m), stud = S.studs[m.stallionId], nc = stud ? nextCollections(stud, 3) : [];
+  const g = gestDay(m), stud = S.studs[m.stallionId], nc = stud ? shippable(stud, 3) : [];
   return `${pageBar(esc(m.name) + (m.sample?'<span class="tag">Sample</span>':""), `${crumb("mares","Mare roster")}<span>›</span><span>Mare profile</span>`, `<span class="pill ${m.status}">${STATUS[m.status]}</span>`)}
   ${mareHeader(id)}
-  ${g != null ? `<section class="sec"><div class="big-gest"><div class="d">Day ${g} <small>of ~${GEST} days · from ${m.ovulationDate?"ovulation":"breeding date"} · due ${short(dueDate(m))}</small></div>${gestBar(m)}<div class="chips">${seasonChip(m)}<span class="chip">Foal will be ${ageAtTwo(dueDate(m))} months old on Jan 1, ${parse(dueDate(m)).getFullYear()+2}, when it's a two-year-old</span></div></div></section>` : ""}
+  ${g != null ? `<section class="sec"><div class="big-gest"><div class="d">Day ${g} <small>of ~${GEST} days · from ${m.ovulationDate?"ovulation":"breeding date"} · due ${short(dueDate(m))}</small></div>${gestBar(m)}<div class="chips">${seasonChip(m)}<span class="chip sw-ideal">Pre-foaling vaccines ${short(addDays(dueDate(m), -30))}</span><span class="chip">Foal will be ${ageAtTwo(dueDate(m))} months old on Jan 1, ${parse(dueDate(m)).getFullYear()+2}, when it's a two-year-old</span></div></div></section>` : ""}
   ${(m.status === "open" || (m.status === "foaled" && carries(m))) ? (() => { const w = currentCrop(), st = seasonStatus(w); return `<section class="sec"><div class="howto"><b>${w.year} foal crop · ${esc(st.t)}</b><span>Breed ${esc(m.name)} ${short(w.open)} – ${short(w.close)} to foal ${MONTHS_L[season().start-1]}–${MONTHS_L[season().end-1]} (${MONTHS_L[season().ideal-1]} is ideal: breed ${short(w.idealFrom)} – ${short(w.idealTo)}). ${TODAY >= w.open ? `Bred today, she'd foal about ${short(addDays(TODAY, GEST))}, ${parse(addDays(TODAY, GEST)).getFullYear()}.` : ""}</span></div></section>`; })() : ""}
-  ${stud && collDays(stud).length && !m.ovulationDate ? `<section class="sec"><div class="howto"><b>${esc(stud.name)} collects ${esc(collLabel(stud))}</b><span>Next collections: ${nc.map(wdShort).join(", ")}. Her pre-breeding ultrasound is set for the day before the next one.</span>${canWrite?`<div class="row-btns"><button class="btn sm" data-stud="${stud.id}">Stallion profile</button><button class="btn sm primary" data-act="order" data-id="${stud.id}">Order semen</button></div>`:""}</div></section>` : ""}
+  ${stud && hasColl(stud) && !m.ovulationDate ? `<section class="sec"><div class="howto"><b>${esc(stud.name)} collects ${esc(collLabel(stud))}</b><span>Next collections: ${nc.map(wdShort).join(", ")}. Her pre-breeding ultrasound is set for the day before the next one${shipsCooled(stud) ? " that can ship and arrive (no Sunday or carrier-holiday deliveries)" : ""}.</span>${canWrite?`<div class="row-btns"><button class="btn sm" data-stud="${stud.id}">Stallion profile</button><button class="btn sm primary" data-act="order" data-id="${stud.id}">Order semen</button></div>`:""}</div></section>` : ""}
   ${cycleCard(id)}
   ${actionTable(id)}
+  ${cardsSec(id)}
   <section class="sec"><div class="sec-h"><h2>Reminders & care</h2><span class="sp"></span>${canWrite?`<button class="btn sm" data-act="add-task" data-id="${id}">+ Task</button>`:""}</div>
     <div class="list">${open.length ? open.map(t=>taskRow(t,false)).join("") : `<div class="empty-row">${m.status==="open"?"Check Ovulated in the action chart to build her breeding checklist.":"All caught up."}</div>`}</div>
     ${done.length ? `<details><summary class="muted" style="cursor:pointer;font-size:14px;padding:4px 0">${done.length} completed</summary><div class="list" style="margin-top:8px">${done.map(t=>taskRow(t,false)).join("")}</div></details>` : ""}
@@ -1232,7 +1294,11 @@ function studForm(sid){
     <div class="field"><label for="s-line">Pedigree & record</label><textarea id="s-line" name="sireLine" placeholder="Sire × dam sire, offspring earnings, titles">${esc(s.sireLine)}</textarea><div class="hint">Upload a pedigree file from the stallion's profile after saving.</div></div>
     <div class="two"><div class="field"><label for="s-ranch">Stallion station / farm</label><input id="s-ranch" name="ranch" required value="${esc(s.ranch)}"></div>
     <div class="field"><label for="s-city">Town, state</label><input id="s-city" name="city" placeholder="Weatherford, TX" value="${esc(s.city)}"></div></div>
-    <div class="field"><label>Collection days</label><div class="checks">${WD.map((w,i) => `<label><input type="checkbox" name="cd" value="${i}" ${cd.includes(i)?"checked":""}> ${w}</label>`).join("")}</div></div>
+    <div class="field"><label for="s-par">Collection schedule</label><select id="s-par" name="collParity"><option value="">Days of the week</option><option value="odd" ${collParity(s)==="odd"?"selected":""}>Odd dates (1st, 3rd, 5th…)</option><option value="even" ${collParity(s)==="even"?"selected":""}>Even dates (2nd, 4th, 6th…)</option></select>
+      <div class="checks" style="margin-top:6px">${WD.map((w,i) => `<label><input type="checkbox" name="cd" value="${i}" ${cd.includes(i)?"checked":""}> ${w}</label>`).join("")}</div>
+      <div class="hint">Pick weekdays, odd or even dates, or both: odd dates plus Mon–Sat means odd dates except Sundays. Odd-date stations collect the 31st and the 1st back to back.</div></div>
+    <div class="two"><div class="field"><label for="s-sat">Saturday delivery</label><select id="s-sat" name="satShip"><option value="">Ships for Saturday (extra fee)</option><option value="no" ${s.satShip==="no"?"selected":""}>No Saturday delivery</option></select></div>
+    <div class="field"><label for="s-bo">Not shipping on (dates)</label><input id="s-bo" name="blackout" value="${esc(s.blackout)}" placeholder="2026-12-24, 2027-01-02"><div class="hint">Station closed or stallion away. Sundays and carrier holidays are skipped automatically.</div></div></div>
     <div class="two"><div class="field"><label for="s-fee">Stud fee ($)</label><input id="s-fee" name="fee" inputmode="numeric" required value="${esc(s.fee||"")}"></div>
     <div class="field"><label for="s-chute">Chute fee ($)</label><input id="s-chute" name="chuteFee" inputmode="numeric" value="${esc(s.chuteFee||"")}"></div></div>
     <div class="field"><label for="s-ship">Shipment cost per dose ($)</label><input id="s-ship" name="shipFee" inputmode="numeric" value="${esc(s.shipFee||"")}"></div>
@@ -1243,7 +1309,7 @@ function studForm(sid){
   </form><datalist id="sbreeds">${breedOptions()}</datalist><datalist id="sdiscs">${DISCIPLINES.map(x => `<option value="${x}">`).join("")}</datalist>`, root => {
     root.querySelector("#sf").addEventListener("submit", async e => {
       e.preventDefault(); const f = e.target;
-      const d = {...s, name:val(f,"name"), breed:val(f,"breed"), color:val(f,"color"), height:val(f,"height"), discipline:val(f,"discipline"), lte:val(f,"lte"), sireLine:val(f,"sireLine"), ranch:val(f,"ranch"), city:val(f,"city"), collDays:[...f.querySelectorAll('[name="cd"]:checked')].map(x=>+x.value), fee:num(val(f,"fee")), chuteFee:num(val(f,"chuteFee")), shipFee:num(val(f,"shipFee")), ship:[...f.querySelectorAll('[name="ship"]:checked')].map(x=>x.value), contact:val(f,"contact"), contactPref:val(f,"contactPref")};
+      const d = {...s, name:val(f,"name"), breed:val(f,"breed"), color:val(f,"color"), height:val(f,"height"), discipline:val(f,"discipline"), lte:val(f,"lte"), sireLine:val(f,"sireLine"), ranch:val(f,"ranch"), city:val(f,"city"), collDays:[...f.querySelectorAll('[name="cd"]:checked')].map(x=>+x.value), collParity:val(f,"collParity"), satShip:val(f,"satShip"), blackout:val(f,"blackout"), fee:num(val(f,"fee")), chuteFee:num(val(f,"chuteFee")), shipFee:num(val(f,"shipFee")), ship:[...f.querySelectorAll('[name="ship"]:checked')].map(x=>x.value), contact:val(f,"contact"), contactPref:val(f,"contactPref")};
       delete d.days;
       if (!sid){ d.createdBy = me.id; d.createdAt = new Date().toISOString(); }
       const nid = sid || uid(); close(); await put("studs", nid, d); ui.stud = nid; ui.view = "studs"; render(); toast(sid ? "Saved" : d.name + " is listed");
@@ -1257,15 +1323,22 @@ function orderForm(sid){
     <div class="field"><label for="o-mare">For mare</label><select id="o-mare" name="mareId" required>${mares.length?mares.map(m=>`<option value="${m.id}">${esc(m.name)} (${STATUS[m.status]})</option>`).join(""):'<option value="">Add a mare first</option>'}</select></div>
     <div class="two"><div class="field"><label for="o-type">Type</label><select id="o-type" name="type">${types.map(t=>`<option>${esc(t)}</option>`).join("")}</select></div>
     <div class="field"><label for="o-doses">Doses</label><input id="o-doses" name="doses" type="number" min="1" max="6" value="1"></div></div>
-    <div class="two"><div class="field"><label for="o-need">Needed at barn</label><input id="o-need" name="neededBy" type="date" value="${(() => { const c = nextCollections(s,1)[0]; return c ? addDays(c,1) : addDays(TODAY,3); })()}" required></div>
+    <div class="two"><div class="field"><label for="o-need">Needed at barn</label><input id="o-need" name="neededBy" type="date" value="${(() => { const c = shippable(s,1)[0]; return c ? addDays(c,1) : addDays(TODAY,3); })()}" required><div class="hint" id="oShip"></div></div>
     <div class="field"><label for="o-car">Delivery</label><select id="o-car" name="carrier"><option>FedEx Priority Overnight</option><option>Counter-to-counter (airline)</option><option>Same-day courier</option><option>Dry shipper (frozen)</option></select></div></div>
     <div class="field"><label for="o-addr">Ship to (vet clinic or barn)</label><textarea id="o-addr" name="shipTo" required placeholder="Clinic name, street, town, ZIP · receiving phone"></textarea></div>
     <div class="hint">Adds to Costs as unpaid bills: stud fee <b class="money">${money(s.fee||0)}</b>${s.chuteFee?` + chute fee <b class="money">${money(s.chuteFee)}</b>`:""}${s.shipFee?` + shipment <b class="money">${money(s.shipFee)}</b> per dose`:""}.${collLabel(s)?` He collects ${esc(collLabel(s))}.`:""}</div>
     <p class="hint">Cooled semen is collected the day before and must arrive by 10:30 am for same-day insemination. The station confirms the date, then ships. A "Breed mare" task is added to the calendar.</p>
     <div class="row-btns"><button class="btn primary" type="submit" ${mares.length?"":"disabled"}>Send request</button><button class="btn" type="button" data-close>Cancel</button></div></form>`, root => {
+    const of = root.querySelector("#of"), oNeed = of.querySelector('[name="neededBy"]'), oType = of.querySelector('[name="type"]');
+    const oChk = () => { const box = root.querySelector("#oShip"); if (!box) return; const need = oNeed.value; if (!need || !/cool/i.test(oType.value || "Cooled")){ box.textContent = ""; return; }
+      const c = addDays(need, -1), k = shipCheck(s, c), coll = hasColl(s) && !collOn(s, c) ? ` He doesn't collect ${wdShort(c)}.` : "";
+      if (!k.ok){ const alt = shippable(s, 1, addDays(TODAY, 1))[0]; box.innerHTML = `<b style="color:var(--warn)">Can't arrive ${esc(short(need))}: ${esc(k.why)}.</b>${esc(coll)}${alt ? ` Next that works: arrives ${esc(wdShort(addDays(alt, 1)))}.` : ""}`; }
+      else box.textContent = (k.warn ? k.warn + "." : "Ships " + wdShort(c) + ", arrives next morning.") + coll; };
+    oNeed.addEventListener("input", oChk); oType && oType.addEventListener("change", oChk); oChk();
     root.querySelector("#of").addEventListener("submit", async e => {
       e.preventDefault(); const f = e.target; const mareId = val(f,"mareId"); if (!mareId) return;
       const oid = uid(), need = val(f,"neededBy");
+      if (/cool/i.test(val(f,"type")) && !shipCheck(s, addDays(need, -1)).ok && !confirm(`Cooled semen can't arrive ${short(need)} (${shipCheck(s, addDays(need, -1)).why}). Send the request anyway?`)) return;
       close();
       await put("orders", oid, {studId:sid, mareId, type:val(f,"type"), doses:Number(val(f,"doses"))||1, neededBy:need, carrier:val(f,"carrier"), shipTo:val(f,"shipTo"), status:"Requested", requestedBy:me.id, createdAt:new Date().toISOString()});
       await put("tasks", oid+"_breed", {mareId, title:`Semen arrives (${s.name}) · breed mare`, due:need, cat:"breeding", auto:false, done:false, assignee:null, createdBy:me.id});
@@ -1931,12 +2004,38 @@ function viewStud(sid){
   return `${pageBar(esc(s.name) + (s.sample?'<span class="tag">Sample</span>':""), `${mine ? crumb("stallions","My stallions") : crumb("search","Stallion search")}<span>›</span><span>Stallion profile</span>`, `<span class="fee">${money(s.fee||0,false)} stud fee</span>`)}
   ${studHeader(sid, mine)}
   ${portalCard(s, mine)}
-  ${nc.length ? `<section class="sec"><div class="sec-h"><h2>Breeding calendar</h2><span class="eyebrow">Next collections</span></div><div class="chips">${nc.map(d => `<span class="chip ship">${esc(wdShort(d))}</span>`).join("")}</div><p class="hint">Select him for a mare and her pre-breeding ultrasound lands the day before his next collection.</p></section>` : ""}
+  ${nc.length ? (() => { const hs = shipsCooled(s) ? upcomingHolidays(60) : []; return `<section class="sec"><div class="sec-h"><h2>Breeding calendar</h2><span class="eyebrow">Next collections · ${esc(collLabel(s))}</span></div><div class="chips">${nc.map(d => shipChip(s, d)).join("")}</div>${hs.length ? `<p class="hint">Carrier holidays ahead: ${hs.map(h => `${esc(wdShort(h.d))} ${esc(h.n)}${h.block ? " (no delivery)" : ""}`).join(" · ")}.</p>` : ""}<p class="hint">Select him for a mare and her pre-breeding ultrasound lands the day before his next collection that can ship cooled and arrive. Sundays, carrier holidays${s.satShip==="no"?", Saturdays":""} and his not-shipping dates are skipped.</p></section>`; })() : ""}
   ${s.sireLine ? `<section class="sec"><div class="sec-h"><h2>Pedigree & record</h2></div><div class="notes">${esc(s.sireLine)}</div></section>` : ""}
   ${bredTo.length ? `<section class="sec"><div class="sec-h"><h2>Mares booked to him</h2></div><div class="mares">${bredTo.map(m => mareCard(m.id)).join("")}</div></section>` : ""}
   ${mine && ts.length ? `<section class="sec"><div class="sec-h"><h2>Station to-do</h2></div><div class="list">${ts.map(t => taskRow(t,false)).join("")}</div></section>` : ""}`;
 }
 function ynSelect(name, id, v, label){ return `<div class="field"><label for="${id}">${label}</label><select id="${id}" name="${name}"><option value="">—</option><option value="yes" ${v==="yes"?"selected":""}>Yes</option><option value="no" ${v==="no"?"selected":""}>No</option></select></div>`; }
+// Earlier exams for the mare, newest first, read back on screen or out loud at the chute.
+const mmOf = v => { const a = [...String(v || "").matchAll(/(\d+(?:\.\d+)?)\s*mm/gi)].map(x => +x[1]); return a.length ? Math.max(...a) : null; };
+function priorExams(mareId, upTo, skipId){ return mareTasks(mareId).filter(x => x.id !== skipId && isExam(x) && x.done && x.due <= upTo && (x.lo || x.ro || x.tone || x.notes || x.ovulated || x.result)).sort((a,b) => b.due.localeCompare(a.due)); }
+function examSay(x, prev){
+  const ago = diff(TODAY, x.due), when = ago === 0 ? "today" : ago === 1 ? "yesterday" : ago + " days ago";
+  const side = (lab, v, pv) => { if (!v) return ""; const a = mmOf(v), b = mmOf(pv); return `${lab} ovary: ${v}${a != null && b != null && a !== b ? `, ${a > b ? "up" : "down"} from ${b} mm on ${short(prev.due)}` : ""}.`; };
+  return [`Last exam, ${short(x.due)}, ${when}: ${x.title}.`, side("Left", x.lo, prev && prev.lo), side("Right", x.ro, prev && prev.ro), x.tone ? `Uterine tone: ${x.tone}.` : "", x.ovulated ? "Ovulated." : "", x.result ? `Result: ${x.result}.` : "", x.notes ? `Notes: ${x.notes}` : ""].filter(Boolean).join(" ");
+}
+function speak(text){
+  try { if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) throw 0; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/(\d)\s*mm\b/gi, "$1 millimeter").replace(/\bCL\b/g, "C L")); u.lang = "en-US"; u.rate = .95; speechSynthesis.speak(u); }
+  catch(_){ toast(text); }
+}
+let lastSay = "";
+const ASK_LAST = /\b(last|previous|prior|earlier)\s+(exam|check|ultrasound|scan|findings?|results?)\b|\bread\s+(it\s+)?back\b|\bwhat did (she|we) have\b/i;
+function lastExamPanel(mareId, upTo, skipId){
+  const xs = priorExams(mareId, upTo, skipId), name = S.mares[mareId] ? S.mares[mareId].name : "her";
+  if (!xs.length){ lastSay = `No earlier exams on record for ${name}.`; return `<div class="lastx"><span class="muted">No earlier exams on record for ${esc(name)} yet.</span></div>`; }
+  const x = xs[0]; lastSay = examSay(x, xs[1]);
+  const cell = (k, v) => v ? `<span><i>${k}</i>${esc(v)}</span>` : "";
+  const grow = (v, pv) => { const a = mmOf(v), b = mmOf(pv); return a != null && b != null && a !== b ? ` (${a > b ? "+" : ""}${Math.round((a - b) * 10) / 10} mm)` : ""; };
+  return `<div class="lastx"><div class="lastx-h"><b>Last exam</b><span class="muted">${short(x.due)} · ${diff(TODAY, x.due) === 0 ? "today" : diff(TODAY, x.due) + "d ago"} · ${esc(x.title)}</span><span class="sp"></span><button class="btn sm" type="button" id="xRead">Read it back</button></div>
+    <div class="lastx-g">${cell("Left", x.lo ? x.lo + grow(x.lo, xs[1] && xs[1].lo) : "")}${cell("Right", x.ro ? x.ro + grow(x.ro, xs[1] && xs[1].ro) : "")}${cell("Tone", x.tone)}${x.ovulated ? cell("", "Ovulated") : ""}${cell("Result", x.result)}</div>
+    ${x.notes ? `<div class="lastx-n">${esc(x.notes)}</div>` : ""}
+    ${xs.length > 1 ? `<details><summary>${xs.length - 1} earlier exam${xs.length > 2 ? "s" : ""}</summary><div class="tbl-wrap"><table class="tbl act"><thead><tr><th>Date</th><th>Action</th><th>Left</th><th>Right</th><th>Tone</th><th>Ov.</th></tr></thead><tbody>${xs.slice(1, 9).map(y => `<tr><td>${short(y.due)}</td><td>${esc(y.title)}</td><td>${esc(y.lo || "")}</td><td>${esc(y.ro || "")}</td><td>${esc(y.tone || "")}</td><td>${y.ovulated ? "✓" : ""}</td></tr>`).join("")}</tbody></table></div></details>` : ""}
+    <div class="hint">Hands full? Tap Dictate and say “last exam” to hear it.</div></div>`;
+}
 function examForm(tid, mareId){
   const t = tid ? {...S.tasks[tid]} : {mareId, due:TODAY, cat:"vet", exam:true, title:"Ultrasound"};
   const m = S.mares[t.mareId];
@@ -1946,6 +2045,7 @@ function examForm(tid, mareId){
   <form class="form" id="xf">
     <div class="two"><div class="field"><label for="x-date">Date</label><input id="x-date" name="due" type="date" required value="${esc(t.due)}"></div>
     <div class="field"><label for="x-act">Action</label>${auto ? `<input id="x-act" value="${esc(t.title)}" disabled>` : `<input id="x-act" name="title" list="xacts" required value="${esc(t.title)}"><datalist id="xacts">${EXAM_ACTIONS.map(a=>`<option value="${a}">`).join("")}</datalist>`}</div></div>
+    ${m ? lastExamPanel(t.mareId, t.due || TODAY, tid) : ""}
     <div class="field"><label for="xSay">Say or type the findings</label><textarea id="xSay" rows="2" placeholder="Left 35 millimeter follicle, right CL, edema 2"></textarea><div class="row-btns" style="margin-top:6px"><button class="btn sm" type="button" id="xMic">Dictate</button><button class="btn sm" type="button" id="xFill">Fill in the chart</button></div></div>
     <div class="two"><div class="field"><label for="x-lo">Left ovary</label><input id="x-lo" name="lo" value="${esc(t.lo)}" placeholder="35 mm follicle, CL…"></div>
     <div class="field"><label for="x-ro">Right ovary</label><input id="x-ro" name="ro" value="${esc(t.ro)}" placeholder="Small follicles"></div></div>
@@ -1958,6 +2058,7 @@ function examForm(tid, mareId){
     <div class="row-btns"><button class="btn primary" type="submit" ${canWrite?"":"disabled"}>Save</button>${tid && canWrite ? `<button class="btn" type="button" id="xCost">Log cost</button>` : ""}<button class="btn" type="button" data-close>Cancel</button>${tid && !auto && canWrite ? `<button class="btn danger" type="button" id="xDel">Delete</button>` : ""}</div>
   </form>`, root => {
     const f = root.querySelector("#xf"); attachDictation(root);
+    const rb = root.querySelector("#xRead"); rb && rb.addEventListener("click", () => speak(lastSay));
     const bf = root.querySelector("#xBredF"), ovBox = f.querySelector('[name="ovulated"]');
     if (bf){ ovBox.addEventListener("change", () => { bf.hidden = !ovBox.checked; }); bf.querySelectorAll("[data-xb]").forEach(b => b.addEventListener("click", () => bf.querySelectorAll("[data-xb]").forEach(x => x.setAttribute("aria-pressed", String(x === b))))); }
     f.addEventListener("submit", async ev => { ev.preventDefault();
@@ -2003,7 +2104,7 @@ function horseOptions(sel){
 }
 function pickMareForStud(sid){
   const s = S.studs[sid], ms = arr("mares").filter(m => m.status !== "in-foal").sort((a,b)=>a.name.localeCompare(b.name));
-  const nc = nextCollections(s, 1)[0];
+  const nc = shippable(s, 1)[0];
   sheet(`<h2>Select ${esc(s.name)} for a mare</h2><form class="form" id="pmf">
     <div class="field"><label for="pm-mare">Mare</label><select id="pm-mare" name="mareId" required>${ms.length ? ms.map(m => `<option value="${m.id}">${esc(m.name)} (${STATUS[m.status]})</option>`).join("") : '<option value="">No open mares</option>'}</select></div>
     <p class="hint">${nc ? `He collects ${esc(collLabel(s))}. The mare's pre-breeding ultrasound goes on ${esc(wdShort(addDays(nc,-1)))} to order for the ${esc(wdShort(nc))} collection, and a breed reminder on ${esc(wdShort(addDays(nc,1)))}.` : "No collection days listed for him, so no ultrasound is scheduled. You can still order a shipment."}</p>
@@ -2017,6 +2118,175 @@ function pickMareForStud(sid){
 }
 
 
+
+// ---------- mare management cards: photo, PDF or spreadsheet -> action chart & history ----------
+const CARD_KINDS = {exam:["Exam / ultrasound","vet"], breeding:["Breeding","breeding"], vaccine:["Vaccine","vaccine"], deworm:["Deworming","care"], foaling:["Foaling","foaling"], treatment:["Treatment / meds","vet"], farrier:["Farrier","care"], dental:["Dental","vet"], other:["Other","care"]};
+const CARD_MARE = [["breed","Breed"],["color","Color"],["registry","Registry"],["regNo","Reg #"],["born","Year foaled"]];
+function cardPrompt(){
+  return `This image is a broodmare management card: a paper breeding, teasing, vet or health record for one mare. Read every dated entry. Reply with only JSON shaped like {"mare":{"name":"","breed":"","color":"","registry":"","regNo":"","born":""},"entries":[{"date":"YYYY-MM-DD","kind":"exam","title":"","left":"","right":"","tone":"","ovulated":false,"result":"","notes":""}]}. kind is one of: ${Object.keys(CARD_KINDS).join(", ")}. For ultrasound or palpation entries put left-ovary and right-ovary findings in left and right (for example "35 mm follicle", "CL"), uterine tone in tone using one of ${TONES.filter(Boolean).join(", ")} or "", ovulated true only when the card shows ovulation, and result one of Pregnant, Open, Twins or "". title is a short description under 8 words, such as "Ultrasound", "Bred · cooled AI", "Flu/rhino booster". born is a 4-digit year. Today is ${TODAY}; when the card leaves out the year, use the most recent year that keeps the date on or before today. Skip entries you can't date. Use "" for anything unreadable and never invent entries.`;
+}
+function cardsSec(id){
+  const m = S.mares[id], cs = m.cards || [];
+  const pic = c => c.id && /^image/.test(c.type || "") ? `<a href="${esc(photoUrl(c))}" target="_blank" rel="noopener"><img src="${esc(photoUrl(c))}" alt="" loading="lazy"></a>` : `<a class="doc" ${c.id ? `href="${esc(photoUrl(c))}" target="_blank" rel="noopener"` : ""}>${esc(((c.name || "").split(".").pop() || "file").toUpperCase().slice(0, 4))}</a>`;
+  return `<section class="sec"><div class="sec-h"><h2>Management cards</h2><span class="eyebrow">Paper records</span><span class="sp"></span>${canWrite ? `<button class="btn sm" data-card-tpl="1">CSV template</button><label class="btn sm primary">Upload card<input type="file" accept="image/*,application/pdf,.csv,text/csv" data-card-up="${id}" multiple hidden></label>` : ""}</div>
+    ${cs.length ? `<div class="cardups">${cs.map((c, i) => `<div class="cardup">${pic(c)}<div><b>${esc(c.name || "Card")}</b><span class="muted">${c.at ? short(c.at) : ""} · ${c.imported ? c.imported + " entr" + (c.imported > 1 ? "ies" : "y") + " imported" : "not imported"}</span>${canWrite && c.id && !/csv/.test(c.type || "") ? `<div class="row-btns"><button class="btn sm" data-card-read="${id}:${i}">${c.imported ? "Read again" : "Read & import"}</button></div>` : ""}</div></div>`).join("")}</div>`
+      : `<p class="muted" style="margin:0">Take a photo of her paper breeding or vet card, or upload a PDF or spreadsheet. Marebook reads the dates, ultrasounds, shots and breedings into her action chart and history, and learns her cycle length from past ovulations.</p>`}
+  </section>`;
+}
+function csvRows(text){
+  const rows = []; let row = [], cur = "", q = false;
+  for (let i = 0; i < text.length; i++){ const ch = text[i];
+    if (q){ if (ch === '"' && text[i+1] === '"'){ cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; }
+    else if (ch === '"') q = true; else if (ch === ","){ row.push(cur); cur = ""; } else if (ch === "\n" || ch === "\r"){ if (ch === "\r" && text[i+1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; } else cur += ch; }
+  if (cur || row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim()));
+}
+const normDate = v => { v = String(v || "").trim(); if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v; const m = v.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/); if (!m) return ""; const y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; return `${y}-${String(m[1]).padStart(2,"0")}-${String(m[2]).padStart(2,"0")}`; };
+const kindOf = v => { v = String(v || "").toLowerCase(); if (CARD_KINDS[v]) return v; if (/ultra|palp|exam|follic|scan|check|tease/.test(v)) return "exam"; if (/breed|insem|\bai\b|cover/.test(v)) return "breeding"; if (/vacc|booster|shot|rhino|flu|ewt|wnv|rabies|ehv/.test(v)) return "vaccine"; if (/worm/.test(v)) return "deworm"; if (/foal/.test(v)) return "foaling"; if (/shoe|trim|farrier/.test(v)) return "farrier"; if (/dent|float/.test(v)) return "dental"; if (/med|treat|lavage|regu|oxy|lute|deslor|banamine/.test(v)) return "treatment"; return "other"; };
+function cleanCard(r){
+  const tone = v => TONES.find(x => x && x.toLowerCase() === String(v || "").trim().toLowerCase()) || "";
+  const entries = (r && r.entries || []).map(e => { const date = normDate(e.date); const tn = tone(e.tone); return {date, kind: kindOf(e.kind || e.title), title: String(e.title || "").trim(), lo: String(e.left || e.lo || "").trim(), ro: String(e.right || e.ro || "").trim(), tone: tn, ovulated: e.ovulated === true || /^(y|yes|true|x|✓|1)$/i.test(String(e.ovulated || "")), result: ["Pregnant","Open","Twins"].find(x => x.toLowerCase() === String(e.result || "").trim().toLowerCase()) || "", notes: [String(e.notes || "").trim(), !tn && e.tone ? "Tone: " + e.tone : ""].filter(Boolean).join(" · ")}; }).filter(e => e.date && e.date <= addDays(TODAY, 1));
+  const mm = (r && r.mare) || {}; const mare = {}; for (const [k] of [["name"], ...CARD_MARE]) if (mm[k]) mare[k] = String(mm[k]).trim(); if (mare.born && !/^\d{4}$/.test(mare.born)) delete mare.born;
+  return {mare, entries: entries.sort((a,b) => a.date.localeCompare(b.date))};
+}
+function cardFromCsv(text){
+  const rows = csvRows(text); if (!rows.length) return {};
+  const h = rows[0].map(x => x.trim().toLowerCase()), col = (...ks) => h.findIndex(x => ks.some(k => x.includes(k)));
+  const ix = {mare:col("mare","horse","name"), date:col("date"), kind:col("type","kind","category"), title:col("action","what","description","title","procedure"), lo:col("left"), ro:col("right"), tone:col("tone","uter","edema"), ov:col("ovul"), res:col("result","preg"), notes:col("note","comment")};
+  const g = (r, k) => ix[k] >= 0 ? (r[ix[k]] || "").trim() : "";
+  const byMare = {};
+  for (const r of rows.slice(1)){ const nm = g(r, "mare"); (byMare[nm] = byMare[nm] || []).push({date:g(r,"date"), kind:g(r,"kind") || g(r,"title"), title:g(r,"title"), left:g(r,"lo"), right:g(r,"ro"), tone:g(r,"tone"), ovulated:g(r,"ov"), result:g(r,"res"), notes:g(r,"notes")}); }
+  return byMare;
+}
+async function fileB64(b){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = () => rej(r.error); r.readAsDataURL(b); }); }
+async function aiReadCard(file){
+  if (sampleFn && sampleImg && /^image\//.test(file.type)) return cleanCard(await sampleFn.json(cardPrompt(), {images:[file], modelTier:"default"}));
+  if (window.claude) throw {code:"not_configured"};
+  let b = file; if (/^image\//.test(file.type)) b = await shrinkImage(file);
+  const type = b.type || file.type;
+  if (!/^(image\/(jpeg|png|webp|gif)|application\/pdf)$/.test(type)) throw {code:"bad_type"};
+  if (b.size > 4.4 * 1024 * 1024) throw {code:"too_large"};
+  const h = {"content-type":"application/json"};
+  if (sb){ try { const ss = (await sb.auth.getSession()).data.session; if (ss) h.authorization = "Bearer " + ss.access_token; } catch(_){} }
+  const r = await fetch("/.netlify/functions/read-card", {method:"POST", headers:h, body:JSON.stringify({data: await fileB64(b), mediaType:type, today:TODAY})});
+  if (r.status === 404 || r.status === 501) throw {code:"not_configured"};
+  if (r.status === 401) throw {code:"auth"};
+  if (!r.ok) throw {code:"failed"};
+  return cleanCard(await r.json());
+}
+const mareByName = n => { n = String(n || "").trim().toLowerCase(); return n ? arr("mares").find(m => m.name.trim().toLowerCase() === n) || arr("mares").find(m => m.name.toLowerCase().includes(n) || n.includes(m.name.toLowerCase())) : null; };
+// Upload a card (or a stack of them) and walk through each one.
+async function cardUpload(files, mareId){
+  const q = [];
+  for (const f of files){
+    if (/csv|comma-separated/.test(f.type) || /\.csv$/i.test(f.name)){
+      const byMare = cardFromCsv(await f.text());
+      for (const [nm, list] of Object.entries(byMare)) q.push({mareId: mareId || (mareByName(nm) || {}).id || "", name: f.name, src:"csv", card: cleanCard({mare:{name:nm}, entries:list}), ref:{name:f.name, type:"text/csv"}});
+      continue;
+    }
+    q.push({mareId, file:f, name:f.name});
+  }
+  cardNext(q);
+}
+async function cardNext(q){
+  const job = q.shift(); if (!job) return;
+  if (job.card){ cardReview(job, q); return; }
+  const f = job.file, url = /^image\//.test(f.type) ? URL.createObjectURL(f) : "";
+  sheet(`<h2>Reading card…</h2><div class="muted" style="margin:-8px 0 12px">${esc(job.name)}${q.length ? ` · ${q.length} more after this` : ""}</div>${url ? `<img class="card-prev" src="${url}" alt="">` : ""}<p class="muted">Pulling dates, exams, shots and breedings off the card.</p>`);
+  if (assets && !job.ref){ try { const r = await assets.upload(f, f.type ? undefined : {type:"image/jpeg"}); job.ref = {id:r.id, type:r.contentType || f.type, name:f.name}; } catch(_){} }
+  try { job.card = await aiReadCard(f); job.src = "ai"; }
+  catch(e){ job.card = {mare:{}, entries:[]}; job.src = "manual"; job.err = e && e.code; }
+  if (!job.mareId && job.card.mare.name){ const mm = mareByName(job.card.mare.name); if (mm) job.mareId = mm.id; }
+  job.preview = url; cardReview(job, q);
+}
+function cardReview(job, q){
+  const ms = arr("mares").sort((a,b) => a.name.localeCompare(b.name)), card = job.card, nm = card.mare.name || "";
+  const isDup = (mid, e) => !!mid && mareTasks(mid).some(t => t.due === e.date && (e.kind === "exam" ? isExam(t) : t.cat === CARD_KINDS[e.kind][1]));
+  const kinds = v => Object.entries(CARD_KINDS).map(([k, x]) => `<option value="${k}" ${v === k ? "selected" : ""}>${x[0]}</option>`).join("");
+  const row = (e, i, mid) => `<div class="cardrow" data-row="${i}"><label class="cr-ck"><input type="checkbox" name="use" ${isDup(mid, e) ? "" : "checked"}></label>
+    <div class="cr-f"><input type="date" name="date" value="${esc(e.date || "")}"><select name="kind">${kinds(e.kind || "exam")}</select><input name="title" placeholder="What was done" value="${esc(e.title)}"></div>
+    <div class="cr-f"><input name="lo" placeholder="Left ovary" value="${esc(e.lo)}"><input name="ro" placeholder="Right ovary" value="${esc(e.ro)}"><select name="tone">${TONES.map(x => `<option ${e.tone === x ? "selected" : ""}>${x}</option>`).join("")}</select><label class="cr-ov"><input type="checkbox" name="ov" ${e.ovulated ? "checked" : ""}> Ovulated</label></div>
+    <div class="cr-f"><select name="result"><option value="">No preg result</option>${["Pregnant","Open","Twins"].map(x => `<option ${e.result === x ? "selected" : ""}>${x}</option>`).join("")}</select><input name="notes" placeholder="Notes" value="${esc(e.notes)}"></div>
+    ${isDup(mid, e) ? `<div class="hint">Something is already logged for her this day, so this row starts unchecked.</div>` : ""}</div>`;
+  const srcNote = job.src === "ai" ? `Read by AI from the card. Check each row against the card before importing.` : job.src === "csv" ? `From the spreadsheet.` : job.err === "not_configured" ? `AI card reading isn't switched on here yet, so type the entries in from the card. (Add the Claude API key in Netlify to turn it on.)` : job.err === "too_large" ? `That file is too big to read automatically. Type the entries in, or upload a smaller photo.` : `Couldn't read this card automatically. Type the entries in from the card below.`;
+  sheet(`<h2>Review card</h2><div class="muted" style="margin:-8px 0 12px">${esc(job.name)}${q.length ? ` · ${q.length} more after this` : ""}</div>
+  ${job.preview ? `<a href="${job.preview}" target="_blank" rel="noopener"><img class="card-prev" src="${job.preview}" alt="Card"></a>` : ""}
+  <p class="hint">${esc(srcNote)}</p>
+  <form class="form" id="crf">
+    <div class="two"><div class="field"><label for="cr-mare">Mare</label><select id="cr-mare" name="mareId">${ms.map(m => `<option value="${m.id}" ${job.mareId === m.id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}<option value="__new" ${!job.mareId ? "selected" : ""}>New mare…</option></select></div>
+    <div class="field" id="crNewF" ${job.mareId ? "hidden" : ""}><label for="cr-new">New mare's name</label><input id="cr-new" name="newName" value="${esc(nm)}" placeholder="Name on the card"></div></div>
+    <div id="crMare"></div>
+    <div class="eyebrow" style="margin-top:4px">Entries</div><div id="crRows">${card.entries.map((e, i) => row(e, i, job.mareId)).join("") || ""}</div>
+    <div class="row-btns"><button class="btn sm" type="button" id="crAdd">+ Add row</button></div>
+    <div id="crPreg"></div>
+    <div class="row-btns"><button class="btn primary" type="submit" ${canWrite ? "" : "disabled"}>Import</button>${job.ref && job.ref.id ? `<button class="btn" type="button" id="crSave">Just save the card</button>` : ""}<button class="btn" type="button" data-close>${q.length ? "Skip" : "Cancel"}</button></div>
+  </form>`, root => {
+    const f = root.querySelector("#crf"), sel = f.querySelector('[name="mareId"]'), rowsEl = root.querySelector("#crRows");
+    let n = card.entries.length;
+    const curMare = () => sel.value === "__new" ? null : S.mares[sel.value];
+    const readRows = () => [...rowsEl.querySelectorAll(".cardrow")].map(r => ({use: r.querySelector('[name="use"]').checked, date: r.querySelector('[name="date"]').value, kind: r.querySelector('[name="kind"]').value, title: r.querySelector('[name="title"]').value.trim(), lo: r.querySelector('[name="lo"]').value.trim(), ro: r.querySelector('[name="ro"]').value.trim(), tone: r.querySelector('[name="tone"]').value, ovulated: r.querySelector('[name="ov"]').checked, result: r.querySelector('[name="result"]').value, notes: r.querySelector('[name="notes"]').value.trim()}));
+    const side = () => {
+      const m = curMare() || {}, box = root.querySelector("#crMare");
+      const fill = CARD_MARE.filter(([k]) => card.mare[k] && !m[k]);
+      box.innerHTML = fill.length ? `<div class="field"><label>Fill in from the card</label><div class="checks">${fill.map(([k, l]) => `<label><input type="checkbox" name="mf_${k}" checked> ${l}: ${esc(card.mare[k])}</label>`).join("")}</div></div>` : "";
+      const ovs = readRows().filter(r => r.use && r.ovulated && r.date).map(r => r.date).sort(), last = ovs[ovs.length - 1], pb = root.querySelector("#crPreg");
+      const canPreg = last && (!curMare() || notPregnant(m)) && diff(TODAY, last) <= 60 && diff(TODAY, last) >= 0;
+      pb.innerHTML = (ovs.length ? `<p class="hint">${ovs.length} ovulation${ovs.length > 1 ? "s" : ""} will go into her cycle history so heat prediction learns her cycle length.</p>` : "") +
+        (canPreg ? `<div class="checks"><label><input type="checkbox" name="startPreg"> She was bred on the ${esc(short(last))} cycle: set that ovulation date and start her pregnancy checks</label></div>` : "");
+    };
+    sel.addEventListener("change", () => { root.querySelector("#crNewF").hidden = sel.value !== "__new"; side(); });
+    rowsEl.addEventListener("change", side);
+    root.querySelector("#crAdd").addEventListener("click", () => { rowsEl.insertAdjacentHTML("beforeend", row({date:TODAY, kind:"exam", title:"", lo:"", ro:"", tone:"", notes:""}, n++, null)); });
+    side();
+    const ensureMare = async () => {
+      if (sel.value !== "__new") return sel.value;
+      const name = val(f, "newName") || card.mare.name || "New mare"; const id = uid();
+      await put("mares", id, {name, status:"open", carry:"yes", createdBy:me.id, createdAt:new Date().toISOString()}); return id;
+    };
+    const sv = root.querySelector("#crSave"); sv && sv.addEventListener("click", async () => {
+      const mid = await ensureMare(), m = S.mares[mid]; close();
+      if (!(m.cards || []).some(c => c.id === job.ref.id)) await put("mares", mid, {...m, cards:[...(m.cards || []), {...job.ref, at:TODAY, imported:0}]});
+      toast("Card saved to " + m.name); cardNext(q);
+    });
+    f.addEventListener("submit", async ev => { ev.preventDefault();
+      const rows = readRows().filter(r => r.use && r.date); const mid = await ensureMare(); let m = S.mares[mid];
+      const startPreg = !!(f.querySelector('[name="startPreg"]') || {}).checked;
+      close();
+      for (const r of rows){
+        const [lab, cat] = CARD_KINDS[r.kind] || CARD_KINDS.other;
+        await put("tasks", uid(), {mareId:mid, title: r.title || lab, due:r.date, cat, exam: r.kind === "exam", lo:r.lo, ro:r.ro, tone:r.tone, ovulated:r.ovulated, ...(r.result ? {result:r.result} : {}), notes:r.notes, done:true, doneAt:r.date, doneBy:me.id, auto:false, fromCard:true, createdBy:me.id, sample:!!m.sample});
+      }
+      m = {...S.mares[mid]};
+      for (const [k] of CARD_MARE) if ((f.querySelector(`[name="mf_${k}"]`) || {}).checked) m[k] = card.mare[k];
+      const ovs = rows.filter(r => r.ovulated).map(r => r.date);
+      if (ovs.length) m.cycles = [...new Set([...(m.cycles || []), ...ovs])].sort();
+      const foaled = rows.filter(r => r.kind === "foaling").map(r => r.date).sort().pop(); if (foaled && (!m.foalDate || foaled > m.foalDate) && m.status !== "in-foal") m.foalDate = foaled;
+      if (job.ref){ const cards = (m.cards || []).filter(c => !(job.ref.id && c.id === job.ref.id)); m.cards = [...cards, {...job.ref, at:TODAY, imported:rows.length}]; }
+      if (startPreg && ovs.length){ const ov = ovs.sort().pop(); m = {...m, ovulationDate:ov, status:"bred"}; await put("mares", mid, m); await genTasks(mid, m, TODAY); }
+      else { await put("mares", mid, m); if (notPregnant(m)) await genHeatTasks(mid, m); }
+      toast(`${rows.length} entr${rows.length === 1 ? "y" : "ies"} added to ${m.name}${startPreg ? " · pregnancy checks scheduled" : ""}`);
+      if (q.length) cardNext(q); else { ui.mare = mid; ui.foal = null; ui.stud = null; if (!["barn","today"].includes(ui.view)) ui.view = "barn"; render(); window.scrollTo(0,0); }
+    });
+  });
+}
+async function cardReread(mareId, i){
+  const m = S.mares[mareId], c = (m.cards || [])[+i]; if (!c || !c.id) return;
+  try { const b = await (await fetch(photoUrl(c))).blob(); const f = new File([b], c.name || "card", {type: c.type || b.type}); cardNext([{mareId, file:f, name:c.name || "Card", ref:c}]); }
+  catch(_){ toast("Couldn't open that card. Try uploading it again."); }
+}
+async function cardTemplate(){
+  const lines = ["Mare,Date,Type,Action,Left ovary,Right ovary,Uterine tone,Ovulated,Result,Notes", `Sample Mare,${addDays(TODAY,-20)},exam,Ultrasound,35 mm follicle,small follicles,Edema 2,,,`, `Sample Mare,${addDays(TODAY,-19)},breeding,Bred · cooled AI,,,,,,`, `Sample Mare,${addDays(TODAY,-18)},exam,Ultrasound,CL,,Good,yes,,ovulated left`, `Sample Mare,${addDays(TODAY,-4)},exam,14-day check,,,,,Pregnant,single`, `Sample Mare,${addDays(TODAY,-60)},vaccine,Flu/rhino booster,,,,,,`];
+  await saveFile("marebook-mare-card-template.csv", lines.join("\n"), "text/csv");
+}
+document.addEventListener("change", async ev => {
+  const el = ev.target; if (!el.dataset || el.dataset.cardUp === undefined || !canWrite) return;
+  const files = [...(el.files || [])]; el.value = ""; if (files.length) cardUpload(files, el.dataset.cardUp || "");
+});
+document.addEventListener("click", ev => {
+  const el = ev.target.closest("[data-card-read],[data-card-tpl]"); if (!el || !canWrite) return;
+  if (el.dataset.cardTpl){ cardTemplate(); return; }
+  const [mid, i] = el.dataset.cardRead.split(":"); cardReread(mid, i);
+});
 // ---------- photos, pedigree ----------
 const COLL_OF = {mare:"mares", foal:"foals", stallion:"studs"};
 document.addEventListener("change", async ev => {
@@ -2211,7 +2481,9 @@ function studHeader(sid, mine){
     ${fld("Pedigree", s.pedigree ? `<a class="btn sm" href="${esc(photoUrl(s.pedigree))}" target="_blank" rel="noopener">View pedigree</a>` : mine && assets ? `<label class="btn sm">Upload pedigree<input type="file" accept="image/*,application/pdf" data-pedigree="${sid}" hidden></label>` : ro("Not uploaded"))}
     ${fld("Stallion station / farm", mine ? inp(r,"ranch",s.ranch) : ro(s.ranch))}
     ${fld("Location", mine ? inp(r,"city",s.city,"",'placeholder="Weatherford, TX"') : ro(s.city))}
-    ${fld("Collection days", mine ? `<div class="cdays">${WD.map((w,i) => `<button type="button" data-cd="${sid}:${i}" aria-pressed="${cd.includes(i)}">${w}</button>`).join("")}</div>` : ro(collLabel(s)), true)}
+    ${fld("Collection days", mine ? `<div class="cdays">${[["odd","Odd dates"],["even","Even dates"]].map(([k,l]) => `<button type="button" data-cpar="${sid}:${k}" aria-pressed="${collParity(s)===k}">${l}</button>`).join("")}<span class="cdsep"></span>${WD.map((w,i) => `<button type="button" data-cd="${sid}:${i}" aria-pressed="${cd.includes(i)}">${w}</button>`).join("")}</div>` : ro(collLabel(s)), true)}
+    ${fld("Cooled shipping", mine ? `<select data-mf="${r}:satShip" ${canWrite?"":"disabled"}><option value="">Ships for Saturday delivery</option><option value="no" ${s.satShip==="no"?"selected":""}>No Saturday delivery</option></select>` : ro(shipsCooled(s) ? (s.satShip==="no" ? "Mon–Fri delivery" : "Mon–Sat delivery") : "Not shipped cooled"))}
+    ${mine ? fld("Not shipping on", inp(r,"blackout",s.blackout,"",'placeholder="2026-12-24, 2027-01-02"')) : ""}
     ${fld("Stud fee", mine ? inp(r,"fee",s.fee||"","",'inputmode="decimal"') : ro(money(s.fee||0)))}
     ${fld("Chute fee", mine ? inp(r,"chuteFee",s.chuteFee||"","",'inputmode="decimal"') : ro(s.chuteFee ? money(s.chuteFee) : "None"))}
     ${fld("Shipment cost (per dose)", mine ? inp(r,"shipFee",s.shipFee||"","",'inputmode="decimal"') : ro(s.shipFee ? money(s.shipFee) : "—"))}
@@ -2297,6 +2569,7 @@ document.addEventListener("click", async ev => {
   if (d.plan){ await put("settings", "plan", {tier:d.plan, updatedBy:me.id}); toast("Plan switched to " + PLANS.find(p=>p.k===d.plan).name); return; }
   if (!canWrite) return;
   if (d.yn){ const [kind, id, field, v] = d.yn.split(":"); if (kind === "mare") await applyMare(id, {[field]: v}); else if (kind === "foal") await applyFoal(id, {[field]: v}); return; }
+  if (d.cpar){ const [sid, k] = d.cpar.split(":"); const s = S.studs[sid]; await applyStud(sid, {collParity: collParity(s) === k ? "" : k}); return; }
   if (d.cd){ const [sid, i] = d.cd.split(":"); const s = S.studs[sid]; const cur = collDays(s); const nd = cur.includes(+i) ? cur.filter(x => x !== +i) : [...cur, +i].sort(); await applyStud(sid, {collDays:nd}); return; }
 });
 document.addEventListener("change", async ev => {
@@ -2408,6 +2681,7 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 function attachDictation(root){
   const box = root.querySelector("#xSay"), mic = root.querySelector("#xMic"), fill = root.querySelector("#xFill"); if (!box) return;
   fill.addEventListener("click", () => {
+    if (ASK_LAST.test(box.value)){ box.value = ""; speak(lastSay || "No earlier exams on record."); return; }
     const p = parseFindings(box.value); const set = (n, v) => { const el = root.querySelector(`[name="${n}"]`); if (el && v) el.value = v; };
     set("lo", p.lo); set("ro", p.ro); if (p.tone) set("tone", p.tone); if (p.ovulated) root.querySelector('[name="ovulated"]').checked = true;
     toast("Filled from your notes. Check before saving.");
@@ -2418,7 +2692,7 @@ function attachDictation(root){
     try {
       const rec = new SR(); rec.lang = "en-US"; rec.interimResults = false;
       mic.textContent = "Listening…"; mic.disabled = true;
-      rec.onresult = ev => { box.value = (box.value + " " + ev.results[0][0].transcript).trim(); fill.click(); };
+      rec.onresult = ev => { const said = ev.results[0][0].transcript; if (ASK_LAST.test(said)){ speak(lastSay || "No earlier exams on record."); return; } box.value = (box.value + " " + said).trim(); fill.click(); };
       rec.onerror = () => toast("Couldn't hear that. Type the findings instead.");
       rec.onend = () => { mic.textContent = "Dictate"; mic.disabled = false; };
       rec.start();
@@ -2736,7 +3010,7 @@ function adBanner(){
 }
 function viewLanding(){
   const f = (t, p) => `<div class="feature"><h3>${t}</h3><p>${p}</p></div>`;
-  const flow = [["Plan the crop","Foal Jan–Apr"],["Ovulation","Day 0"],["Pregnancy check","Day 14"],["Heartbeat","Day 25"],["Ultrasounds","35 · 45 · 60"],["EHV-1 vaccines","5 · 7 · 9 mo"],["Foaling watch","Day 320"],["Foal heat","6–8 days after"],["Foal care","Plasma → weaning"]];
+  const flow = [["Plan the crop","Foal Jan–Apr"],["Ovulation","Day 0"],["Pregnancy check","Day 14"],["Heartbeat","Day 25"],["Ultrasounds","35 · 45 · 60"],["EHV-1 vaccines","5 · 7 · 9 mo"],["Pre-foaling vaccines","30 days before due"],["Foaling watch","Day 320"],["Foal heat","6–8 days after"],["Foal care","Plasma → weaning"]];
   const studs = arr("studs").sort((a,b) => (b.featured?1:0) - (a.featured?1:0)).slice(0,3);
   return `<div class="pub">
   <section class="hero-x"><span class="ring-deco" aria-hidden="true"></span>${logoSvg()}
@@ -3212,7 +3486,7 @@ function cycleInfo(m, id){
 }
 // Best collection day: the latest one that still lands semen the day before predicted ovulation.
 function alignedCollection(s, nextOv){
-  const cands = nextCollections(s, 12, addDays(TODAY, 1)); if (!cands.length) return null;
+  const cands = shippable(s, 12, addDays(TODAY, 1)); if (!cands.length) return null;
   const ok = cands.filter(c => addDays(c, 1) <= nextOv);
   return ok.length ? ok[ok.length - 1] : cands[0];
 }
@@ -3228,7 +3502,8 @@ async function genHeatTasks(mareId, m){
     await put("tasks", id, {...(ex || {}), mareId, ...d, auto:true, done:false, sample:!!m.sample, createdBy: ex ? ex.createdBy : me.id}); }
 }
 let heatT;
-function refreshHeat(){ clearTimeout(heatT); heatT = setTimeout(async () => { if (!ready || !canWrite) return; for (const m of arr("mares")) if (notPregnant(m) && ((m.cycles||[]).length || m.ovulationDate || m.foalDate)) await genHeatTasks(m.id, S.mares[m.id]); }, 600); }
+function refreshHeat(){ clearTimeout(heatT); heatT = setTimeout(async () => { if (!ready || !canWrite) return;
+  const pf = PREG.find(p => p.k === "d310"); for (const t of arr("tasks")) if (!t.done && t.auto && /_p_d310$/.test(t.id) && t.title !== pf.t){ const m = S.mares[t.mareId]; if (m && anchor(m)) await put("tasks", t.id, {...t, title:pf.t, due:addDays(anchor(m), pf.d)}); } for (const m of arr("mares")) if (notPregnant(m) && ((m.cycles||[]).length || m.ovulationDate || m.foalDate)) await genHeatTasks(m.id, S.mares[m.id]); }, 600); }
 
 function cycleStrip(ci){
   const days = ci.L + 4, start = addDays(ci.nextOv, -ci.L + 1);
@@ -3254,7 +3529,7 @@ function cycleCard(id){
     <div class="kpis">${kpi("Next heat", `${short(ci.heatFrom)}–${parse(ci.heatTo).getDate()}`, ci.basis === "teasing" ? "from teasing" : ci.basis === "foaling" ? "from foaling date" : "from last ovulation")}${kpi("Ovulation", "~" + short(ci.nextOv), ci.inHeatNow ? "this heat" : "next cycle")}${kpi("Her cycle", ci.L + " days", ci.learned ? `learned from ${ci.learned} cycle${ci.learned>1?"s":""}` : "standard until she has 2 ovulations")}</div>
     ${cycleStrip(ci)}
     ${ci.fol ? `<div class="fol ${ci.fol.k}"><b>${esc(ci.fol.t)}</b><span>${esc(ci.fol.s)}</span></div>` : ""}
-    ${stud ? `<p class="hint" style="margin:10px 0 0">${col ? `${esc(stud.name)} collects ${esc(collLabel(stud))}. Order for the <b>${esc(wdShort(col))}</b> collection so semen arrives ${esc(wdShort(addDays(col,1)))}, ahead of ovulation ~${esc(short(ci.nextOv))}.` : `${esc(stud.name)} has no collection days listed. Call the station ahead of ${esc(short(ci.heatFrom))}.`}</p>` : ""}
+    ${stud ? `<p class="hint" style="margin:10px 0 0">${col ? `${esc(stud.name)} collects ${esc(collLabel(stud))}. Order for the <b>${esc(wdShort(col))}</b> collection so semen arrives ${esc(wdShort(addDays(col,1)))}, ahead of ovulation ~${esc(short(ci.nextOv))}.${(() => { const sk = nextCollections(stud, 12, addDays(TODAY, 1)).filter(c => c > col && addDays(c, 1) <= ci.nextOv && !shipCheck(stud, c).ok); return sk.length ? ` Skips ${sk.map(c => wdShort(c) + " (" + shipCheck(stud, c).why + ")").join(", ")}.` : ""; })()}${(shipCheck(stud, col).warn || "") && " " + esc(shipCheck(stud, col).warn) + "."}` : `${esc(stud.name)} has no collection days listed. Call the station ahead of ${esc(short(ci.heatFrom))}.`}</p>` : ""}
     ${teases.length ? `<div class="chips" style="margin-top:10px">${teases.map(x => `<span class="chip ${x.r==="in"?"sw-ideal":""}">${short(x.d)} · ${x.r==="in"?"in heat":"not in heat"}</span>`).join("")}</div>` : ""}
     ${ci.cyc.length ? `<p class="hint" style="margin:8px 0 10px">Ovulations on record: ${ci.cyc.slice(-5).map(short).join(", ")}</p>` : ""}
     ${tease}</div></section>`;

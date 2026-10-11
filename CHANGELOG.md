@@ -1,5 +1,20 @@
 # Changelog
 
+## v10 · Pre-foaling vaccines, exam read-back, management cards, collection & shipping rules
+- **Pre-foaling vaccines:** scheduled 30 days before each mare's due date (EWT, WNV, rabies, flu/rhino). The due date shows a "Pre-foaling vaccines" chip on her profile. Existing reminders are retitled and re-dated automatically.
+- **Read the last exam back:** every exam form shows her last exam (left, right, tone, ovulation, result, notes) with follicle growth since the one before, plus earlier exams. "Read it back" speaks it aloud. While dictating, say "last exam" to hear it hands-free.
+- **Mare management cards:** upload a photo, PDF or CSV of a paper breeding or vet card from her profile, or several at once with "Import mare cards" on the roster.
+  - AI reads the dated entries into a review sheet: exams with ovary findings, breedings, vaccines, deworming, foaling and treatments.
+  - Check each row, then import. Rows already logged that day start unchecked.
+  - Imported ovulations train her heat prediction. A recent bred cycle can start her pregnancy checks.
+  - Blank mare details (breed, color, registry, reg #, year foaled) fill in from the card. Cards stay on her profile.
+  - Without AI, you type entries in beside the card photo. A CSV template is included.
+  - AI on Netlify needs `ANTHROPIC_API_KEY` set (see `netlify/functions/read-card.mjs`).
+- **Collection schedules:** stallions can collect on weekdays, odd dates, even dates, or both (for example odd dates except Sundays).
+- **Cooled-semen shipping:** collections that can't ship and arrive are skipped when timing a mare's ultrasound and order. That covers Sunday deliveries, carrier holidays (New Year's, Memorial Day, July 4, Labor Day, Thanksgiving, Christmas, with observed days), Saturday when the station doesn't ship for it, and the station's own not-shipping dates.
+  - The stallion calendar flags blocked dates and lists holidays ahead.
+  - The order form warns when the needed date can't arrive and suggests the next one that can.
+
 ## v9 · Real accounts, phone app, heat prediction
 - **Real accounts, ready to switch on:** Supabase backend (`supabase/schema.sql`).
   - Email log-in, sign-up with email confirmation, and password reset by email.
