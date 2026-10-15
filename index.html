@@ -304,6 +304,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance
 .cdays button{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:5px 8px;font-size:12.5px;font-weight:600;color:var(--muted)}
 .cdays button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .cdays .cdsep{width:1px;background:var(--line);margin:2px 4px}
+.cdays.acts{gap:6px} .cdays.acts button{padding:8px 12px;font-size:14px;border-radius:999px}
 .aud{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
 .aud:last-child{border-bottom:0} .aud-t{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:2px}
 .aud-c{display:block;margin-top:3px;color:var(--muted);font-size:13px;font-family:var(--f-mono)}
@@ -796,7 +797,15 @@ const CATS = {vet:"Vet", vaccine:"Vaccine", foaling:"Foaling", breeding:"Breedin
 const STATUS = {open:"Open", bred:"Bred", "in-foal":"In foal", foaled:"Foaled"};
 const BREEDS = ["American Quarter Horse","American Paint Horse","Appaloosa","Thoroughbred","Arabian","Morgan","Tennessee Walking Horse","American Saddlebred","Standardbred","Missouri Fox Trotter","Paso Fino","Friesian","Andalusian","Warmblood","Hanoverian","Oldenburg","Dutch Warmblood","Holsteiner","Trakehner","Percheron","Belgian","Clydesdale","Draft cross","Mustang","Palomino","Pinto","Buckskin","Miniature Horse","Pony of the Americas","Welsh Pony"];
 const TONES = ["","Good","Fair","Poor","Edema 1","Edema 2","Edema 3","Fluid present"];
-const EXAM_ACTIONS = ["Ultrasound","Tease","Breed / inseminate","Flush","Palpation","Culture / cytology","Other"];
+const EXAM_ACTIONS = ["Ultrasound","Inseminate","Culture","Deslorelin","hCG","Cytology","Uterine lavage","Oxytocin","Tease","Palpation","Flush"];
+// Pick several actions at once; the exam's title lists them. Older single-action titles map back onto the chips.
+const ACT_ALIAS = {"breed / inseminate":"Inseminate","breed":"Inseminate","culture / cytology":"Culture","hcg":"hCG"};
+function examActs(t){
+  if (Array.isArray(t.actions) && t.actions.length) return t.actions;
+  if (t.auto) return [];
+  return String(t.title || "").split(/\s*\+\s*|\s*,\s*/).map(x => ACT_ALIAS[x.toLowerCase()] || EXAM_ACTIONS.find(a => a.toLowerCase() === x.toLowerCase()) || x).filter(Boolean);
+}
+const actTitle = t => { const a = Array.isArray(t.actions) ? t.actions : []; return t.auto ? t.title + (a.length ? " + " + a.join(" + ") : "") : (a.length ? a.join(" + ") : t.title); };
 const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const yn = v => v === "yes" ? "Yes" : v === "no" ? "No" : "—";
 
@@ -2051,7 +2060,7 @@ function actionTable(id){
   const rows = mareTasks(id).filter(t => isExam(t)).sort((a,b) => a.due.localeCompare(b.due));
   return `<section class="sec"><div class="sec-h"><h2>Action chart</h2><span class="eyebrow">Ultrasounds & exams</span><span class="sp"></span>${canWrite?`<button class="btn sm" data-act="add-exam" data-id="${id}">+ Exam</button>`:""}</div>
     <div class="tbl-wrap"><table class="tbl act"><thead><tr><th>Date</th><th>Action</th><th>Left ovary</th><th>Right ovary</th><th>Uterine tone</th><th>Ovulated</th><th>Done</th><th>By</th></tr></thead><tbody>
-    ${rows.length ? rows.map(t => `<tr data-exam="${t.id}" class="${t.done?"is-done":""} ${!t.done&&t.due<TODAY?"is-late":""}"><td>${short(t.due)}</td><td>${esc(t.title)}</td><td>${esc(t.lo||"")}</td><td>${esc(t.ro||"")}</td><td>${esc(t.tone||"")}</td><td>${t.ovulated?"✓":""}</td><td>${t.done?"✓":t.due<TODAY?`<span class="due over">late</span>`:""}</td><td>${t.done && t.doneBy ? esc(pname(t.doneBy)) : ""}</td></tr>`).join("")
+    ${rows.length ? rows.map(t => `<tr data-exam="${t.id}" class="${t.done?"is-done":""} ${!t.done&&t.due<TODAY?"is-late":""}"><td>${short(t.due)}</td><td>${esc(actTitle(t))}</td><td>${esc(t.lo||"")}</td><td>${esc(t.ro||"")}</td><td>${esc(t.tone||"")}</td><td>${t.ovulated?"✓":""}</td><td>${t.done?"✓":t.due<TODAY?`<span class="due over">late</span>`:""}</td><td>${t.done && t.doneBy ? esc(pname(t.doneBy)) : ""}</td></tr>`).join("")
       : `<tr><td colspan="8" style="font-family:var(--f-body);font-weight:400;color:var(--muted);white-space:normal">Ultrasound rows fill in here automatically once you record ovulation (Carry: 14, 25, 35, 45, 60 days; Embryo transfer: flush day 8) or pick a stallion with collection days. Tap + Exam to log a follicle check.</td></tr>`}
     </tbody></table></div>
     <p class="hint">Tap a row to record left and right ovary findings, uterine tone and ovulation. Checking Ovulated sets her ovulation date and schedules what follows.</p></section>`;
@@ -2079,7 +2088,7 @@ function priorExams(mareId, upTo, skipId){ return mareTasks(mareId).filter(x => 
 function examSay(x, prev){
   const ago = diff(TODAY, x.due), when = ago === 0 ? "today" : ago === 1 ? "yesterday" : ago + " days ago";
   const side = (lab, v, pv) => { if (!v) return ""; const a = mmOf(v), b = mmOf(pv); return `${lab} ovary: ${v}${a != null && b != null && a !== b ? `, ${a > b ? "up" : "down"} from ${b} mm on ${short(prev.due)}` : ""}.`; };
-  return [`Last exam, ${short(x.due)}, ${when}: ${x.title}.`, side("Left", x.lo, prev && prev.lo), side("Right", x.ro, prev && prev.ro), x.tone ? `Uterine tone: ${x.tone}.` : "", x.ovulated ? "Ovulated." : "", x.result ? `Result: ${x.result}.` : "", x.notes ? `Notes: ${x.notes}` : ""].filter(Boolean).join(" ");
+  return [`Last exam, ${short(x.due)}, ${when}: ${actTitle(x)}.`, side("Left", x.lo, prev && prev.lo), side("Right", x.ro, prev && prev.ro), x.tone ? `Uterine tone: ${x.tone}.` : "", x.ovulated ? "Ovulated." : "", x.result ? `Result: ${x.result}.` : "", x.notes ? `Notes: ${x.notes}` : ""].filter(Boolean).join(" ");
 }
 function speak(text){
   try { if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) throw 0; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/(\d)\s*mm\b/gi, "$1 millimeter").replace(/\bCL\b/g, "C L")); u.lang = "en-US"; u.rate = .95; speechSynthesis.speak(u); }
@@ -2093,11 +2102,25 @@ function lastExamPanel(mareId, upTo, skipId){
   const x = xs[0]; lastSay = examSay(x, xs[1]);
   const cell = (k, v) => v ? `<span><i>${k}</i>${esc(v)}</span>` : "";
   const grow = (v, pv) => { const a = mmOf(v), b = mmOf(pv); return a != null && b != null && a !== b ? ` (${a > b ? "+" : ""}${Math.round((a - b) * 10) / 10} mm)` : ""; };
-  return `<div class="lastx"><div class="lastx-h"><b>Last exam</b><span class="muted">${short(x.due)} · ${diff(TODAY, x.due) === 0 ? "today" : diff(TODAY, x.due) + "d ago"} · ${esc(x.title)}</span><span class="sp"></span><button class="btn sm" type="button" id="xRead">Read it back</button></div>
+  return `<div class="lastx"><div class="lastx-h"><b>Last exam</b><span class="muted">${short(x.due)} · ${diff(TODAY, x.due) === 0 ? "today" : diff(TODAY, x.due) + "d ago"} · ${esc(actTitle(x))}</span><span class="sp"></span><button class="btn sm" type="button" id="xRead">Read it back</button></div>
     <div class="lastx-g">${cell("Left", x.lo ? x.lo + grow(x.lo, xs[1] && xs[1].lo) : "")}${cell("Right", x.ro ? x.ro + grow(x.ro, xs[1] && xs[1].ro) : "")}${cell("Tone", x.tone)}${x.ovulated ? cell("", "Ovulated") : ""}${cell("Result", x.result)}</div>
     ${x.notes ? `<div class="lastx-n">${esc(x.notes)}</div>` : ""}
-    ${xs.length > 1 ? `<details><summary>${xs.length - 1} earlier exam${xs.length > 2 ? "s" : ""}</summary><div class="tbl-wrap"><table class="tbl act"><thead><tr><th>Date</th><th>Action</th><th>Left</th><th>Right</th><th>Tone</th><th>Ov.</th></tr></thead><tbody>${xs.slice(1, 9).map(y => `<tr><td>${short(y.due)}</td><td>${esc(y.title)}</td><td>${esc(y.lo || "")}</td><td>${esc(y.ro || "")}</td><td>${esc(y.tone || "")}</td><td>${y.ovulated ? "✓" : ""}</td></tr>`).join("")}</tbody></table></div></details>` : ""}
+    ${xs.length > 1 ? `<details><summary>${xs.length - 1} earlier exam${xs.length > 2 ? "s" : ""}</summary><div class="tbl-wrap"><table class="tbl act"><thead><tr><th>Date</th><th>Action</th><th>Left</th><th>Right</th><th>Tone</th><th>Ov.</th></tr></thead><tbody>${xs.slice(1, 9).map(y => `<tr><td>${short(y.due)}</td><td>${esc(actTitle(y))}</td><td>${esc(y.lo || "")}</td><td>${esc(y.ro || "")}</td><td>${esc(y.tone || "")}</td><td>${y.ovulated ? "✓" : ""}</td></tr>`).join("")}</tbody></table></div></details>` : ""}
     <div class="hint">Hands full? Tap Dictate and say “last exam” to hear it.</div></div>`;
+}
+// Follow-ups from what was done: induction drugs -> ovulation check, culture -> results, insemination -> post-breeding check.
+async function examFollowUps(id, t, m){
+  if (!m || !t.done) return;
+  const a = (t.actions || []).map(x => x.toLowerCase()), jobs = [];
+  const drug = a.includes("deslorelin") ? "Deslorelin" : a.includes("hcg") ? "hCG" : "";
+  if (drug && !t.ovulated) jobs.push(["ovchk", addDays(t.due, drug === "Deslorelin" ? 2 : 1), `Ultrasound · check ovulation (${drug} given ${short(t.due)})`, "vet", true]);
+  if (a.includes("culture")) jobs.push(["cult", addDays(t.due, 2), `Culture results back? (sample ${short(t.due)})`, "vet", false]);
+  if (a.includes("inseminate")) jobs.push(["pbx", addDays(t.due, 1), `Post-breeding ultrasound · check for fluid, confirm ovulation (bred ${short(t.due)})`, "vet", true]);
+  for (const [k, due, title, cat, exam] of jobs){
+    if (due < TODAY) continue; // backfilled history: don't create past-due reminders
+    const fid = id + "_fu_" + k, ex = S.tasks[fid]; if (ex && ex.done) continue;
+    await put("tasks", fid, {...(ex || {}), mareId:t.mareId, title, due, cat, exam, auto:false, done:false, createdBy:me.id, sample:!!m.sample});
+  }
 }
 function examForm(tid, mareId){
   const t = tid ? {...S.tasks[tid]} : {mareId, due:TODAY, cat:"vet", exam:true, title:"Ultrasound"};
@@ -2107,7 +2130,11 @@ function examForm(tid, mareId){
   <div class="muted" style="margin:-8px 0 12px">${esc(m ? m.name : "")}${auto ? " · scheduled automatically" : ""}</div>
   <form class="form" id="xf">
     <div class="two"><div class="field"><label for="x-date">Date</label><input id="x-date" name="due" type="date" required value="${esc(t.due)}"></div>
-    <div class="field"><label for="x-act">Action</label>${auto ? `<input id="x-act" value="${esc(t.title)}" disabled>` : `<input id="x-act" name="title" list="xacts" required value="${esc(t.title)}"><datalist id="xacts">${EXAM_ACTIONS.map(a=>`<option value="${a}">`).join("")}</datalist>`}</div></div>
+    ${auto ? `<div class="field"><label>Scheduled</label><div class="ro">${esc(t.title)}</div></div>` : "<div></div>"}</div>
+    ${(() => { const cur = examActs(t), extra = cur.filter(a => !EXAM_ACTIONS.includes(a));
+      return `<div class="field"><label>${auto ? "Also done at this visit" : "Action"} <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">· pick all that apply</span></label>
+      <div class="cdays acts" id="xActs">${EXAM_ACTIONS.concat(extra).map(a => `<button type="button" data-xa="${esc(a)}" aria-pressed="${cur.includes(a)}">${esc(a)}</button>`).join("")}</div>
+      <input id="x-other" placeholder="Other (type and press Enter)" style="margin-top:6px"></div>`; })()}
     ${m ? lastExamPanel(t.mareId, t.due || TODAY, tid) : ""}
     <div class="field"><label for="xSay">Say or type the findings</label><textarea id="xSay" rows="2" placeholder="Left 35 millimeter follicle, right CL, edema 2"></textarea><div class="row-btns" style="margin-top:6px"><button class="btn sm" type="button" id="xMic">Dictate</button><button class="btn sm" type="button" id="xFill">Fill in the chart</button></div></div>
     <div class="two"><div class="field"><label for="x-lo">Left ovary</label><input id="x-lo" name="lo" value="${esc(t.lo)}" placeholder="35 mm follicle, CL…"></div>
@@ -2121,6 +2148,9 @@ function examForm(tid, mareId){
     <div class="row-btns"><button class="btn primary" type="submit" ${canWrite?"":"disabled"}>Save</button>${tid && canWrite ? `<button class="btn" type="button" id="xCost">Log cost</button>` : ""}<button class="btn" type="button" data-close>Cancel</button>${tid && !auto && canWrite ? `<button class="btn danger" type="button" id="xDel">Delete</button>` : ""}</div>
   </form>`, root => {
     const f = root.querySelector("#xf"); attachDictation(root);
+    const xa = root.querySelector("#xActs"), xo = root.querySelector("#x-other");
+    xa.addEventListener("click", e => { const b = e.target.closest("[data-xa]"); if (b) b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); });
+    xo.addEventListener("keydown", e => { if (e.key !== "Enter") return; e.preventDefault(); const v = xo.value.trim(); if (!v) return; let b = [...xa.querySelectorAll("[data-xa]")].find(x => x.dataset.xa.toLowerCase() === v.toLowerCase()); if (!b){ xa.insertAdjacentHTML("beforeend", `<button type="button" data-xa="${esc(v)}" aria-pressed="true">${esc(v)}</button>`); } else b.setAttribute("aria-pressed","true"); xo.value = ""; });
     const rb = root.querySelector("#xRead"); rb && rb.addEventListener("click", () => speak(lastSay));
     const bf = root.querySelector("#xBredF"), ovBox = f.querySelector('[name="ovulated"]');
     if (bf){ ovBox.addEventListener("change", () => { bf.hidden = !ovBox.checked; }); bf.querySelectorAll("[data-xb]").forEach(b => b.addEventListener("click", () => bf.querySelectorAll("[data-xb]").forEach(x => x.setAttribute("aria-pressed", String(x === b))))); }
@@ -2129,9 +2159,12 @@ function examForm(tid, mareId){
       const d = {...t, due:val(f,"due"), lo:val(f,"lo"), ro:val(f,"ro"), tone:val(f,"tone"), notes:val(f,"notes"), ovulated:ovul, exam:true, done, doneBy: done ? (t.doneBy || me.id) : null, doneAt: done ? (t.doneAt || val(f,"due")) : null};
       const res = f.querySelector('[name="result"]') ? val(f,"result") : (t.result || ""); if (res) d.result = res;
       const xb = root.querySelector('[data-xb][aria-pressed="true"]'), bredCycle = xb ? xb.dataset.xb === "yes" : true;
-      if (!auto) d.title = val(f,"title") || "Ultrasound";
+      const acts = [...xa.querySelectorAll('[data-xa][aria-pressed="true"]')].map(b => b.dataset.xa); if (xo.value.trim()) acts.push(xo.value.trim());
+      if (!auto && !acts.length){ toast("Pick at least one action"); return; }
+      d.actions = acts; if (!auto) d.title = acts.join(" + ");
       if (!tid){ d.createdBy = me.id; d.auto = false; }
       const nid = tid || uid(); close(); await put("tasks", nid, d);
+      await examFollowUps(nid, d, m);
       if (res && res !== t.result && m && m.donorId && m.embryoId) await setEmbryo(m.donorId, m.embryoId, {status: res === "Open" ? "Not pregnant" : "Pregnant", result:res, resultOn:d.due});
       if (res && res !== t.result && m && tid){
         if (res === "Open"){

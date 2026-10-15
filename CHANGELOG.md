@@ -1,5 +1,12 @@
 # Changelog
 
+## v12 · Multi-action exams
+- **Log an exam → Action** is now a set of tap-to-select buttons, and you can pick several for one visit: Ultrasound, Inseminate, Culture, Deslorelin, hCG, Cytology, Uterine lavage, Oxytocin, Tease, Palpation and Flush. Type anything else in "Other". The previous text box only ever offered Ultrasound.
+- Scheduled exams (14-day check and so on) can record extra actions done at the same visit.
+- The action chart, last-exam read-back and vet sheet show every action.
+- Follow-ups are added automatically: an ovulation check after Deslorelin (2 days) or hCG (1 day), culture results after 2 days, and a post-breeding ultrasound the day after insemination.
+- When you log exams from earlier in the year, no past-due reminders are created.
+
 ## v11 · Vet portal, audit trail, documents, ICSI donors & recipients, FedEx shipping
 - **Vet portal** (Vet in the top menu, and Account → Vet portal):
   - Lists every facility (barn) the vet works with and today's, 7-day or 30-day rounds grouped by facility. "Print rounds" prints the list.
