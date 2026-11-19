@@ -1,5 +1,22 @@
 # Changelog
 
+## v14 · Accounts and shared storage switched on
+- The site now runs on the Supabase project (`config.js`): email log-in, barns shared by join code, live sync between phones, photo and document storage, audit trail.
+- **Bring in your preview barn:** after logging in, a device that still holds horses entered during the on-device preview shows a one-tap card on Home that copies them, with their tasks, costs and photos, into the signed-in barn. Sample data is skipped and nothing is removed from the device.
+- Once accounts are on, the app no longer writes over the on-device preview copy.
+- Database: creating a barn, joining one and changing roles are closed to callers who aren't signed in.
+
+## v13 · Simpler screens
+Every screen now does one job and nothing is shown twice. No features were removed; they moved to where you'd look for them.
+- **Home:** one search box for the whole herd (mares, foals, your stallions) and one **+ Add** button, instead of four search rows. **Today** is the to-do list. **Coming up** merges heat watch, tomorrow's work and mares close to foaling. The duplicate alerts list, mini calendar, full foaling planner, foaling-watch cards and featured stallion are gone from Home; each still lives on its own page.
+- **Mare profile:** split into tabs — **Overview** (gestation, heat cycle, reminders), **Breeding** (action chart, recipients, ICSI, management cards, vet sheet), **Foals**, **Costs** and **Profile** (photos, all fields, documents, notes, history).
+- **Costs & profit:** split into **Summary**, **Breeding profit** and **Ledger**. Log cost, Income, Prices and Export moved to the top of the page.
+- **Horses:** the roster comes first. The foaling-season planner is one line that opens when tapped.
+- **Calendar:** the calendar comes first. The planner and the duplicate Today list are gone; Overdue only shows when something is overdue.
+- **To-do:** empty Foals/Stallions groups are hidden, and the date controls fit on one row.
+- **Account:** grouped into Barn, Membership & setup, and Marebook site. Sample-data tools are folded away.
+- **Everywhere:** the public-site footer no longer appears inside the app, the preview notice is a thin strip you can dismiss, the top menu is six items (Home, To-Do, Calendar, Horses, Stallion Search, Account), and the floating Add buttons that duplicated the page buttons are gone.
+
 ## v12 · Multi-action exams
 - **Log an exam → Action** is now a set of tap-to-select buttons, and you can pick several for one visit: Ultrasound, Inseminate, Culture, Deslorelin, hCG, Cytology, Uterine lavage, Oxytocin, Tease, Palpation and Flush. Type anything else in "Other". The previous text box only ever offered Ultrasound.
 - Scheduled exams (14-day check and so on) can record extra actions done at the same visit.

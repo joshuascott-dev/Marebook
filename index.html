@@ -699,6 +699,50 @@ body.is-public .tabs, body.is-public .fab{display:none}
 .install span{font-size:13.5px;color:var(--muted)}
 @media (max-width:620px){.install{grid-template-columns:auto minmax(0,1fr)}.install .btn{grid-column:1/-1}}
 .steps-ios{margin:0 0 12px;padding-left:20px;display:grid;gap:8px;font-size:15px}
+/* ===== v13 · simpler screens: one job per screen, nothing shown twice ===== */
+body:not(.is-public) .site-foot{display:none}
+body:not(.is-public) .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+@media (min-width:900px){body:not(.is-public) .wrap{padding-bottom:64px}}
+.fab{display:none!important}
+.banner{display:flex;align-items:center;justify-content:center;gap:8px;max-width:none;margin:0;border:0;border-bottom:1px solid rgb(184 146 76 / .3);border-radius:0;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer}
+.banner::after{content:"\2715";font-size:10px;opacity:.6}
+.strip{margin-top:14px}
+.finder{display:flex;gap:8px;align-items:stretch;margin-top:14px}
+.finder .combo .search{background-color:var(--surface);min-height:46px}
+.finder .btn{white-space:nowrap}
+.home{margin-top:16px}
+@media (min-width:920px){.home{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+.fold{display:block;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);text-align:left}
+.fold>summary,.foldbtn{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;list-style:none}
+.fold>summary::-webkit-details-marker{display:none}
+.fold-t{display:grid;gap:1px;flex:1;min-width:0}
+.fold-t b{font-family:var(--f-display);font-size:19px;font-weight:600;line-height:1.2}
+.fold-t small{font-size:13px;color:var(--muted)}
+.fold>summary::after,.foldbtn::after{content:"\203A";font-size:22px;line-height:1;color:var(--muted);transition:transform .15s}
+.fold[open]>summary::after{transform:rotate(90deg)}
+.fold[open]>summary{border-bottom:1px solid var(--line)}
+.fold .season{border:0;box-shadow:none;border-radius:0;background:none;padding:14px}
+.fold .season>.card-h{display:none}
+.foldbtn{margin-top:18px}
+.mtabs{display:flex;max-width:100%;overflow-x:auto;scrollbar-width:none;margin-top:14px}
+.mtabs::-webkit-scrollbar{display:none}
+.mtabs button{flex:1 0 auto;padding:8px 11px;font-size:13.5px;white-space:nowrap}
+@media (min-width:700px){.mtabs{display:inline-flex}.mtabs button{padding:8px 18px}}
+.mare-sum{display:grid;gap:8px;margin-top:14px}
+.mare-sum .sub{font-size:14px;color:var(--muted)}
+.daynav{display:inline-flex;align-items:center;gap:4px}
+@media (min-width:900px){.calwrap{grid-template-columns:minmax(0,1fr) 320px}}
+@media (min-width:900px){.calwrap .evlist{margin-top:24px}}
+.acct{display:grid;gap:0 18px;align-items:start}
+@media (min-width:900px){.acct{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mrow{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;border:0;border-top:1px solid var(--line);background:none;text-align:left}
+.mrow:first-child{border-top:0}
+.mrow:hover{background:var(--soft)}
+.mrow span{display:grid;gap:1px;flex:1;min-width:0}
+.mrow b{font-size:15px;font-weight:700}
+.mrow small{font-size:12.5px;color:var(--muted)}
+.mrow i{font-style:normal;color:var(--muted);font-size:20px;line-height:1}
+.fold .row-btns{padding:12px 14px 14px}
 @media print{.top,.tabs,.site-foot,.fab,#banner{display:none!important}}
 </style>
 
@@ -1000,16 +1044,18 @@ async function scheduleCollection(mareId, m, stud){
 function renderTabs(){
   const pub = isPublic(), k = navKey();
   document.body.classList.toggle("is-public", pub);
-  const bn = $("#banner"); if (bn.textContent) bn.hidden = pub;
+  const bn = $("#banner"); if (bn.textContent) bn.hidden = pub || (bannerOff && bn.textContent.startsWith("Preview"));
   if (pub){
     const top = [["mare-owners","Mare owners"],["stallion-owners","Stallion owners"],["about","About us"],["contact","Contact us"],["today","Herd management"]];
     $("#topnav").innerHTML = top.map(([v,l]) => `<button data-nav="${v}" ${k===v?'aria-current="page"':""}>${l}</button>`).join("");
     $("#topActs").innerHTML = `<button class="btn sm on-dark" data-auth="login">Log in</button><button class="btn sm teal hide-sm" data-nav="join">Join</button><button class="btn sm menu-btn" data-pubmenu aria-label="Menu">Menu</button>`;
     $("#meAv").style.display = "none";
   } else {
-    const top = [["today","Dashboard"],["mares","My Mares"],["foals","Foals"],["stallions","My Stallions"],["search","Stallion Search"],["calendar","Calendar"],["todo","To-Do"], ...(showVet() ? [["vet","Vet"]] : []), ["account","Account"]];
-    $("#topnav").innerHTML = top.map(([v,l]) => `<button data-nav="${v}" ${k===v?'aria-current="page"':""}>${l}</button>`).join("");
-    $("#topActs").innerHTML = `<button class="btn sm on-dark hide-sm" data-nav="landing">Public site</button>`;
+    const hk = ["mares","foals","stallions"].includes(k) ? "mares" : k;
+    const vetTop = isVetRole() || myBarns.some(b => b.role === "Vet") || acct().type === "vet";
+    const top = [["today","Home"],["todo","To-Do"],["calendar","Calendar"],["mares","Horses"],["search","Stallion Search"], ...(vetTop ? [["vet","Vet"]] : []), ["account","Account"]];
+    $("#topnav").innerHTML = top.map(([v,l]) => `<button data-nav="${v}" ${hk===v?'aria-current="page"':""}>${l}</button>`).join("");
+    $("#topActs").innerHTML = "";
     $("#meAv").style.display = "";
   }
   const horses = ["mares","foals","stallions","search"].includes(k);
@@ -1106,9 +1152,9 @@ function viewBarn(){
     .sort((a,b) => (gestDay(b) ?? -1) - (gestDay(a) ?? -1) || a.name.localeCompare(b.name));
   const counts = s => arr("mares").filter(m => s==="all" || m.status===s).length;
   const seg = `<div class="seg bseg"><button data-bseg="mares" aria-pressed="${ui.barnSeg!=="foals"}">Mare roster ${arr("mares").length}</button><button data-bseg="foals" aria-pressed="${ui.barnSeg==="foals"}">Foals ${arr("foals").length}</button><button data-nav="stallions">My stallions</button></div>`;
-  if (ui.barnSeg === "foals") return `${pageBar("Foals", "Horses")}${seg}${viewFoals()}`;
-  return `${pageBar("Mare roster", "Horses", canWrite ? `<label class="btn sm">Import mare cards<input type="file" accept="image/*,application/pdf,.csv,text/csv" data-card-up="" multiple hidden></label><button class="btn sm primary" data-act="add-mare">+ Add new mare</button>` : "")}${seg}
-  <div class="sec">${seasonCard(true)}</div>
+  if (ui.barnSeg === "foals") return `${pageBar("Foals", "Horses", canWrite && arr("mares").length ? `<button class="btn sm primary" data-cact="add-foal">+ Add foal</button>` : "")}${seg}${viewFoals()}`;
+  return `${pageBar("Mare roster", "Horses", canWrite ? `<label class="btn sm">Import cards<input type="file" accept="image/*,application/pdf,.csv,text/csv" data-card-up="" multiple hidden></label><button class="btn sm primary" data-act="add-mare">+ Add mare</button>` : "")}${seg}
+  <div class="sec">${seasonFold()}</div>
   <div class="sec">
     <input class="search" id="barnQ" type="search" placeholder="Search mares, breeds or stallions" value="${esc(ui.barnQ)}">
     <div class="filters">${["all","in-foal","bred","open","foaled"].map(s => `<button class="fchip" data-bf="${s}" aria-pressed="${ui.barnFilter===s}">${s==="all"?"All":STATUS[s]} ${counts(s)}</button>`).join("")}</div>
@@ -1119,26 +1165,31 @@ function viewBarn(){
 function viewMare(id){
   const m = S.mares[id], ts = mareTasks(id), open = ts.filter(t=>!t.done && !isExam(t)), done = ts.filter(t=>t.done && !isExam(t));
   const g = gestDay(m), stud = S.studs[m.stallionId], nc = stud ? shippable(stud, 3) : [];
-  return `${pageBar(esc(m.name) + (m.sample?'<span class="tag">Sample</span>':""), `${crumb("mares","Mare roster")}<span>›</span><span>Mare profile</span>`, `<span class="pill ${m.status}">${STATUS[m.status]}</span>`)}
-  ${mareHeader(id)}
+  if (ui.mareTabFor !== id){ ui.mareTabFor = id; ui.mareTab = "overview"; }
+  const tabs = [["overview","Overview"],["breeding","Breeding"],["foals","Foals"], ...(isVetRole() ? [] : [["costs","Costs"]]), ["profile","Profile"]];
+  const tab = tabs.some(x => x[0] === ui.mareTab) ? ui.mareTab : "overview", age = ageOf(m);
+  const head = `${pageBar(esc(m.name) + (m.sample?'<span class="tag">Sample</span>':""), `${crumb("mares","Mare roster")}<span>›</span><span>Mare profile</span>`, `<span class="pill ${m.status}">${STATUS[m.status]}</span>`)}
+  <div class="seg mtabs" role="tablist" aria-label="Mare sections">${tabs.map(([k,l]) => `<button role="tab" data-mtab="${k}" aria-pressed="${tab===k}">${l}</button>`).join("")}</div>`;
+  if (tab === "breeding") return head + `  ${actionTable(id)}
+  ${recipSec(id)}
+  ${icsiSec(id)}
+  ${cardsSec(id)}
+  <section class="sec"><div class="row-btns"><button class="btn sm" data-vsheet="${id}">Vet sheet</button><button class="btn sm" data-vcopy="${id}">Copy summary</button><span class="hint">${(() => { const v = vetsWithAccess(); return v.length ? "Shared with " + v.map(esc).join(", ") : "Add your vet on the Team page to share her records."; })()}</span></div></section>`;
+  if (tab === "foals") return head + `  ${mareFoals(id)}`;
+  if (tab === "costs") return head + `  ${isVetRole() ? "" : mareCosts(id)}`;
+  if (tab === "profile") return head + `  ${mareHeader(id)}
+  ${docsSec(id)}
+  <section class="sec"><div class="sec-h"><h2>Notes</h2></div><div class="pf"><textarea data-mf="mare:${id}:notes" rows="3" placeholder="Foaling history, temperament, meds…" ${canWrite?"":"disabled"}>${esc(m.notes)}</textarea></div></section>
+  ${histSec(id)}`;
+  return head + `  <div class="mare-sum"><div class="sub">${esc([age!=null?age+" yrs":"", m.breed, m.color].filter(Boolean).join(" · "))}</div>${chipsFor(m)}</div>
   ${g != null ? `<section class="sec"><div class="big-gest"><div class="d">Day ${g} <small>of ~${GEST} days · from ${m.ovulationDate?"ovulation":"breeding date"} · due ${short(dueDate(m))}</small></div>${gestBar(m)}<div class="chips">${seasonChip(m)}<span class="chip sw-ideal">Pre-foaling vaccines ${short(addDays(dueDate(m), -30))}</span><span class="chip">Foal will be ${ageAtTwo(dueDate(m))} months old on Jan 1, ${parse(dueDate(m)).getFullYear()+2}, when it's a two-year-old</span></div></div></section>` : ""}
   ${(m.status === "open" || (m.status === "foaled" && carries(m))) ? (() => { const w = currentCrop(), st = seasonStatus(w); return `<section class="sec"><div class="howto"><b>${w.year} foal crop · ${esc(st.t)}</b><span>Breed ${esc(m.name)} ${short(w.open)} – ${short(w.close)} to foal ${MONTHS_L[season().start-1]}–${MONTHS_L[season().end-1]} (${MONTHS_L[season().ideal-1]} is ideal: breed ${short(w.idealFrom)} – ${short(w.idealTo)}). ${TODAY >= w.open ? `Bred today, she'd foal about ${short(addDays(TODAY, GEST))}, ${parse(addDays(TODAY, GEST)).getFullYear()}.` : ""}</span></div></section>`; })() : ""}
   ${stud && hasColl(stud) && !m.ovulationDate ? `<section class="sec"><div class="howto"><b>${esc(stud.name)} collects ${esc(collLabel(stud))}</b><span>Next collections: ${nc.map(wdShort).join(", ")}. Her pre-breeding ultrasound is set for the day before the next one${shipsCooled(stud) ? " that can ship and arrive (no Sunday or carrier-holiday deliveries)" : ""}.</span>${canWrite?`<div class="row-btns"><button class="btn sm" data-stud="${stud.id}">Stallion profile</button><button class="btn sm primary" data-act="order" data-id="${stud.id}">Order semen</button></div>`:""}</div></section>` : ""}
   ${cycleCard(id)}
-  <section class="sec"><div class="row-btns"><button class="btn sm" data-vsheet="${id}">Vet sheet</button><button class="btn sm" data-vcopy="${id}">Copy summary</button><span class="hint">${(() => { const v = vetsWithAccess(); return v.length ? "Shared with " + v.map(esc).join(", ") : "Add your vet on the Team page to share her records."; })()}</span></div></section>
-  ${recipSec(id)}
-  ${actionTable(id)}
-  ${icsiSec(id)}
-  ${cardsSec(id)}
   <section class="sec"><div class="sec-h"><h2>Reminders & care</h2><span class="sp"></span>${canWrite?`<button class="btn sm" data-act="add-task" data-id="${id}">+ Task</button>`:""}</div>
     <div class="list">${open.length ? open.map(t=>taskRow(t,false)).join("") : `<div class="empty-row">${m.status==="open"?"Check Ovulated in the action chart to build her breeding checklist.":"All caught up."}</div>`}</div>
     ${done.length ? `<details><summary class="muted" style="cursor:pointer;font-size:14px;padding:4px 0">${done.length} completed</summary><div class="list" style="margin-top:8px">${done.map(t=>taskRow(t,false)).join("")}</div></details>` : ""}
-  </section>
-  ${mareFoals(id)}
-  ${isVetRole() ? "" : mareCosts(id)}
-  ${docsSec(id)}
-  ${histSec(id)}
-  <section class="sec"><div class="sec-h"><h2>Notes</h2></div><div class="pf"><textarea data-mf="mare:${id}:notes" rows="3" placeholder="Foaling history, temperament, meds…" ${canWrite?"":"disabled"}>${esc(m.notes)}</textarea></div></section>`;
+  </section>`;
 }
 function calMain(){
   const mode = ui.calMode, byDay = calItems();
@@ -1572,32 +1623,17 @@ function viewCosts(){
     </tbody></table></div></section>`;
   }
 
-  return `${pageBar("Costs & profit", crumb("account","Account"))}
+  const ctabs = [["summary","Summary"], ...((!f || f === "foals") ? [["profit","Breeding profit"]] : []), ["ledger","Ledger"]];
+  const ctab = ctabs.some(x => x[0] === ui.costTab) ? ui.costTab : "summary";
+  const head = `${pageBar("Costs & profit", crumb("account","Account"), canWrite ? `<button class="btn sm primary" data-cact="add-exp" data-mare-id="${isMareF(f)?f:""}">+ Log cost</button><button class="btn sm" data-cact="add-inc" data-mare-id="${isMareF(f)?f:""}">+ Income</button><button class="btn sm" data-cact="prices">Prices</button><button class="btn sm" data-cact="export">Export CSV</button>` : "")}
   <div class="sec" style="margin-top:12px">
     <div class="filters">${Object.entries(PERIODS).map(([k,v]) => `<button class="fchip" data-cp="${k}" aria-pressed="${p===k}">${v}</button>`).join("")}</div>
     <select class="search" id="costMare" aria-label="Show costs for"><option value="">Whole operation</option><option value="barn" ${f==="barn"?"selected":""}>Barn overhead only</option><option value="foals" ${f==="foals"?"selected":""}>Foals (raising & sale)</option>${mares.map(m => `<option value="${m.id}" ${f===m.id?"selected":""}>${esc(m.name)}</option>`).join("")}</select>
   </div>
-  <section class="sec"><div class="kpis">
-    ${kpi("Spent · "+PERIODS[p].toLowerCase(), money(spent,false), `${exp.length} entries${!f&&arr("mares").length?` · ${money(spent/mareCount(),false)} per mare`:""}`)}
-    ${isMareF(f) ? kpi("Barn overhead share", money(oh,false), "hay, feed, facility ÷ "+mareCount()) : ""}
-    ${kpi("Unpaid bills", money(unpaidAmt,false), unpaid.length+" open", unpaid.length?"warn":"")}
-    ${kpi("Next 90 days", money(proj.total,false), `${money(proj.tasks,false)} checklist · ${money(proj.rec,false)} recurring`)}
-    ${kpi("Income", money(income,false), inc.length+" entries", income?"good":"")}
-    ${kpi("Net", money(net,false), isMareF(f)?"after overhead share":"income − spending", net<0?"warn":"good")}
-  </div></section>
-  ${canWrite ? `<div class="row-btns" style="margin-top:12px"><button class="btn primary" data-cact="add-exp" data-mare-id="${isMareF(f)?f:""}">+ Log cost</button><button class="btn" data-cact="add-inc" data-mare-id="${isMareF(f)?f:""}">+ Income</button><button class="btn" data-cact="prices">Prices</button>${true?`<button class="btn" data-cact="export">Export CSV</button>`:""}</div>` : ""}
-
-  ${unpaid.length ? `<section class="sec"><div class="sec-h"><h2>Bills to pay</h2><span class="sp"></span><span class="money">${money(unpaidAmt)}</span></div>
-    <div class="list">${unpaid.map(e => `<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border-top:1px solid var(--line)">${entRow(e, f).replace('class="ent"','class="ent" style="border-top:0"')}${canWrite?`<button class="btn sm" style="margin-right:12px" data-pay="${e.id}">Paid</button>`:""}</div>`).join("").replace('border-top:1px solid var(--line)"','"')}</div></section>` : ""}
-
-  <section class="sec"><div class="sec-h"><h2>Where it goes</h2></div>
-    <div class="buckets">${buckets.map(([b,v]) => `<span>${b} <b>${money(v,false)}</b></span>`).join("")}</div>
-    ${hbars(exp, f, 10)}</section>
-  <section class="sec"><div class="sec-h"><h2>By month</h2><span class="eyebrow">${p==="ytd"?TODAY.slice(0,4):p==="last"?(+TODAY.slice(0,4)-1):"Last 12 months"}</span></div>${monthChart(exp, f, p)}</section>
-  ${inc.length ? `<section class="sec"><div class="sec-h"><h2>Income</h2></div>${hbars(inc, f)}</section>` : ""}
-  ${!f || f === "foals" ? profitSection(p) : ""}
-  ${table}
-  ${owedSection()}
+  <div class="seg mtabs" role="tablist" aria-label="Cost sections">${ctabs.map(([k,l]) => `<button role="tab" data-ctab="${k}" aria-pressed="${ctab===k}">${l}</button>`).join("")}</div>`;
+  if (ctab === "profit") return head + `${profitSection(p)}
+  ${table}`;
+  if (ctab === "ledger") return head + `  ${owedSection()}
   <section class="sec"><div class="sec-h"><h2>Recurring</h2><span class="sp"></span>${canWrite?`<button class="btn sm" data-cact="add-rec">+ Recurring</button>`:""}</div>
     <div class="list">${recurring.length ? recurring.map(r => { const posted = arr("expenses").some(e => e.recurringId === r.id && e.date.slice(0,7) === month); const ids = r.mareIds||[];
       return `<div class="ent" style="cursor:default"><div class="dt">MO<b>↻</b></div><div style="min-width:0"><div class="t" data-rec="${r.id}" style="cursor:pointer">${esc(r.title)}</div><div class="m"><span>${esc(catLabel(r))}</span><span>${ids.length?esc(ids.map(i=>S.mares[i]?S.mares[i].name:"").filter(Boolean).join(", ")):"Barn overhead"}</span>${r.vendor?`<span>${esc(r.vendor)}</span>`:""}</div></div>
@@ -1607,6 +1643,23 @@ function viewCosts(){
     <div class="list">${shown.length ? shown.map(e => entRow(e, f)).join("") : `<div class="empty-row">${arr("expenses").length?"Nothing matches.":"No costs yet. Log your first one, or tick off a checklist item and log its cost from there."}</div>`}</div>
     ${list.length > shown.length ? `<button class="btn link" data-cact="more">Show all ${list.length}</button>` : ""}
   </section>`;
+  return head + `<section class="sec"><div class="kpis">
+    ${kpi("Spent · "+PERIODS[p].toLowerCase(), money(spent,false), `${exp.length} entries${!f&&arr("mares").length?` · ${money(spent/mareCount(),false)} per mare`:""}`)}
+    ${isMareF(f) ? kpi("Barn overhead share", money(oh,false), "hay, feed, facility ÷ "+mareCount()) : ""}
+    ${kpi("Unpaid bills", money(unpaidAmt,false), unpaid.length+" open", unpaid.length?"warn":"")}
+    ${kpi("Next 90 days", money(proj.total,false), `${money(proj.tasks,false)} checklist · ${money(proj.rec,false)} recurring`)}
+    ${kpi("Income", money(income,false), inc.length+" entries", income?"good":"")}
+    ${kpi("Net", money(net,false), isMareF(f)?"after overhead share":"income − spending", net<0?"warn":"good")}
+  </div></section>
+
+  ${unpaid.length ? `<section class="sec"><div class="sec-h"><h2>Bills to pay</h2><span class="sp"></span><span class="money">${money(unpaidAmt)}</span></div>
+    <div class="list">${unpaid.map(e => `<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border-top:1px solid var(--line)">${entRow(e, f).replace('class="ent"','class="ent" style="border-top:0"')}${canWrite?`<button class="btn sm" style="margin-right:12px" data-pay="${e.id}">Paid</button>`:""}</div>`).join("").replace('border-top:1px solid var(--line)"','"')}</div></section>` : ""}
+
+  <section class="sec"><div class="sec-h"><h2>Where it goes</h2></div>
+    <div class="buckets">${buckets.map(([b,v]) => `<span>${b} <b>${money(v,false)}</b></span>`).join("")}</div>
+    ${hbars(exp, f, 10)}</section>
+  <section class="sec"><div class="sec-h"><h2>By month</h2><span class="eyebrow">${p==="ytd"?TODAY.slice(0,4):p==="last"?(+TODAY.slice(0,4)-1):"Last 12 months"}</span></div>${monthChart(exp, f, p)}</section>
+  ${inc.length ? `<section class="sec"><div class="sec-h"><h2>Income</h2></div>${hbars(inc, f)}</section>` : ""}`;
 }
 
 // ---------- cost forms ----------
@@ -2054,7 +2107,10 @@ function groupTasks(list){
 }
 function todoGroups(list, empty, stack){
   const g = groupTasks(list), names = {mare:"Mares", foal:"Foals", stallion:"Stallions"};
-  return `<div class="todo ${stack?"stack":""}">${Object.entries(g).map(([k, ts]) => `<div class="todo-col"><div class="todo-h">${names[k]}<span>${ts.length}</span></div><div class="list">${ts.length ? ts.map(t => taskRow(t)).join("") : `<div class="empty-row">${empty}</div>`}</div></div>`).join("")}</div>`;
+  const cols = Object.entries(g).filter(([, ts]) => ts.length);
+  if (!cols.length) return `<div class="list"><div class="empty-row">${empty}</div></div>`;
+  const solo = cols.length === 1 && cols[0][0] === "mare";
+  return `<div class="todo ${stack?"stack":""}">${cols.map(([k, ts]) => `<div class="todo-col">${solo ? "" : `<div class="todo-h">${names[k]}<span>${ts.length}</span></div>`}<div class="list">${ts.map(t => taskRow(t)).join("")}</div></div>`).join("")}</div>`;
 }
 function actionTable(id){
   const rows = mareTasks(id).filter(t => isExam(t)).sort((a,b) => a.due.localeCompare(b.due));
@@ -3005,19 +3061,17 @@ function viewTodo(){
   const day = ui.todoDay || TODAY;
   const list = arr("tasks").filter(t => liveTask(t) && (t.due === day || (day === TODAY && !t.done && t.due < TODAY))).sort((a,b) => (a.done?1:0)-(b.done?1:0) || a.due.localeCompare(b.due));
   const left = list.filter(t => !t.done).length;
-  return `${pageBar("Daily to-do", `${day===TODAY?"Today":esc(long(day))} · ${left} open`, `<input class="datein" type="date" id="todoDay" value="${day}" aria-label="Date">${canWrite?`<button class="btn sm" data-act="add-event">+ Task</button>`:""}${true?`<button class="btn sm" data-act="print-todo">Print list</button>`:""}`)}
-  <div class="row-btns" style="margin-top:12px"><button class="btn sm" data-todoshift="-1">‹ Previous day</button><button class="btn sm" data-todoshift="0">Today</button><button class="btn sm" data-todoshift="1">Next day ›</button></div>
-  <section class="sec">${todoGroups(list, day === TODAY ? "Nothing today." : "Nothing that day.")}</section>
-  <p class="hint">Tick a task to complete it; the horse's profile and the calendar update with it. Tap a task to edit, assign or log its cost.</p>`;
+  return `${pageBar("Daily to-do", `${day===TODAY?"Today":esc(long(day))} · ${left} open`, `<div class="daynav"><button class="btn sm" data-todoshift="-1" aria-label="Previous day">‹</button><input class="datein" type="date" id="todoDay" value="${day}" aria-label="Date"><button class="btn sm" data-todoshift="1" aria-label="Next day">›</button></div>${day!==TODAY?`<button class="btn sm" data-todoshift="0">Today</button>`:""}${canWrite?`<button class="btn sm primary" data-act="add-event">+ Task</button>`:""}<button class="btn sm" data-act="print-todo">${PRINT_L()}</button>`)}
+  <section class="sec">${todoGroups(list, day === TODAY ? "Nothing due today." : "Nothing due that day.")}</section>`;
 }
 
 // ---------- calendar (event list + grid) ----------
 function viewCal(){
-  const byDay = calItems(), open = openTasks().filter(t => ui.calFilter === "all" || horseOf(t).kind === ui.calFilter);
-  const over = open.filter(t => t.due < TODAY), today = (byDay[TODAY]||[]), up = open.filter(t => t.due > TODAY && diff(t.due, TODAY) <= 14);
-  const grp = (h, l, empty) => `<div><h3>${h} · ${l.length}</h3><div class="list">${l.length ? l.slice(0,12).map(t => taskRow(t)).join("") : `<div class="empty-row">${empty}</div>`}</div></div>`;
-  return `${pageBar("Calendar", "All past, present and future activity")}
-  <div class="calwrap"><aside class="evlist">${seasonCard(true)}${grp("Overdue", over, "Nothing overdue.")}${grp("Today", today, "Nothing today.")}${grp("Next 14 days", up, "Nothing coming up.")}</aside><div style="min-width:0">${calMain()}</div></div>`;
+  const open = openTasks().filter(t => ui.calFilter === "all" || horseOf(t).kind === ui.calFilter);
+  const over = open.filter(t => t.due < TODAY), up = open.filter(t => t.due > TODAY && diff(t.due, TODAY) <= 14);
+  const grp = (h, l) => `<div><h3>${h} · ${l.length}</h3><div class="list">${l.slice(0,12).map(t => taskRow(t)).join("")}</div></div>`;
+  return `${pageBar("Calendar")}
+  <div class="calwrap"><div style="min-width:0">${calMain()}</div><aside class="evlist">${over.length ? grp("Overdue", over) : ""}${up.length ? grp("Next 14 days", up) : `<div><h3>Next 14 days</h3><div class="list"><div class="empty-row">Nothing coming up.</div></div></div>`}</aside></div>`;
 }
 
 // ---------- account, membership, landing ----------
@@ -3042,23 +3096,27 @@ function viewPlans(){
 }
 function viewAccount(){
   const cur = curPlan(), n = horseCount();
-  const tile = (k, t, s) => `<button class="tile" data-nav="${k}"><b>${t}</b><span>${s}</span></button>`;
-  return `${pageBar("Account", cloud ? esc(me.email || "") : "Membership, money, team and settings")}
+  const row = (k, t, s) => `<button class="mrow" data-nav="${k}"><span><b>${t}</b><small>${s}</small></span><i aria-hidden="true">›</i></button>`;
+  const grp = (h, rows) => `<section class="sec"><div class="eyebrow">${h}</div><div class="list">${rows.filter(Boolean).join("")}</div></section>`;
+  return `${pageBar("Account", cloud ? esc(me.email || "") : "")}
   ${barnSection()}
+  <div class="acct">
+  ${grp("Barn", [
+    isVetRole() ? "" : row("costs","Costs & profit","Ledger, bills, foal profit, budgets"),
+    row("orders","Semen orders", `${arr("orders").filter(o=>o.status!=="Delivered").length} open`),
+    row("team","Team","Barn staff, vets, trainers, roles"),
+    row("vet","Vet portal","Rounds, mares across barns, documents due")])}
+  ${grp("Membership & setup", [
+    row("plans","Membership", `${cur.name} · ${n} of ${cur.horses===Infinity?"unlimited":cur.horses} horses`),
+    row("integrations","Integrations","Calendars, QuickBooks, receipts, texts, contracts"),
+    row("audit","Audit log","Who changed what, and when")])}
+  ${grp("Marebook site", [
+    row("members","Members & inquiries", `${arr("members").filter(m => m.kind === "member").length} sign-ups · ${arr("members").filter(m => m.kind === "inquiry").length} messages`),
+    row("landing","Public site","Home, owners pages, about, contact")])}
+  </div>
   ${installCard()}
-  <section class="sec"><div class="tiles">
-    ${tile("plans","Membership", `${cur.name} · ${n} of ${cur.horses===Infinity?"unlimited":cur.horses} horses`)}
-    ${isVetRole() ? "" : tile("costs","Costs & profit","Ledger, bills, foal profit, budgets")}
-    ${tile("vet","Vet portal","Facilities, mares across barns, rounds, documents due")}
-    ${tile("audit","Audit log","Who added, changed or deleted what, and when")}
-    ${tile("orders","Semen orders", `${arr("orders").filter(o=>o.status!=="Delivered").length} open`)}
-    ${tile("integrations","Integrations","Google & Apple Calendar, QuickBooks, receipts, texts, contracts")}
-    ${tile("team","Team","Barn staff, vets, trainers, roles")}
-    ${tile("members","Members & inquiries", `${arr("members").filter(m => m.kind === "member").length} sign-ups · ${arr("members").filter(m => m.kind === "inquiry").length} messages`)}
-    ${tile("landing","Public site","Home, mare owners, stallion owners, about, contact")}
-  </div></section>
-  <section class="sec"><div class="row-btns"><button class="btn sm" data-act="logout">Log out</button></div></section>
-  ${canWrite ? `<section class="sec"><div class="sec-h"><h2>Sample data</h2></div><div class="row-btns">${arr("mares").some(m=>m.sample) ? `<button class="btn danger sm" data-act="clear-sample">Remove sample data</button>` : `<button class="btn sm" data-act="load-sample">Load a sample barn</button>`}<button class="btn sm" data-cact="prices">Prices for reminders</button><button class="btn sm" data-act="season-set">Foaling season</button>${local ? `<button class="btn sm" data-act="reset-demo">Reset demo</button>` : ""}</div></section>` : ""}`;
+  ${canWrite ? `<section class="sec"><details class="fold"><summary><span class="fold-t"><b>Setup & sample data</b><small>Reminder prices, foaling season, sample barn</small></span></summary><div class="row-btns"><button class="btn sm" data-cact="prices">Prices for reminders</button><button class="btn sm" data-act="season-set">Foaling season</button>${arr("mares").some(m=>m.sample) ? `<button class="btn danger sm" data-act="clear-sample">Remove sample data</button>` : `<button class="btn sm" data-act="load-sample">Load a sample barn</button>`}${local ? `<button class="btn sm" data-act="reset-demo">Reset demo</button>` : ""}</div></details></section>` : ""}
+  <section class="sec"><div class="row-btns"><button class="btn sm" data-act="logout">Log out</button></div><p class="hint">Reminder schedules are standard defaults. Confirm every protocol with your veterinarian.<br>© ${TODAY.slice(0,4)} ${esc(LEGAL)}, d/b/a Marebook · Weatherford, Texas</p></section>`;
 }
 // ---------- v5 events ----------
 document.addEventListener("click", async ev => {
@@ -3091,7 +3149,7 @@ document.addEventListener("change", async ev => {
 let sampleFn = null, sampleImg = false;
 const DEMO_KEY = "marebook-demo-v1";
 let saveT;
-function saveLocal(){ clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(DEMO_KEY, JSON.stringify(S)); } catch(_){} }, 300); }
+function saveLocal(){ if (CLOUD_ON) return; clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(DEMO_KEY, JSON.stringify(S)); } catch(_){} }, 300); }
 function loadLocal(){ try { const raw = localStorage.getItem(DEMO_KEY); if (!raw) return false; const o = JSON.parse(raw); for (const c of COLLS) S[c] = o[c] || {}; return true; } catch(_){ return false; } }
 async function saveFile(filename, data, mime){
   if (downloads){
@@ -3251,7 +3309,7 @@ document.addEventListener("change", async ev => {
   if (t.dataset && t.dataset.role && canWrite){ const cur = (S.settings.roles||{}).map || {}; await put("settings", "roles", {map: {...cur, [t.dataset.role]: t.value}}); toast("Role saved"); }
 });
 window.addEventListener("offline", () => { $("#banner").hidden = false; $("#banner").textContent = "You're offline. Keep working; changes catch up when you reconnect."; });
-window.addEventListener("online", () => { if (local){ $("#banner").textContent = "Preview: changes, photos and videos save on this device only."; } else { $("#banner").hidden = true; } });
+window.addEventListener("online", () => { if (local){ $("#banner").textContent = "Preview · everything saves on this device only"; } else { $("#banner").hidden = true; } });
 
 // ---------- v7: brand, public site, member home, media ----------
 const LEGAL = "Hixson Group Enterprises LLC";
@@ -3387,59 +3445,66 @@ function alertsList(alerts){
 function viewToday(){
   const mares = arr("mares"), a = acct(), hr = new Date().getHours();
   const greet = (hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening") + (a.contact ? ", " + firstName(a.contact) : "");
-  if (!mares.length && !arr("foals").length && !arr("studs").length) return pageBar(esc(greet), esc(long(TODAY))) + welcome();
+  if (!mares.length && !arr("foals").length && !arr("studs").length) return pageBar(esc(greet), esc(long(TODAY))) + importCard() + welcome();
   const open = openTasks(), over = open.filter(t => t.due < TODAY);
   const todayList = arr("tasks").filter(t => liveTask(t) && (t.due === TODAY || (!t.done && t.due < TODAY))).sort((x,y) => (x.done?1:0)-(y.done?1:0) || x.due.localeCompare(y.due));
-  const alerts = [
-    ...over.map(t => ({t, txt:"overdue"})),
-    ...open.filter(t => t.due === TODAY).map(t => ({t, txt:"due today"})),
-    ...open.filter(t => t.due === addDays(TODAY,1)).map(t => ({t, txt:"tomorrow"})),
-    ...mares.filter(m => { const g = gestDay(m); return g != null && g >= 320; }).map(m => ({m, txt: gestDay(m) >= GEST ? `past due · day ${gestDay(m)}` : `foaling window · day ${gestDay(m)}`})),
-  ];
+  const left = todayList.filter(t => !t.done).length;
   const mine = arr("studs").filter(s => ownsStud(s));
-  const mareItems = mares.map(m => ({ref:"mare:"+m.id, label:m.name, sub:[STATUS[m.status], abbr(m.breed) || m.breed, ageOf(m) != null ? ageOf(m)+" yrs" : ""].filter(Boolean).join(" · ")}));
-  const foalItems = arr("foals").map(f => ({ref:"foal:"+f.id, label:foalName(f), sub:[f.sex, ageLabel(f.foaledOn), "out of " + damName(f), f.status === "sold" ? "sold" : ""].filter(Boolean).join(" · ")}));
-  const studItems = mine.map(s => ({ref:"stallion:"+s.id, label:s.name, sub:[abbr(s.breed) || s.breed, s.ranch].filter(Boolean).join(" · ")}));
-  const searchItems = arr("studs").filter(s => (!ui.studBreed || s.breed === ui.studBreed) && (!ui.studDisc || s.discipline === ui.studDisc)).map(s => ({ref:"stallion:"+s.id, label:s.name, sub:[s.discipline, s.ranch, money(s.fee||0,false)+" fee"].filter(Boolean).join(" · "), group:breedLabel(s.breed)}));
-  const breeds = [...new Set(arr("studs").map(s => s.breed).filter(Boolean))].sort();
-  const hrow = (label, n, ctl) => `<div class="hrow"><div class="lbl">${label}<i>${n}</i></div><div class="ctl">${ctl}</div></div>`;
-  const add = (attr, l) => canWrite ? `<button class="btn sm" ${attr}>+ ${l}</button>` : "";
-  const unpaid = arr("expenses").filter(e => e.kind !== "income" && e.status === "unpaid");
-  const feat = arr("studs").filter(s => s.featured)[0];
+  // one search box for the whole herd
+  const herd = [
+    ...mares.map(m => ({ref:"mare:"+m.id, label:m.name, sub:["Mare", STATUS[m.status], abbr(m.breed) || m.breed, ageOf(m) != null ? ageOf(m)+" yrs" : ""].filter(Boolean).join(" · ")})),
+    ...arr("foals").map(f => ({ref:"foal:"+f.id, label:foalName(f), sub:["Foal", f.sex, ageLabel(f.foaledOn), "out of " + damName(f), f.status === "sold" ? "sold" : ""].filter(Boolean).join(" · ")})),
+    ...mine.map(s => ({ref:"stallion:"+s.id, label:s.name, sub:["Stallion", abbr(s.breed) || s.breed, s.ranch].filter(Boolean).join(" · ")})),
+  ];
+  // one "coming up" list: heat, tomorrow's work, mares close to foaling
+  const tmr = open.filter(t => t.due === addDays(TODAY,1));
   const watch = mares.filter(m => (gestDay(m) ?? 0) >= 300).sort((x,y) => gestDay(y) - gestDay(x));
-  return `${pageBar(esc(greet), `${esc(a.ranch || "Member home")} · ${esc(long(TODAY))}`, `<button class="btn sm" data-act="print-todo">${PRINT_L()} to-do</button>`)}
+  const soon = [
+    ...heatRows(),
+    ...tmr.map(t => { const h = horseOf(t); return `<div class="alert-row" data-task="${t.id}"><span class="dotx"></span><span>${h ? `<b class="hlink" data-open="${h.kind}:${h.id}">${esc(h.name)}</b> · ` : ""}${esc(t.title)}</span><span class="due">Tomorrow</span></div>`; }),
+    ...watch.map(m => `<div class="alert-row" data-mare="${m.id}"><span class="dotx ${gestDay(m) >= 320 ? "warn" : ""}"></span><span><b>${esc(m.name)}</b> · ${gestDay(m) >= GEST ? "past due" : gestDay(m) >= 320 ? "foaling window" : "foaling watch"} · day ${gestDay(m)}</span><span class="due">Due ${short(dueDate(m))}</span></div>`),
+  ];
+  const unpaid = arr("expenses").filter(e => e.kind !== "income" && e.status === "unpaid");
+  const sl = seasonLine();
+  return `${pageBar(esc(greet), `${esc(a.ranch || "Member home")} · ${esc(long(TODAY))}`)}
   <div class="strip">
     <span class="stat"><b>${mares.length}</b> mares</span><span class="stat"><b>${mares.filter(m => m.status === "in-foal").length}</b> in foal</span>
     <span class="stat"><b>${arr("foals").filter(f => f.status === "raising" || f.status === "listed").length}</b> foals on the ground</span>
-    <span class="stat ${over.length?"alert":""}"><b>${over.length}</b> overdue</span>
-    ${unpaid.length ? `<span class="stat alert" data-go="costs" role="button" tabindex="0" style="cursor:pointer"><b>${money(unpaid.reduce((s,e) => s + (Number(e.amount)||0), 0), false)}</b> unpaid</span>` : ""}
+    ${over.length ? `<span class="stat alert"><b>${over.length}</b> overdue</span>` : ""}
+    ${unpaid.length && !isVetRole() ? `<span class="stat alert" data-go="costs" role="button" tabindex="0" style="cursor:pointer"><b>${money(unpaid.reduce((s,e) => s + (Number(e.amount)||0), 0), false)}</b> unpaid</span>` : ""}
   </div>
+  ${importCard()}
+  <div class="finder">${combo("cHerd", "Find a mare, foal or stallion…", herd)}${canWrite ? `<button class="btn primary" data-addmenu>+ Add</button>` : ""}</div>
   <div class="home">
     <div class="home-col">
-      <section class="card"><div class="card-h"><h2>Herd</h2><span class="sp" style="flex:1"></span><span class="eyebrow">Type a name to jump</span></div>
-        ${hrow("My mares", mares.length, combo("cMares", "Start typing a mare's name…", mareItems) + add('data-act="add-mare"', "Add new mare"))}
-        ${hrow("Foals", arr("foals").length, combo("cFoals", "Start typing a foal's name…", foalItems) + (mares.length ? add('data-cact="add-foal"', "Add new foal") : ""))}
-        ${hrow("My stallions", mine.length, combo("cStuds", "Start typing a stallion's name…", studItems) + add('data-act="add-stud"', "Add new stallion"))}
-        ${hrow("Stallion search", arr("studs").length, `<div class="ss"><select class="search" id="dashBreed" aria-label="Breed"><option value="">All breeds</option>${breeds.map(b => `<option value="${esc(b)}" ${b===ui.studBreed?"selected":""}>${esc(breedLabel(b))}</option>`).join("")}</select><select class="search" id="dashDisc" aria-label="Discipline"><option value="">All disciplines</option>${discOf().map(x => `<option ${x===ui.studDisc?"selected":""}>${esc(x)}</option>`).join("")}</select></div>${combo("cSearch", "Stallion name…", searchItems)}<button class="btn sm primary" data-nav="search">Search</button>`)}
-      </section>
-      ${heatWatch()}
-      <section class="card"><div class="card-h"><h2>Today's alerts</h2><span class="sp" style="flex:1"></span><span class="eyebrow">${alerts.length}</span></div>${alertsList(alerts)}</section>
-    </div>
-    <div class="home-col">
-      <section class="card"><div class="card-h"><h2>Calendar</h2><span class="sp" style="flex:1"></span><div class="seg sm">${[["day","Today"],["week","Week"],["month","Month"]].map(([k,v]) => `<button data-calmode="${k}">${v}</button>`).join("")}</div></div>
-        ${miniCal("dashMonth")}
-        <div class="card-f"><button class="btn link" data-nav="calendar">Open full calendar</button><button class="btn sm" data-act="print-cal-month">${PRINT_L()}</button></div></section>
-      <section class="card"><div class="card-h"><h2>Daily to-do</h2><span class="sp" style="flex:1"></span><span class="eyebrow">${todayList.filter(t => !t.done).length} open</span></div>
-        ${todoGroups(todayList, "Nothing today.", true)}
+      <section class="card"><div class="card-h"><h2>Today</h2><span class="sp" style="flex:1"></span><span class="eyebrow">${left} open${over.length ? ` · ${over.length} overdue` : ""}</span></div>
+        ${todoGroups(todayList, "Nothing due today. Enjoy the quiet.", true)}
         <div class="card-f"><button class="btn link" data-nav="todo">Open to-do list</button><button class="btn sm" data-act="print-todo">${PRINT_L()}</button></div></section>
     </div>
+    <div class="home-col">
+      <section class="card"><div class="card-h"><h2>Coming up</h2><span class="sp" style="flex:1"></span><span class="eyebrow">Heat · foaling · tomorrow</span></div>
+        <div class="list">${soon.length ? soon.slice(0,8).join("") : `<div class="empty-row">Nothing coming up in the next few days.</div>`}</div>
+        <div class="card-f"><button class="btn link" data-nav="calendar">Open calendar</button></div></section>
+    </div>
   </div>
-  ${(() => { let dis = false; try { dis = localStorage.getItem("marebook-install-dismissed") === "1"; } catch(_){} return dis ? "" : installCard().replace('data-act="install">', 'data-act="install">').replace('</div></section>', `<button class="btn link sm" data-act="install-dismiss" aria-label="Dismiss">Not now</button></div></section>`); })()}
-  <section class="sec">${seasonCard(false)}</section>
-  <section class="sec"><div class="sec-h"><h2>Foaling watch</h2><span class="eyebrow">Day 300+</span></div>
-    ${watch.length ? `<div class="mares">${watch.map(m => mareCard(m.id)).join("")}</div>` : `<div class="list"><div class="empty-row">No mares past day 300.</div></div>`}</section>
-  ${feat ? `<section class="sec"><div class="sec-h"><h2>Featured stallion</h2><span class="eyebrow">Sponsored placement</span></div><div class="studs-grid">${studCard(feat)}</div></section>` : ""}`;
+  <button class="fold foldbtn" data-season-go><span class="fold-t"><b>Foaling season</b><small>${esc(sl)}</small></span></button>
+  ${(() => { let dis = false; try { dis = localStorage.getItem("marebook-install-dismissed") === "1"; } catch(_){} return dis ? "" : installCard().replace('</div></section>', `<button class="btn link sm" data-act="install-dismiss" aria-label="Dismiss">Not now</button></div></section>`); })()}`;
 }
+// v13: banner dismiss, "+ Add" menu, folds and tabs
+let bannerOff = false; try { bannerOff = sessionStorage.getItem("marebook-banner-off") === "1"; } catch(_){}
+document.addEventListener("click", ev => {
+  const t = ev.target;
+  if (t.id === "banner"){ if (t.textContent.startsWith("Preview")){ bannerOff = true; try { sessionStorage.setItem("marebook-banner-off", "1"); } catch(_){} } t.hidden = true; return; }
+  const tb = t.closest("[data-mtab],[data-ctab]");
+  if (tb){ if (tb.dataset.mtab) ui.mareTab = tb.dataset.mtab; else ui.costTab = tb.dataset.ctab; render(); return; }
+  if (t.closest("[data-season-go]")){ ui.seasonOpen = true; nav("mares"); return; }
+  if (t.closest("[data-import-preview]")){ importPreview(t.closest("[data-import-preview]")); return; }
+  if (t.closest("[data-import-skip]")){ ui.importHide = true; render(); return; }
+  if (t.closest("[data-addmenu]")){
+    sheet(`<h2>Add</h2><div class="menu-list"><button data-act="add-mare">Mare</button>${arr("mares").length ? `<button data-cact="add-foal">Foal</button>` : ""}<button data-act="add-stud">Stallion</button><button data-act="add-event">Task or event</button></div><div class="row-btns" style="margin-top:14px"><button class="btn" data-close>Cancel</button></div>`);
+  }
+});
+document.addEventListener("toggle", ev => { const d = ev.target; if (d && d.dataset && d.dataset.fold === "season") ui.seasonOpen = d.open; }, true);
 
 // ----- foal page laid out like the wireframe: Date·Action | Photos & video | Calendar -----
 function foalTimeline(id){
@@ -3478,7 +3543,7 @@ function viewStuds(){
   const mineList = arr("studs").filter(x => ownsStud(x));
   const seg = `<div class="seg"><button data-seg="browse" aria-pressed="${ui.studSeg==="browse"}">Stallion search</button><button data-seg="mine" aria-pressed="${ui.studSeg==="mine"}">My stallions</button><button data-seg="orders" aria-pressed="${ui.studSeg==="orders"}">Orders ${arr("orders").filter(o => o.status !== "Delivered").length || ""}</button></div>`;
   if (ui.studSeg === "orders") return `${pageBar("Semen orders", crumb("account","Account"))}${seg}${viewOrders()}`;
-  if (ui.studSeg === "mine") return `${pageBar("My stallions", "Horses", canWrite ? `<button class="btn sm primary" data-act="add-stud">+ Add new stallion</button>` : "")}${seg}<div class="sec">${mineList.length ? `<div class="studs-grid">${mineList.map(studCard).join("")}</div>` : `<div class="list"><div class="empty-row">Stand a stallion? Add him with collection days, chute fee and shipment cost so mare owners can book him.</div></div>`}</div>${canWrite ? `<button class="btn primary fab" data-act="add-stud">+ Add stallion</button>` : ""}`;
+  if (ui.studSeg === "mine") return `${pageBar("My stallions", "Horses", canWrite ? `<button class="btn sm primary" data-act="add-stud">+ Add stallion</button>` : "")}${seg}<div class="sec">${mineList.length ? `<div class="studs-grid">${mineList.map(studCard).join("")}</div>` : `<div class="list"><div class="empty-row">Stand a stallion? Add him with collection days, chute fee and shipment cost so mare owners can book him.</div></div>`}</div>${canWrite ? `<button class="btn primary fab" data-act="add-stud">+ Add stallion</button>` : ""}`;
   const all = arr("studs"), breeds = [...new Set(all.map(s => s.breed).filter(Boolean))].sort(), q = ui.studQ.toLowerCase();
   const list = all.filter(s => (!ui.studBreed || s.breed === ui.studBreed) && (!ui.studDisc || s.discipline === ui.studDisc) && (!ui.studShip || (s.ship||[]).includes(ui.studShip)) && (!q || [s.name, s.ranch, s.city, s.discipline, s.sireLine, s.lte, s.breed, abbr(s.breed)].join(" ").toLowerCase().includes(q)))
     .sort((a,b) => (b.featured?1:0) - (a.featured?1:0) || (a.fee||0) - (b.fee||0));
@@ -3864,6 +3929,69 @@ async function enterCloud(u){
   render(); refreshHeat();
   if (fresh && meta.type === "stallion"){ nav("stallions"); setTimeout(() => studForm(), 80); }
 }
+// ----- bring the preview barn (saved on this device before accounts) into the signed-in barn -----
+const IMPORT_FLAG = "marebook-preview-imported";
+let previewCache;
+function previewData(){
+  if (previewCache !== undefined) return previewCache;
+  previewCache = null;
+  try {
+    if (localStorage.getItem(IMPORT_FLAG)) return null;
+    const o = JSON.parse(localStorage.getItem(DEMO_KEY) || "null"); if (!o) return null;
+    const smp = (c, id) => !!((o[c] || {})[id] || {}).sample, real = {};
+    for (const c of COLLS){
+      real[c] = {};
+      if (c === "members") continue;
+      for (const [id, v] of Object.entries(o[c] || {})){
+        if (!v || typeof v !== "object" || v.sample) continue;
+        if (smp("mares", v.mareId) || smp("foals", v.foalId) || smp("studs", v.studId)) continue;
+        if (c === "settings" && (id === "account" || id === "plan")) continue;
+        real[c][id] = v;
+      }
+    }
+    const n = c => Object.keys(real[c]).length;
+    if (n("mares") + n("foals") + n("studs")) previewCache = {real, mares:n("mares"), foals:n("foals"), studs:n("studs")};
+  } catch(_){}
+  return previewCache;
+}
+function importCard(){
+  if (!cloud || !canWrite || ui.importHide) return "";
+  const p = previewData(); if (!p) return "";
+  const pl = (n, w) => n ? `${n} ${w}${n === 1 ? "" : "s"}` : "", parts = [pl(p.mares, "mare"), pl(p.foals, "foal"), pl(p.studs, "stallion")].filter(Boolean);
+  const list = parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts[0];
+  const barn = (myBarns.find(b => b.id === barnId) || {}).name || "your barn";
+  return `<section class="card" style="margin-top:14px"><div class="card-h"><h2>Bring in your preview barn</h2></div>
+    <p class="muted" style="margin:0 0 12px">This device still holds ${esc(list)} entered before accounts were switched on, along with their tasks, costs and photos. Bring them into ${esc(barn)} so the whole team sees them. Nothing is removed from this device.</p>
+    <div class="row-btns"><button class="btn primary" data-import-preview>Bring them in</button><button class="btn" data-import-skip>Not now</button></div></section>`;
+}
+async function importPreview(btn){
+  const p = previewData(); if (!p || !cloud || !canWrite) return;
+  btn.disabled = true; btn.textContent = "Bringing them in…";
+  // photos, videos and documents saved on this device move to the barn's storage
+  const map = {}; let missed = 0;
+  try {
+    await idb.open();
+    const blobs = await new Promise(res => { const out = [], rq = idb.store("readonly").openCursor(); rq.onsuccess = () => { const c = rq.result; if (!c){ res(out); return; } out.push([c.key, c.value]); c.continue(); }; rq.onerror = () => res(out); });
+    const json = JSON.stringify(p.real);
+    for (const [key, blob] of blobs){ if (!json.includes('"' + key + '"')) continue; try { map[key] = await cloudAssets.upload(blob, {type: blob.type}); } catch(_){ missed++; } }
+  } catch(_){}
+  const WHO = ["createdBy","updatedBy","doneBy","paidBy","requestedBy","by"];
+  const fix = v => {
+    if (Array.isArray(v)) return v.map(fix);
+    if (v && typeof v === "object"){
+      const o = {}; for (const [k, x] of Object.entries(v)) o[k] = WHO.includes(k) && x === "local" ? me.id : fix(x);
+      if (typeof v.id === "string" && map[v.id] && "url" in o) o.url = map[v.id].url;
+      return o;
+    }
+    return typeof v === "string" && map[v] ? map[v].id : v;
+  };
+  let n = 0;
+  for (const c of COLLS) for (const [id, v] of Object.entries(p.real[c])){ if (S[c][id]) continue; const d = fix(v); S[c][id] = d; queue.push({op:"up", c, id, data:d}); n++; }
+  qSave(); cacheSave(); flushQueue();
+  try { localStorage.setItem(IMPORT_FLAG, new Date().toISOString()); } catch(_){}
+  previewCache = null; render(); refreshHeat();
+  toast(missed ? `Brought in ${n} records. ${missed} photo${missed === 1 ? "" : "s"} couldn't be copied and stayed on this device.` : `Brought in ${n} records from this device`);
+}
 async function leaveCloud(){
   try { if (rtChan) sb.removeChannel(rtChan); } catch(_){}
   cloud = false; barnId = null; myBarns = []; barnMembers = []; adminRows = null; queue = [];
@@ -4039,13 +4167,16 @@ function cycleCard(id){
     ${ci.cyc.length ? `<p class="hint" style="margin:8px 0 10px">Ovulations on record: ${ci.cyc.slice(-5).map(short).join(", ")}</p>` : ""}
     ${tease}</div></section>`;
 }
-function heatWatch(){
+function heatRows(){
   const list = arr("mares").filter(notPregnant).map(m => ({m, ci:cycleInfo(m, m.id)})).filter(x => x.ci && (x.ci.inHeatNow || (x.ci.fol && x.ci.fol.k) || diff(x.ci.heatFrom, TODAY) <= 5))
     .sort((a,b) => (b.ci.fol && b.ci.fol.k === "hot" ? 1 : 0) - (a.ci.fol && a.ci.fol.k === "hot" ? 1 : 0) || a.ci.nextOv.localeCompare(b.ci.nextOv));
+  return list.map(({m, ci}) => { const s = S.studs[m.stallionId], col = s ? alignedCollection(s, ci.nextOv) : null;
+    return `<div class="alert-row" data-mare="${m.id}"><span class="dotx ${ci.fol && ci.fol.k==="hot" ? "warn" : ""}"></span><span><b>${esc(m.name)}</b> · ${ci.fol ? esc(ci.fol.t) + " · " : ""}${ci.inHeatNow ? "in heat window" : "heat " + short(ci.heatFrom)}, ovulation ~${short(ci.nextOv)}${col ? ` · order ${esc(s.name)} for ${esc(wdShort(col))}` : ""}</span><span class="due ${ci.fol && ci.fol.k==="hot" ? "over" : ""}">${ci.fol && ci.fol.k==="hot" ? "Now" : ci.inHeatNow ? "In heat" : diff(ci.heatFrom, TODAY) + "d"}</span></div>`; });
+}
+function heatWatch(){
+  const rows = heatRows();
   return `<section class="card"><div class="card-h"><h2>Heat watch</h2><span class="sp" style="flex:1"></span><span class="eyebrow">Next 5 days</span></div>
-    <div class="list">${list.length ? list.map(({m, ci}) => { const s = S.studs[m.stallionId], col = s ? alignedCollection(s, ci.nextOv) : null;
-      return `<div class="alert-row" data-mare="${m.id}"><span class="dotx ${ci.fol && ci.fol.k==="hot" ? "warn" : ""}"></span><span><b>${esc(m.name)}</b> · ${ci.fol ? esc(ci.fol.t) + " · " : ""}${ci.inHeatNow ? "in heat window" : "heat " + short(ci.heatFrom)}, ovulation ~${short(ci.nextOv)}${col ? ` · order ${esc(s.name)} for ${esc(wdShort(col))}` : ""}</span><span class="due ${ci.fol && ci.fol.k==="hot" ? "over" : ""}">${ci.fol && ci.fol.k==="hot" ? "Now" : ci.inHeatNow ? "In heat" : diff(ci.heatFrom, TODAY) + "d"}</span></div>`; }).join("")
-      : `<div class="empty-row">No open mares due in heat in the next 5 days.</div>`}</div></section>`;
+    <div class="list">${rows.length ? rows.join("") : `<div class="empty-row">No open mares due in heat in the next 5 days.</div>`}</div></section>`;
 }
 document.addEventListener("click", async ev => {
   const el = ev.target.closest("[data-tease]"); if (!el || !canWrite) return;
@@ -4094,6 +4225,17 @@ function cropBar(y){
     .map(m => { const d = dueDate(m), pct = diff(d, `${y}-01-01`) / days * 100; return `<button class="cb-dot" style="left:${pct.toFixed(2)}%" data-mare="${m.id}" title="${esc(m.name)} · due ${short(d)}" aria-label="${esc(m.name)}, due ${short(d)}"><b>${esc(initials(m.name))}</b></button>`; }).join("");
   return `<div class="cropbar" role="img" aria-label="${y} foaling calendar with each mare's due date"><div class="cb-track">${segs}</div><div class="cb-dots">${dots}</div></div>
     <div class="legend"><span class="cat"><i class="sw-in"></i>Foaling window</span><span class="cat"><i class="sw-ideal"></i>Ideal month</span><span class="cat"><i class="sw-late"></i>Late foals</span></div>`;
+}
+function seasonLine(){
+  const w = currentCrop(), st = seasonStatus(w), mares = arr("mares");
+  const toBreed = mares.filter(m => m.status === "open" || (m.status === "foaled" && carries(m)));
+  const carrying = mares.filter(m => (m.status === "bred" || m.status === "in-foal") && anchor(m) && carries(m));
+  const by = carrying.some(m => dueDate(m).slice(0,4) === String(w.year - 1)) ? w.year - 1 : w.year;
+  const due = carrying.filter(m => dueDate(m).slice(0,4) === String(by));
+  return `${st.t} · ${due.length} due in ${by} · ${toBreed.length} still to breed`;
+}
+function seasonFold(){
+  return `<details class="fold" data-fold="season" ${ui.seasonOpen ? "open" : ""}><summary><span class="fold-t"><b>Foaling season</b><small>${esc(seasonLine())}</small></span></summary>${seasonCard(true)}</details>`;
 }
 function seasonCard(full){
   const w = currentCrop(), st = seasonStatus(w), s = season();
@@ -4254,7 +4396,7 @@ render();
     local = true; me = me.id ? me : {id:"local"};
     if (!location.hash) ui.view = "landing";
     try { await localAssets.loadAll(); assets = localAssets; } catch(_){}
-    $("#banner").hidden = false; $("#banner").textContent = "Preview: changes, photos and videos save on this device only.";
+    $("#banner").hidden = false; $("#banner").textContent = "Preview · everything saves on this device only";
     ready = true; if (!loadLocal()) await loadSample(true); render(); refreshHeat(); return;
   }
   let pending = COLLS.length;
