@@ -1,5 +1,11 @@
 # Changelog
 
+## v15 · Nobody loses their preview barn
+- **"Your barn is still here":** the log-in and join screens now tell anyone whose device holds horses from the preview that they're safe and will be offered to bring them in after logging in.
+- **Download a backup:** one tap saves the whole preview barn to a file, before or after logging in.
+- **Bring in a backup file** (Account → Setup & sample data): restores that file into a barn from any device. Photos and uploaded files only travel with the same-device bring-in.
+- Bringing in is safe to repeat: records already in the barn are skipped.
+
 ## v14 · Accounts and shared storage switched on
 - The site now runs on the Supabase project (`config.js`): email log-in, barns shared by join code, live sync between phones, photo and document storage, audit trail.
 - **Bring in your preview barn:** after logging in, a device that still holds horses entered during the on-device preview shows a one-tap card on Home that copies them, with their tasks, costs and photos, into the signed-in barn. Sample data is skipped and nothing is removed from the device.
