@@ -199,6 +199,18 @@ end $$;
 drop trigger if exists docs_audit_trg on public.docs;
 create trigger docs_audit_trg after insert or update or delete on public.docs for each row execute function public.audit_docs();
 
+-- ---------- API access ----------
+-- New Supabase projects don't hand table access to the API roles automatically.
+-- Grant only what the app uses; row-level security still decides which rows each person sees.
+revoke all on public.barns, public.barn_members, public.docs, public.docs_audit, public.signups, public.site_admins from anon, authenticated;
+grant select, update on public.barns to authenticated;
+grant select, delete on public.barn_members to authenticated;
+grant select, insert, update, delete on public.docs to authenticated;
+grant select on public.docs to anon;                    -- public stallion listings only (policy)
+grant select on public.docs_audit to authenticated;
+grant insert on public.signups to anon, authenticated;  -- join + contact forms
+grant select on public.signups to authenticated;        -- site admins only (policy)
+
 -- ---------- realtime ----------
 do $$ begin
   alter publication supabase_realtime add table public.docs;
