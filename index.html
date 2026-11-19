@@ -3149,7 +3149,7 @@ document.addEventListener("change", async ev => {
 let sampleFn = null, sampleImg = false;
 const DEMO_KEY = "marebook-demo-v1";
 let saveT;
-function saveLocal(){ clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(DEMO_KEY, JSON.stringify(S)); } catch(_){} }, 300); }
+function saveLocal(){ if (CLOUD_ON) return; clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(DEMO_KEY, JSON.stringify(S)); } catch(_){} }, 300); }
 function loadLocal(){ try { const raw = localStorage.getItem(DEMO_KEY); if (!raw) return false; const o = JSON.parse(raw); for (const c of COLLS) S[c] = o[c] || {}; return true; } catch(_){ return false; } }
 async function saveFile(filename, data, mime){
   if (downloads){
@@ -3445,7 +3445,7 @@ function alertsList(alerts){
 function viewToday(){
   const mares = arr("mares"), a = acct(), hr = new Date().getHours();
   const greet = (hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening") + (a.contact ? ", " + firstName(a.contact) : "");
-  if (!mares.length && !arr("foals").length && !arr("studs").length) return pageBar(esc(greet), esc(long(TODAY))) + welcome();
+  if (!mares.length && !arr("foals").length && !arr("studs").length) return pageBar(esc(greet), esc(long(TODAY))) + importCard() + welcome();
   const open = openTasks(), over = open.filter(t => t.due < TODAY);
   const todayList = arr("tasks").filter(t => liveTask(t) && (t.due === TODAY || (!t.done && t.due < TODAY))).sort((x,y) => (x.done?1:0)-(y.done?1:0) || x.due.localeCompare(y.due));
   const left = todayList.filter(t => !t.done).length;
@@ -3473,6 +3473,7 @@ function viewToday(){
     ${over.length ? `<span class="stat alert"><b>${over.length}</b> overdue</span>` : ""}
     ${unpaid.length && !isVetRole() ? `<span class="stat alert" data-go="costs" role="button" tabindex="0" style="cursor:pointer"><b>${money(unpaid.reduce((s,e) => s + (Number(e.amount)||0), 0), false)}</b> unpaid</span>` : ""}
   </div>
+  ${importCard()}
   <div class="finder">${combo("cHerd", "Find a mare, foal or stallion…", herd)}${canWrite ? `<button class="btn primary" data-addmenu>+ Add</button>` : ""}</div>
   <div class="home">
     <div class="home-col">
@@ -3497,6 +3498,8 @@ document.addEventListener("click", ev => {
   const tb = t.closest("[data-mtab],[data-ctab]");
   if (tb){ if (tb.dataset.mtab) ui.mareTab = tb.dataset.mtab; else ui.costTab = tb.dataset.ctab; render(); return; }
   if (t.closest("[data-season-go]")){ ui.seasonOpen = true; nav("mares"); return; }
+  if (t.closest("[data-import-preview]")){ importPreview(t.closest("[data-import-preview]")); return; }
+  if (t.closest("[data-import-skip]")){ ui.importHide = true; render(); return; }
   if (t.closest("[data-addmenu]")){
     sheet(`<h2>Add</h2><div class="menu-list"><button data-act="add-mare">Mare</button>${arr("mares").length ? `<button data-cact="add-foal">Foal</button>` : ""}<button data-act="add-stud">Stallion</button><button data-act="add-event">Task or event</button></div><div class="row-btns" style="margin-top:14px"><button class="btn" data-close>Cancel</button></div>`);
   }
@@ -3925,6 +3928,69 @@ async function enterCloud(u){
   $("#banner").hidden = true; $("#banner").textContent = "";
   render(); refreshHeat();
   if (fresh && meta.type === "stallion"){ nav("stallions"); setTimeout(() => studForm(), 80); }
+}
+// ----- bring the preview barn (saved on this device before accounts) into the signed-in barn -----
+const IMPORT_FLAG = "marebook-preview-imported";
+let previewCache;
+function previewData(){
+  if (previewCache !== undefined) return previewCache;
+  previewCache = null;
+  try {
+    if (localStorage.getItem(IMPORT_FLAG)) return null;
+    const o = JSON.parse(localStorage.getItem(DEMO_KEY) || "null"); if (!o) return null;
+    const smp = (c, id) => !!((o[c] || {})[id] || {}).sample, real = {};
+    for (const c of COLLS){
+      real[c] = {};
+      if (c === "members") continue;
+      for (const [id, v] of Object.entries(o[c] || {})){
+        if (!v || typeof v !== "object" || v.sample) continue;
+        if (smp("mares", v.mareId) || smp("foals", v.foalId) || smp("studs", v.studId)) continue;
+        if (c === "settings" && (id === "account" || id === "plan")) continue;
+        real[c][id] = v;
+      }
+    }
+    const n = c => Object.keys(real[c]).length;
+    if (n("mares") + n("foals") + n("studs")) previewCache = {real, mares:n("mares"), foals:n("foals"), studs:n("studs")};
+  } catch(_){}
+  return previewCache;
+}
+function importCard(){
+  if (!cloud || !canWrite || ui.importHide) return "";
+  const p = previewData(); if (!p) return "";
+  const pl = (n, w) => n ? `${n} ${w}${n === 1 ? "" : "s"}` : "", parts = [pl(p.mares, "mare"), pl(p.foals, "foal"), pl(p.studs, "stallion")].filter(Boolean);
+  const list = parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts[0];
+  const barn = (myBarns.find(b => b.id === barnId) || {}).name || "your barn";
+  return `<section class="card" style="margin-top:14px"><div class="card-h"><h2>Bring in your preview barn</h2></div>
+    <p class="muted" style="margin:0 0 12px">This device still holds ${esc(list)} entered before accounts were switched on, along with their tasks, costs and photos. Bring them into ${esc(barn)} so the whole team sees them. Nothing is removed from this device.</p>
+    <div class="row-btns"><button class="btn primary" data-import-preview>Bring them in</button><button class="btn" data-import-skip>Not now</button></div></section>`;
+}
+async function importPreview(btn){
+  const p = previewData(); if (!p || !cloud || !canWrite) return;
+  btn.disabled = true; btn.textContent = "Bringing them in…";
+  // photos, videos and documents saved on this device move to the barn's storage
+  const map = {}; let missed = 0;
+  try {
+    await idb.open();
+    const blobs = await new Promise(res => { const out = [], rq = idb.store("readonly").openCursor(); rq.onsuccess = () => { const c = rq.result; if (!c){ res(out); return; } out.push([c.key, c.value]); c.continue(); }; rq.onerror = () => res(out); });
+    const json = JSON.stringify(p.real);
+    for (const [key, blob] of blobs){ if (!json.includes('"' + key + '"')) continue; try { map[key] = await cloudAssets.upload(blob, {type: blob.type}); } catch(_){ missed++; } }
+  } catch(_){}
+  const WHO = ["createdBy","updatedBy","doneBy","paidBy","requestedBy","by"];
+  const fix = v => {
+    if (Array.isArray(v)) return v.map(fix);
+    if (v && typeof v === "object"){
+      const o = {}; for (const [k, x] of Object.entries(v)) o[k] = WHO.includes(k) && x === "local" ? me.id : fix(x);
+      if (typeof v.id === "string" && map[v.id] && "url" in o) o.url = map[v.id].url;
+      return o;
+    }
+    return typeof v === "string" && map[v] ? map[v].id : v;
+  };
+  let n = 0;
+  for (const c of COLLS) for (const [id, v] of Object.entries(p.real[c])){ if (S[c][id]) continue; const d = fix(v); S[c][id] = d; queue.push({op:"up", c, id, data:d}); n++; }
+  qSave(); cacheSave(); flushQueue();
+  try { localStorage.setItem(IMPORT_FLAG, new Date().toISOString()); } catch(_){}
+  previewCache = null; render(); refreshHeat();
+  toast(missed ? `Brought in ${n} records. ${missed} photo${missed === 1 ? "" : "s"} couldn't be copied and stayed on this device.` : `Brought in ${n} records from this device`);
 }
 async function leaveCloud(){
   try { if (rtChan) sb.removeChannel(rtChan); } catch(_){}

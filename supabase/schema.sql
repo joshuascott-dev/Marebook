@@ -110,6 +110,14 @@ begin
   update barn_members set role = new_role where barn_id = b and user_id = member;
 end $$;
 
+-- Barn actions are for signed-in members only.
+revoke execute on function public.create_barn(text) from public, anon;
+revoke execute on function public.join_barn(text, text) from public, anon;
+revoke execute on function public.set_member_role(uuid, uuid, text) from public, anon;
+grant execute on function public.create_barn(text) to authenticated;
+grant execute on function public.join_barn(text, text) to authenticated;
+grant execute on function public.set_member_role(uuid, uuid, text) to authenticated;
+
 -- ---------- row level security ----------
 alter table public.barns enable row level security;
 alter table public.barn_members enable row level security;

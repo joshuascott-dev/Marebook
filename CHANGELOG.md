@@ -1,5 +1,11 @@
 # Changelog
 
+## v14 · Accounts and shared storage switched on
+- The site now runs on the Supabase project (`config.js`): email log-in, barns shared by join code, live sync between phones, photo and document storage, audit trail.
+- **Bring in your preview barn:** after logging in, a device that still holds horses entered during the on-device preview shows a one-tap card on Home that copies them, with their tasks, costs and photos, into the signed-in barn. Sample data is skipped and nothing is removed from the device.
+- Once accounts are on, the app no longer writes over the on-device preview copy.
+- Database: creating a barn, joining one and changing roles are closed to callers who aren't signed in.
+
 ## v13 · Simpler screens
 Every screen now does one job and nothing is shown twice. No features were removed; they moved to where you'd look for them.
 - **Home:** one search box for the whole herd (mares, foals, your stallions) and one **+ Add** button, instead of four search rows. **Today** is the to-do list. **Coming up** merges heat watch, tomorrow's work and mares close to foaling. The duplicate alerts list, mini calendar, full foaling planner, foaling-watch cards and featured stallion are gone from Home; each still lives on its own page.
