@@ -3115,7 +3115,7 @@ function viewAccount(){
     row("landing","Public site","Home, owners pages, about, contact")])}
   </div>
   ${installCard()}
-  ${canWrite ? `<section class="sec"><details class="fold"><summary><span class="fold-t"><b>Setup & sample data</b><small>Reminder prices, foaling season, sample barn</small></span></summary><div class="row-btns"><button class="btn sm" data-cact="prices">Prices for reminders</button><button class="btn sm" data-act="season-set">Foaling season</button>${arr("mares").some(m=>m.sample) ? `<button class="btn danger sm" data-act="clear-sample">Remove sample data</button>` : `<button class="btn sm" data-act="load-sample">Load a sample barn</button>`}${local ? `<button class="btn sm" data-act="reset-demo">Reset demo</button>` : ""}</div></details></section>` : ""}
+  ${canWrite ? `<section class="sec"><details class="fold"><summary><span class="fold-t"><b>Setup & sample data</b><small>Reminder prices, foaling season, sample barn</small></span></summary><div class="row-btns"><button class="btn sm" data-cact="prices">Prices for reminders</button><button class="btn sm" data-act="season-set">Foaling season</button>${arr("mares").some(m=>m.sample) ? `<button class="btn danger sm" data-act="clear-sample">Remove sample data</button>` : `<button class="btn sm" data-act="load-sample">Load a sample barn</button>`}${local ? `<button class="btn sm" data-act="reset-demo">Reset demo</button>` : ""}${cloud ? `<label class="btn sm">Bring in a backup file<input type="file" accept="application/json,.json" data-backup-up hidden></label>` : ""}</div></details></section>` : ""}
   <section class="sec"><div class="row-btns"><button class="btn sm" data-act="logout">Log out</button></div><p class="hint">Reminder schedules are standard defaults. Confirm every protocol with your veterinarian.<br>© ${TODAY.slice(0,4)} ${esc(LEGAL)}, d/b/a Marebook · Weatherford, Texas</p></section>`;
 }
 // ---------- v5 events ----------
@@ -3500,11 +3500,13 @@ document.addEventListener("click", ev => {
   if (t.closest("[data-season-go]")){ ui.seasonOpen = true; nav("mares"); return; }
   if (t.closest("[data-import-preview]")){ importPreview(t.closest("[data-import-preview]")); return; }
   if (t.closest("[data-import-skip]")){ ui.importHide = true; render(); return; }
+  if (t.closest("[data-preview-backup]")){ previewBackup(); return; }
   if (t.closest("[data-addmenu]")){
     sheet(`<h2>Add</h2><div class="menu-list"><button data-act="add-mare">Mare</button>${arr("mares").length ? `<button data-cact="add-foal">Foal</button>` : ""}<button data-act="add-stud">Stallion</button><button data-act="add-event">Task or event</button></div><div class="row-btns" style="margin-top:14px"><button class="btn" data-close>Cancel</button></div>`);
   }
 });
 document.addEventListener("toggle", ev => { const d = ev.target; if (d && d.dataset && d.dataset.fold === "season") ui.seasonOpen = d.open; }, true);
+document.addEventListener("change", ev => { const t = ev.target; if (t && t.dataset && "backupUp" in t.dataset){ const f = t.files && t.files[0]; t.value = ""; importBackupFile(f); } });
 
 // ----- foal page laid out like the wireframe: Date·Action | Photos & video | Calendar -----
 function foalTimeline(id){
@@ -3689,7 +3691,7 @@ function viewJoin(){
   const pitch = t === "stallion"
     ? `<div class="eyebrow">Stallion owners</div><h1 style="font-size:clamp(38px,5vw,54px);line-height:1.02">Create your station account.</h1><ul><li>A stallion page in Stallion Search, found by breed and discipline</li><li>Collection days that schedule mare owners' ultrasounds</li><li>Shipment orders, breeding contracts and the payment portal at launch</li></ul>`
     : `<div class="eyebrow">Mare owners</div><h1 style="font-size:clamp(38px,5vw,54px);line-height:1.02">Start your membership.</h1><ul><li>Mare and foal profiles with photos and video</li><li>A calendar and daily to-do that schedule themselves</li><li>Your whole team on the same page</li></ul>`;
-  return `<div class="pub"><section class="two-col" style="margin-top:28px">
+  return `<div class="pub">${previewNote()}<section class="two-col" style="margin-top:28px">
     <div class="pitch">${pitch}<p class="hint">Already a member? <button class="btn link" data-auth="login">Log in</button></p></div>
     <div class="card"><div class="seg" style="margin:0 0 14px"><button data-jt="mare" aria-pressed="${t==="mare"}">Mare owner / barn</button><button data-jt="stallion" aria-pressed="${t==="stallion"}">Stallion owner</button></div>
       <form class="form" id="joinF">${fields}
@@ -3932,65 +3934,91 @@ async function enterCloud(u){
 // ----- bring the preview barn (saved on this device before accounts) into the signed-in barn -----
 const IMPORT_FLAG = "marebook-preview-imported";
 let previewCache;
+// the horses a person really entered: sample horses and anything hanging off them are left out
+function realFrom(o){
+  const smp = (c, id) => !!((o[c] || {})[id] || {}).sample, real = {};
+  for (const c of COLLS){
+    real[c] = {};
+    if (c === "members") continue;
+    for (const [id, v] of Object.entries(o[c] || {})){
+      if (!v || typeof v !== "object" || Array.isArray(v) || v.sample || v._ext) continue;
+      if (smp("mares", v.mareId) || smp("foals", v.foalId) || smp("studs", v.studId)) continue;
+      if (c === "settings" && (id === "account" || id === "plan")) continue;
+      real[c][id] = v;
+    }
+  }
+  const n = c => Object.keys(real[c]).length;
+  return n("mares") + n("foals") + n("studs") ? {real, mares:n("mares"), foals:n("foals"), studs:n("studs")} : null;
+}
+function previewRaw(){ try { return JSON.parse(localStorage.getItem(DEMO_KEY) || "null"); } catch(_){ return null; } }
 function previewData(){
   if (previewCache !== undefined) return previewCache;
   previewCache = null;
-  try {
-    if (localStorage.getItem(IMPORT_FLAG)) return null;
-    const o = JSON.parse(localStorage.getItem(DEMO_KEY) || "null"); if (!o) return null;
-    const smp = (c, id) => !!((o[c] || {})[id] || {}).sample, real = {};
-    for (const c of COLLS){
-      real[c] = {};
-      if (c === "members") continue;
-      for (const [id, v] of Object.entries(o[c] || {})){
-        if (!v || typeof v !== "object" || v.sample) continue;
-        if (smp("mares", v.mareId) || smp("foals", v.foalId) || smp("studs", v.studId)) continue;
-        if (c === "settings" && (id === "account" || id === "plan")) continue;
-        real[c][id] = v;
-      }
-    }
-    const n = c => Object.keys(real[c]).length;
-    if (n("mares") + n("foals") + n("studs")) previewCache = {real, mares:n("mares"), foals:n("foals"), studs:n("studs")};
-  } catch(_){}
+  try { if (!localStorage.getItem(IMPORT_FLAG)){ const o = previewRaw(); if (o) previewCache = realFrom(o); } } catch(_){}
   return previewCache;
+}
+const herdCount = p => { const pl = (n, w) => n ? `${n} ${w}${n === 1 ? "" : "s"}` : "", parts = [pl(p.mares, "mare"), pl(p.foals, "foal"), pl(p.studs, "stallion")].filter(Boolean); return parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts[0]; };
+// shown before log-in, so nobody thinks the barn they entered is gone
+function previewNote(){
+  if (!CLOUD_ON || cloud) return "";
+  const p = previewData(); if (!p) return "";
+  return `<section class="card" style="margin:16px auto 0;max-width:640px;text-align:left"><div class="card-h"><h2>Your barn is still here</h2></div>
+    <p class="muted" style="margin:0 0 12px">This device holds ${esc(herdCount(p))} you entered before accounts were switched on. Create an account or log in on this device and Marebook will offer to bring them in, with their tasks, costs and photos.</p>
+    <div class="row-btns"><button class="btn sm" data-preview-backup>Download a backup first</button></div></section>`;
 }
 function importCard(){
   if (!cloud || !canWrite || ui.importHide) return "";
   const p = previewData(); if (!p) return "";
-  const pl = (n, w) => n ? `${n} ${w}${n === 1 ? "" : "s"}` : "", parts = [pl(p.mares, "mare"), pl(p.foals, "foal"), pl(p.studs, "stallion")].filter(Boolean);
-  const list = parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts[0];
   const barn = (myBarns.find(b => b.id === barnId) || {}).name || "your barn";
   return `<section class="card" style="margin-top:14px"><div class="card-h"><h2>Bring in your preview barn</h2></div>
-    <p class="muted" style="margin:0 0 12px">This device still holds ${esc(list)} entered before accounts were switched on, along with their tasks, costs and photos. Bring them into ${esc(barn)} so the whole team sees them. Nothing is removed from this device.</p>
-    <div class="row-btns"><button class="btn primary" data-import-preview>Bring them in</button><button class="btn" data-import-skip>Not now</button></div></section>`;
+    <p class="muted" style="margin:0 0 12px">This device still holds ${esc(herdCount(p))} entered before accounts were switched on, along with their tasks, costs and photos. Bring them into ${esc(barn)} so the whole team sees them. Nothing is removed from this device.</p>
+    <div class="row-btns"><button class="btn primary" data-import-preview>Bring them in</button><button class="btn sm" data-preview-backup>Download a backup</button><button class="btn sm" data-import-skip>Not now</button></div></section>`;
 }
-async function importPreview(btn){
-  const p = previewData(); if (!p || !cloud || !canWrite) return;
-  btn.disabled = true; btn.textContent = "Bringing them in…";
-  // photos, videos and documents saved on this device move to the barn's storage
+function previewBackup(){
+  const o = previewRaw(); if (!o){ toast("No preview barn on this device"); return; }
+  saveFile(`marebook-backup-${TODAY}.json`, JSON.stringify({marebookBackup:1, savedAt:new Date().toISOString(), data:o}, null, 1), "application/json");
+}
+// copy records into the signed-in barn. blobs: photos and files saved on this device, moved to the barn's storage.
+async function bringIn(real, blobs){
   const map = {}; let missed = 0;
-  try {
-    await idb.open();
-    const blobs = await new Promise(res => { const out = [], rq = idb.store("readonly").openCursor(); rq.onsuccess = () => { const c = rq.result; if (!c){ res(out); return; } out.push([c.key, c.value]); c.continue(); }; rq.onerror = () => res(out); });
-    const json = JSON.stringify(p.real);
-    for (const [key, blob] of blobs){ if (!json.includes('"' + key + '"')) continue; try { map[key] = await cloudAssets.upload(blob, {type: blob.type}); } catch(_){ missed++; } }
-  } catch(_){}
+  const json = JSON.stringify(real);
+  for (const [key, blob] of blobs || []){ if (!json.includes('"' + key + '"')) continue; try { map[key] = await cloudAssets.upload(blob, {type: blob.type}); } catch(_){ missed++; } }
   const WHO = ["createdBy","updatedBy","doneBy","paidBy","requestedBy","by"];
+  // a photo or file that lives only on another device can't be shown here, so its link is left out
+  const orphan = x => x && typeof x === "object" && !Array.isArray(x) && typeof x.id === "string" && !x.id.includes("/") && !map[x.id] && typeof x.type === "string" && /^[\w.-]+\/[\w.+-]+$/.test(x.type);
+  let dropped = 0;
   const fix = v => {
-    if (Array.isArray(v)) return v.map(fix);
+    if (Array.isArray(v)) return v.filter(x => orphan(x) ? (dropped++, false) : true).map(fix);
     if (v && typeof v === "object"){
-      const o = {}; for (const [k, x] of Object.entries(v)) o[k] = WHO.includes(k) && x === "local" ? me.id : fix(x);
+      const o = {};
+      for (const [k, x] of Object.entries(v)){ if (orphan(x)){ dropped++; continue; } o[k] = WHO.includes(k) && x === "local" ? me.id : fix(x); }
       if (typeof v.id === "string" && map[v.id] && "url" in o) o.url = map[v.id].url;
       return o;
     }
     return typeof v === "string" && map[v] ? map[v].id : v;
   };
   let n = 0;
-  for (const c of COLLS) for (const [id, v] of Object.entries(p.real[c])){ if (S[c][id]) continue; const d = fix(v); S[c][id] = d; queue.push({op:"up", c, id, data:d}); n++; }
-  qSave(); cacheSave(); flushQueue();
+  for (const c of COLLS) for (const [id, v] of Object.entries(real[c] || {})){ if (S[c][id]) continue; const d = fix(v); S[c][id] = d; queue.push({op:"up", c, id, data:d}); n++; }
+  qSave(); cacheSave(); flushQueue(); render(); refreshHeat();
+  return {n, lost: dropped};
+}
+async function importPreview(btn){
+  const p = previewData(); if (!p || !cloud || !canWrite) return;
+  btn.disabled = true; btn.textContent = "Bringing them in…";
+  let blobs = [];
+  try { await idb.open(); blobs = await new Promise(res => { const out = [], rq = idb.store("readonly").openCursor(); rq.onsuccess = () => { const c = rq.result; if (!c){ res(out); return; } out.push([c.key, c.value]); c.continue(); }; rq.onerror = () => res(out); }); } catch(_){}
+  const r = await bringIn(p.real, blobs);
   try { localStorage.setItem(IMPORT_FLAG, new Date().toISOString()); } catch(_){}
-  previewCache = null; render(); refreshHeat();
-  toast(missed ? `Brought in ${n} records. ${missed} photo${missed === 1 ? "" : "s"} couldn't be copied and stayed on this device.` : `Brought in ${n} records from this device`);
+  previewCache = null; render();
+  toast(r.lost ? `Brought in ${r.n} records. ${r.lost} photo${r.lost === 1 ? "" : "s"} or file${r.lost === 1 ? "" : "s"} couldn't be copied and stayed on this device.` : `Brought in ${r.n} records from this device`);
+}
+async function importBackupFile(file){
+  if (!cloud || !canWrite || !file) return;
+  let o; try { o = JSON.parse(await file.text()); } catch(_){ toast("That isn't a Marebook backup file"); return; }
+  const p = o && o.marebookBackup && o.data ? realFrom(o.data) : null;
+  if (!p){ toast(o && o.marebookBackup ? "That backup has no horses in it" : "That isn't a Marebook backup file"); return; }
+  const r = await bringIn(p.real, []);
+  toast(r.n ? `Brought in ${r.n} records from the backup${r.lost ? ". Photos and files stay on the device they were added on." : ""}` : "Everything in that backup is already in this barn");
 }
 async function leaveCloud(){
   try { if (rtChan) sb.removeChannel(rtChan); } catch(_){}
@@ -4000,7 +4028,7 @@ async function leaveCloud(){
 }
 async function loadListingsAnon(){ barnId = null; await loadListings(); }
 function authGate(){
-  return `<div class="pub"><section class="hero-x lite" style="justify-items:center;text-align:center"><span class="ring-deco" aria-hidden="true"></span>${logoSvg()}<h1 style="max-width:16ch">Log in to open your barn.</h1><p>Your mares, foals, stallions and calendar are waiting, shared with your team.</p><div class="row-btns" style="justify-content:center"><button class="btn teal" data-auth="login">Log in</button><button class="btn on-dark" data-nav="join">Create an account</button></div></section></div>`;
+  return `<div class="pub"><section class="hero-x lite" style="justify-items:center;text-align:center"><span class="ring-deco" aria-hidden="true"></span>${logoSvg()}<h1 style="max-width:16ch">Log in to open your barn.</h1><p>Your mares, foals, stallions and calendar are waiting, shared with your team.</p><div class="row-btns" style="justify-content:center"><button class="btn teal" data-auth="login">Log in</button><button class="btn on-dark" data-nav="join">Create an account</button></div></section>${previewNote()}</div>`;
 }
 function newPasswordSheet(){
   sheet(`<div class="auth"><h2>Choose a new password</h2><form class="form" id="npF"><div class="field"><label for="np-pw">New password</label><input id="np-pw" name="pw" type="password" minlength="8" required autocomplete="new-password"><div class="hint">8 or more characters.</div></div><button class="btn primary block" type="submit">Save password</button><p class="hint" id="npMsg"></p></form></div>`, root => {
